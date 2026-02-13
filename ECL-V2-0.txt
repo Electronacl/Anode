@@ -1,0 +1,78 @@
+License © 2026 Electronacl
+
+This content is licenced under the Electronacl Content Licence V2.0, updated as of 13 February 2026
+
+By "creator", this license refers to the original creator of the content, and "modifier" refers
+to any person modifying, remixing, or expanding upon the content. When this license refers to
+"you", it means the user.
+
+"content" in terms of this license can refer to music, software, video, images, etc. Therefore,
+some statements may only apply to specific forms of content, in which case this will be specified.
+
+When referring to types of content, "media" refers to audio, video, images, and fonts which this
+license applies to.
+
+The intention of this license is to provide fair use for any software or music projects I create,
+but this license may be used externally, as well as for other types of project. Because of this,
+this license generalises a bit and not all parts of this license may be applicable to some types
+of content.
+
+SUMMARY:
+Licenses are boring and long because of edge cases but here's a basic summary:
+
+Don't use this content in controversial, inappropriate or commercial media, don't use this content to
+train AI, you can use this content in social media, credit the original creator, don't claim this
+content as your own, and for modifiers and the creator: explain if and how you used AI, and use this
+license.
+
+ALSO, most importantly: USE AT YOUR OWN RISK. Whilst I don't want for anyone to have any damage
+caused by this content or license, the creator, modifier, and license creator cannot accept
+responsibility. This is more because of legal stuff, this license prohibits anything intending to
+cause harm.
+
+Anyways here's the boring stuff, I'd recommend reading it if you have the time. Reading licenses may
+be boring, but it's really helpful for understanding how you may use the content, and what the content
+is able to be or do. I'm not the best at writing licenses, but hopefully this is clear enough:
+
+
+
+
+
+DISTRIBUTION AND USE:
+You may:
+- Use this content on social media platforms, such as audio for background music.
+You may not:
+- Use this content to train any form of Artificial Intelligence
+- Use this content for commercial projects such as advertisements
+- Use this content for controversial content, content promoting anything, or use in hate speech
+- Use this content in NSFW media
+- Claim this content as your own, and attribution must be given to the creator
+- Take parts of this content to use in similar content unless that content is a modification of
+    this content
+- Distribute copies of the original content
+- Distribute the modified content on other platforms than the platform this content is uploaded on
+    unless the platform is explicitly stated by the creator as usable for uploading modified copies
+
+If this content is included with other software, a copy of this license must be included and easy
+to access.
+
+
+LIABILITY:
+The creator, of both the license and the content, and any modifiers cannot claim any responsibility over
+any damage caused by the content. We (the creators and modifiers) are not able to offer any compensation
+or warranty on this content or any damage it may cause.
+
+
+CREATOR AND MODIFIER REQUIREMENTS:
+- You must state if and how you used Artificial Intelligence in this content, and modifications
+    of this content. This includes the original content.
+- You may not use this license for AI generated content, or modify this content using only AI
+- Modifications of this content must be distributed with the same license
+- Modifications must give attribution to the creator
+- You may not use this license to distribute controversial content
+- You may not use this license for any content with the intent to cause harm in any way
+
+
+TERMINATION OF THE LICENSE:
+If you, the creator, and/or the modifier do not meet the conditions determined above, the license will
+become null and void.
