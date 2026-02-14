@@ -10,11 +10,15 @@ namespace Anode
     {
         // Taken from my old NES Emulator
         // 2_ReadWrite
-        uint[,] ram_test = {
+        /*uint[,] ram_test = {
             { 0, 0x5A },
             { 1, 0x5A },
             { 2, 0x80 },
             { 0x550, 0x80 }
+        };*/
+        // 3_Branches
+        uint[,] ram_test = {
+            { 0, 1 }
         };
         // 5_Instructions1
         /*uint[,] ram_test = {

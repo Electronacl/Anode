@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
 
 namespace Anode
 {
@@ -18,7 +19,13 @@ namespace Anode
         byte t;
         byte opcode;
         byte ADD;
-        // Headers go here, I'm tired and I'm not adding them yet
+
+        bool flag_Carry;
+        bool flag_Zero;
+        bool flag_InterruptDisable;
+        bool flag_Decimal;
+        bool flag_Overflow;
+        bool flag_Negative;
 
         ushort AddressBus;
         byte DataBus;
@@ -34,6 +41,7 @@ namespace Anode
         // Emulator specific
         byte op_t;
         bool inc_op_t;
+        int signedTemp;
 
         public bool CPU_Halted;
 
@@ -81,7 +89,7 @@ namespace Anode
 
             if (CPU_Halted)
             {
-                Console.WriteLine("CPU Halted!");
+                Console.WriteLine($"CPU Halted at address {ProgramCounter:X}!");
             }
         }
 
@@ -129,7 +137,6 @@ namespace Anode
                     // Immediate
                     Read();
                     ProgramCounter++;
-                    AddressBus++;
                     inc_op_t = true;
                 }
             }
@@ -140,7 +147,6 @@ namespace Anode
                 {
                     Read();
                     ProgramCounter++;
-                    AddressBus++;
                 }
                 else if (t == 2)
                 {
@@ -152,7 +158,6 @@ namespace Anode
             else if (op_b == 3)
             {
                 // Absolute
-                // Zero page
                 if (t == 1)
                 {
                     // Hi
@@ -166,7 +171,6 @@ namespace Anode
                     ADD = DataBus;
                     Read();
                     ProgramCounter++;
-                    AddressBus++;
                 }
                 else if (t == 3)
                 {
@@ -268,7 +272,78 @@ namespace Anode
 
         void Branch_Instr()
         {
+            switch (t)
+            {
+                case 1:
+                    Read();
+                    ProgramCounter++;
+                    bool branch_condition = false;
+                    switch (op_a)
+                    {
+                        case 0:
+                            // BPL
+                            branch_condition = !flag_Negative;
+                            break;
+                        case 1:
+                            // BMI
+                            branch_condition = flag_Negative;
+                            break;
+                        case 2:
+                            // BVC
+                            branch_condition = !flag_Overflow;
+                            break;
+                        case 3:
+                            // BVS
+                            branch_condition = flag_Overflow;
+                            break;
+                        case 4:
+                            // BCC
+                            branch_condition = !flag_Carry;
+                            break;
+                        case 5:
+                            // BCS
+                            branch_condition = flag_Carry;
+                            break;
+                        case 6:
+                            // BNE
+                            branch_condition = !flag_Zero;
+                            break;
+                        case 7:
+                            // BEQ
+                            branch_condition = flag_Zero;
+                            break;
+                    }
+                    if (!branch_condition)
+                    {
+                        t = 255;
+                    }
+                    break;
+                case 2:
+                    signedTemp = DataBus;
+                    Read();
+                    if (signedTemp > 127)
+                    {
+                        signedTemp -= 256;
+                    }
 
+                    ushort BranchTemp = (ushort)(((ProgramCounter + signedTemp) & 0xFF) | (ProgramCounter & 0xFF00));
+                    signedTemp = (int)((ProgramCounter + signedTemp) - BranchTemp);
+
+                    ProgramCounter = BranchTemp;
+                    AddressBus = ProgramCounter;
+
+                    if (signedTemp == 0)
+                    {
+                        t = 255;
+                    }
+                    break;
+                case 3:
+                    Read();
+                    AddressBus = (ushort)(AddressBus + signedTemp);
+                    ProgramCounter = AddressBus;
+                    t = 255;
+                    break;
+            }
         }
 
         void Move_Instr()
@@ -315,6 +390,8 @@ namespace Anode
                         X = DataBus;
                         t = 255;
                     }
+                    flag_Zero = DataBus == 0;
+                    flag_Negative = DataBus > 127;
                 }
             }
         }
@@ -363,7 +440,7 @@ namespace Anode
                     // Store instructions
                     Store_Instr();
                 }
-                else if (op_c == 4)
+                else if (op_c == 0)
                 {
                     if (op_b == 4)
                     {
