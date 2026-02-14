@@ -1,0 +1,216 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Anode
+{
+    internal class Emulator
+    {
+        // CPU Regisers
+        ushort ProgramCounter;
+        byte X;
+        byte Y;
+        byte A; // Accumulator
+        byte SP; // Stack pointer
+        byte t;
+        byte opcode;
+        // Headers go here, I'm tired and I'm not adding them yet
+
+        ushort AddressBus;
+        byte DataBus;
+
+        // Clock
+        byte Master_Clock = 1;
+
+        // Storage
+        public byte[] RAM = new byte[0x800];
+        byte[] ROM = new byte[0x8000];
+        byte[] Header = new byte[0x10];
+
+        // Emulator specific
+        byte op_t;
+        bool inc_op_t;
+
+        public bool CPU_Halted;
+
+        byte op_a;
+        byte op_b;
+        byte op_c;
+
+        public string filepath;
+
+        public void Reset()
+        {
+            byte[] HeaderedROM = File.ReadAllBytes(filepath);
+            Array.Copy(HeaderedROM, Header, 0x10);
+            byte size = Header[4];
+            Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
+
+            byte PC_Lo = Read_Raw(0xFFFC);
+            byte PC_Hi = Read_Raw(0xFFFD);
+            ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
+
+            SP = 0xFD;
+        }
+
+        public void Run()
+        {
+            // Clocking
+            if (!CPU_Halted)
+            {
+                if ((Master_Clock - 1) % 4 == 0)
+                {
+                    // Emulate_PPU();
+                }
+
+                if (Master_Clock % 12 == 0)
+                {
+                    Emulate_CPU();
+                }
+
+                Master_Clock++;
+                if (Master_Clock > 12)
+                {
+                    Master_Clock = 1;
+                }
+            }
+        }
+
+        byte Read_Raw(ushort Address)
+        {
+            if (Address < 0x2000)
+            {
+                return RAM[Address & 0x7FF];
+            }
+            if (Address >= 0x8000)
+            {
+                return ROM[Address - 0x8000];
+            }
+            return 0;
+        }
+
+        void Read()
+        {
+            DataBus = Read_Raw(AddressBus);
+        }
+
+        void Write_Raw(ushort Address, byte Value)
+        {
+
+        }
+
+        void Write()
+        {
+            Write_Raw(AddressBus, DataBus);
+        }
+
+        void RMW_Instr()
+        {
+
+        }
+
+        void Store_Instr()
+        {
+
+        }
+
+        void Branch_Instr()
+        {
+
+        }
+
+        void Move_Instr()
+        {
+
+        }
+
+        void Stack_Instr()
+        {
+
+        }
+
+        void General_Instr()
+        {
+            if ((op_b == 2 || op_b == 6) && (op_c == 0 || (op_c == 2 && op_a >= 4) || op_b == 6))
+            {
+                // Single byte instructions
+            }
+            else
+            {
+                // Internal memory execution
+            }
+        }
+
+        void Emulate_CPU()
+        {
+            if (t == 0)
+            {
+                inc_op_t = false;
+                // Increment addresses
+                ProgramCounter++;
+                AddressBus = ProgramCounter;
+                // Read next opcode
+                Read();
+                opcode = DataBus;
+                // Split it up, as this can be used to determine what to do
+                op_a = (byte)(opcode >> 5);
+                op_b = (byte)((opcode & 0x1C) >> 2);
+                op_c = (byte)(opcode & 0x3);
+            }
+            else
+            {
+                if ((op_c == 2 && (op_a < 4 || (op_a > 5 && (op_b & 1) == 1))) || (op_c == 1 && op_a == 7))
+                {
+                    // RMW instructions
+                    RMW_Instr();
+                }
+                else if (op_a == 4 && ((op_c == 1 && op_b != 2) || (op_b & 1) == 1))
+                {
+                    // Store instructions
+                    Store_Instr();
+                }
+                else if (op_c == 4)
+                {
+                    if (op_b == 4)
+                    {
+                        // Branches
+                        Branch_Instr();
+                    }
+                    else if ((op_b == 0 && op_a < 4) || (op_b == 3 && op_a > 1 && op_a < 4))
+                    {
+                        // Movement
+                        Move_Instr();
+                    }
+                    else if (op_b == 2 && op_a < 4)
+                    {
+                        // Stack instructions
+                        Stack_Instr();
+                    }
+                    else
+                    {
+                        // Single byte or internal execution
+                        General_Instr();
+                    }
+                }
+                else
+                {
+                    // Single byte or internal execution
+                    General_Instr();
+                }
+            }
+
+            // Increment cycle counters
+            t++;
+            if (inc_op_t) { t++; }
+
+            if (t > 20)
+            {
+                CPU_Halted = true;
+                Console.WriteLine($"Opcode {opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t exceeded 20.");
+            }
+        }
+    }
+}
