@@ -105,7 +105,10 @@ namespace Anode
 
         void Write_Raw(ushort Address, byte Value)
         {
-
+            if (Address < 0x2000)
+            {
+                RAM[Address & 0x7FF] = Value;
+            }
         }
 
         void Write()
@@ -167,7 +170,7 @@ namespace Anode
                 }
                 else if (t == 3)
                 {
-                    AddressBus = (byte)(ADD + (DataBus << 8));
+                    AddressBus = (ushort)((DataBus << 8) | ADD);
                     Read();
                     inc_op_t = true;
                 }
@@ -205,7 +208,62 @@ namespace Anode
 
         void Store_Instr()
         {
-
+            // Read addresses, this is different
+            if (!inc_op_t)
+            {
+                if (op_b == 1)
+                {
+                    // Zero page
+                    Read();
+                    ProgramCounter++;
+                    AddressBus = DataBus;
+                    inc_op_t = true;
+                }
+                else if (op_b == 3)
+                {
+                    // Absolute
+                    if (t == 1)
+                    {
+                        // Hi
+                        Read();
+                        ProgramCounter++;
+                        AddressBus++;
+                    }
+                    else if (t == 2)
+                    {
+                        // Lo
+                        ADD = DataBus;
+                        Read();
+                        ProgramCounter++;
+                        AddressBus = (ushort)((DataBus << 8) | ADD);
+                        inc_op_t = true;
+                    }
+                }
+            }
+            else
+            {
+                if (op_c == 0)
+                {
+                    // STY
+                    DataBus = Y;
+                    Write();
+                    t = 255;
+                }
+                else if (op_c == 1)
+                {
+                    // STA
+                    DataBus = A;
+                    Write();
+                    t = 255;
+                }
+                else if (op_c == 2)
+                {
+                    // STX
+                    DataBus = X;
+                    Write();
+                    t = 255;
+                }
+            }
         }
 
         void Branch_Instr()

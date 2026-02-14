@@ -35,6 +35,7 @@
             this.hardResetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.haltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.debugTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -69,7 +70,8 @@
             // 
             this.emulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.hardResetToolStripMenuItem,
-            this.haltToolStripMenuItem});
+            this.haltToolStripMenuItem,
+            this.debugTestToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
             this.emulationToolStripMenuItem.Text = "Emulation";
@@ -95,6 +97,13 @@
             this.pictureBox1.Size = new System.Drawing.Size(372, 346);
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
+            // 
+            // debugTestToolStripMenuItem
+            // 
+            this.debugTestToolStripMenuItem.Name = "debugTestToolStripMenuItem";
+            this.debugTestToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.debugTestToolStripMenuItem.Text = "[Debug] Test";
+            this.debugTestToolStripMenuItem.Click += new System.EventHandler(this.debugTestToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -123,6 +132,7 @@
         private System.Windows.Forms.ToolStripMenuItem hardResetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem haltToolStripMenuItem;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ToolStripMenuItem debugTestToolStripMenuItem;
     }
 }
 

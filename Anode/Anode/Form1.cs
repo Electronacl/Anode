@@ -19,6 +19,7 @@ namespace Anode
         Emulator emulator;
         string rompath;
         Thread processThread;
+        bool testenabled = false;
         public Form1()
         {
             InitializeComponent();
@@ -61,6 +62,12 @@ namespace Anode
             {
                 emulator.Run();
             }
+
+            if (testenabled)
+            {
+                Tester tester = new Tester();
+                tester.Test_Ram(emulator);
+            }
         }
 
         private void haltToolStripMenuItem_Click(object sender, EventArgs e)
@@ -85,6 +92,12 @@ namespace Anode
                 processThread.IsBackground = true;
                 processThread.Start();
             }
+        }
+
+        private void debugTestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            testenabled = !testenabled;
+            Console.WriteLine($"Testing: {testenabled}");
         }
     }
 }
