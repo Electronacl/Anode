@@ -79,12 +79,11 @@ namespace Anode
                 if (processThread.ThreadState == ThreadState.Running)
                 {
                     processThread.Abort();
-
-                    processThread = new Thread(Run_Emulator);
-                    processThread.SetApartmentState(ApartmentState.STA);
-                    processThread.IsBackground = true;
-                    processThread.Start();
                 }
+                processThread = new Thread(Run_Emulator);
+                processThread.SetApartmentState(ApartmentState.STA);
+                processThread.IsBackground = true;
+                processThread.Start();
             }
         }
     }

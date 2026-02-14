@@ -17,6 +17,7 @@ namespace Anode
         byte SP; // Stack pointer
         byte t;
         byte opcode;
+        byte ADD;
         // Headers go here, I'm tired and I'm not adding them yet
 
         ushort AddressBus;
@@ -77,6 +78,11 @@ namespace Anode
                     Master_Clock = 1;
                 }
             }
+
+            if (CPU_Halted)
+            {
+                Console.WriteLine("CPU Halted!");
+            }
         }
 
         byte Read_Raw(ushort Address)
@@ -107,9 +113,94 @@ namespace Anode
             Write_Raw(AddressBus, DataBus);
         }
 
+        void Read_Operand()
+        {
+            if (op_b == 2 || (op_b == 0 && op_c != 1))
+            {
+                if (op_c == 2 && op_a < 4)
+                {
+                    CPU_Halted = true;
+                }
+                else
+                {
+                    // Immediate
+                    Read();
+                    ProgramCounter++;
+                    AddressBus++;
+                    inc_op_t = true;
+                }
+            }
+            else if (op_b == 1)
+            {
+                // Zero page
+                if (t == 1)
+                {
+                    Read();
+                    ProgramCounter++;
+                    AddressBus++;
+                }
+                else if (t == 2)
+                {
+                    AddressBus = DataBus;
+                    Read();
+                    inc_op_t = true;
+                }
+            }
+            else if (op_b == 3)
+            {
+                // Absolute
+                // Zero page
+                if (t == 1)
+                {
+                    // Hi
+                    Read();
+                    ProgramCounter++;
+                    AddressBus++;
+                }
+                else if (t == 2)
+                {
+                    // Lo
+                    ADD = DataBus;
+                    Read();
+                    ProgramCounter++;
+                    AddressBus++;
+                }
+                else if (t == 3)
+                {
+                    AddressBus = (byte)(ADD + (DataBus << 8));
+                    Read();
+                    inc_op_t = true;
+                }
+            }
+            else if (op_b == 4)
+            {
+                // Ind, Y
+                if (op_c == 2)
+                {
+                    // HLT
+                    CPU_Halted = true;
+                }
+            }
+        }
+
         void RMW_Instr()
         {
+            if (op_c != 1 && op_b == 2 && t == 1)
+            {
+                // Accumulator instruction
+                DataBus = A;
+                inc_op_t = true;
+                op_t = 1;
+            }
+            
+            if (!inc_op_t)
+            {
+                Read_Operand();
+            }
+            else
+            {
 
+            }
         }
 
         void Store_Instr()
@@ -132,15 +223,55 @@ namespace Anode
 
         }
 
+        void Single_Byte_Instr()
+        {
+            Read(); // Dummy Read
+        }
+
+        void Internal_Mem_Instr()
+        {
+            if (!inc_op_t)
+            {
+                Read_Operand();
+            }
+            else
+            {
+                if (op_a == 5)
+                {
+                    // Load instruction
+                    if (op_c == 0)
+                    {
+                        // LDY
+                        Y = DataBus;
+                        t = 255;
+                    }
+                    else if (op_c == 1)
+                    {
+                        // LDA
+                        A = DataBus;
+                        t = 255;
+                    }
+                    else if (op_c == 2)
+                    {
+                        // LDX
+                        X = DataBus;
+                        t = 255;
+                    }
+                }
+            }
+        }
+
         void General_Instr()
         {
             if ((op_b == 2 || op_b == 6) && (op_c == 0 || (op_c == 2 && op_a >= 4) || op_b == 6))
             {
                 // Single byte instructions
+                Single_Byte_Instr();
             }
             else
             {
                 // Internal memory execution
+                Internal_Mem_Instr();
             }
         }
 
@@ -148,13 +279,15 @@ namespace Anode
         {
             if (t == 0)
             {
+                op_t = 0; // 1st instr on 1
                 inc_op_t = false;
-                // Increment addresses
-                ProgramCounter++;
-                AddressBus = ProgramCounter;
                 // Read next opcode
+                AddressBus = ProgramCounter;
                 Read();
                 opcode = DataBus;
+                // Increment addresses
+                ProgramCounter++;
+                AddressBus++;
                 // Split it up, as this can be used to determine what to do
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
@@ -204,7 +337,7 @@ namespace Anode
 
             // Increment cycle counters
             t++;
-            if (inc_op_t) { t++; }
+            if (inc_op_t) { op_t++; }
 
             if (t > 20)
             {
