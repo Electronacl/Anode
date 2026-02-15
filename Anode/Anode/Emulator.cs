@@ -63,6 +63,7 @@ namespace Anode
             ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
 
             SP = 0xFD;
+            flag_InterruptDisable = true;
         }
 
         public void Run()
@@ -122,6 +123,20 @@ namespace Anode
         void Write()
         {
             Write_Raw(AddressBus, DataBus);
+        }
+
+        void Push()
+        {
+            AddressBus = (ushort)(0x100 + SP);
+            Write();
+            SP--;
+        }
+
+        void Pull()
+        {
+            SP++;
+            AddressBus = (ushort)(0x100 + SP);
+            Read();
         }
 
         void Read_Operand()
@@ -348,12 +363,114 @@ namespace Anode
 
         void Move_Instr()
         {
+            if (op_c == 0)
+            {
+                switch (op_a)
+                {
+                    case 0:
+                        // BRK
+                        break;
+                    case 1:
+                        // JSR
+                        switch (t)
+                        {
+                            case 1:
+                                Read();
+                                ProgramCounter++;
+                                ADD = DataBus;
+                                break;
+                            case 2:
+                                AddressBus = (ushort)(0x100 + SP);
+                                Read();
+                                break;
+                            case 3:
+                                DataBus = (byte)(ProgramCounter >> 8);
+                                Push();
+                                break;
+                            case 4:
+                                DataBus = (byte)(ProgramCounter);
+                                Push();
+                                break;
+                            case 5:
+                                AddressBus = ProgramCounter;
+                                Read();
+                                ProgramCounter = (ushort)((DataBus << 8) | ADD);
+                                t = 255;
+                                break;
+                        }
+                        
+                        break;
+                    case 2:
+                        // RTI
+                        break;
+                    case 3:
+                        // RTS
+                        switch (t)
+                        {
+                            case 1:
+                                Read();
+                                break;
+                            case 2:
+                                ProgramCounter = (ushort)(SP + 0x100);
+                                Read();
+                                break;
+                            case 3:
+                                Pull();
+                                ADD = DataBus;
+                                break;
+                            case 4:
+                                Pull();
+                                ProgramCounter = (ushort)((DataBus << 8) | ADD);
+                                break;
+                            case 5:
+                                AddressBus = ProgramCounter;
+                                Read();
+                                ProgramCounter++;
+                                t = 255;
+                                break;
 
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                // JMP
+            }
         }
 
         void Stack_Instr()
         {
-
+            if ((op_a & 1) == 0)
+            {
+                // Push instruction
+                if ((op_a & 2) == 0)
+                {
+                    // PHP
+                }
+                else
+                {
+                    // PHA
+                    DataBus = A;
+                    t = 255;
+                }
+                Push();
+            }
+            else
+            {
+                Pull();
+                // Pull instruction
+                if ((op_a & 2) == 0)
+                {
+                    // PLP
+                }
+                else
+                {
+                    // PLA
+                    A = DataBus;
+                    t = 255;
+                }
+            }
         }
 
         void Single_Byte_Instr()
