@@ -59,6 +59,8 @@ namespace Anode
         string this_trace = "";
         StreamWriter tracelog;
 
+
+        // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
         static String[] OpCodeNames =
         {
             "BRK", "ORA", "HLT", "SLO", "NOP", "ORA", "ASL", "SLO", "PHP", "ORA", "ASL", "ANC", "NOP", "ORA", "ASL", "SLO",
@@ -1032,6 +1034,10 @@ namespace Anode
                 AddressBus = ProgramCounter;
                 Read();
                 opcode = DataBus;
+                if (logging)
+                {
+                    Tracelogger(opcode);
+                }
                 // Increment addresses
                 ProgramCounter++;
                 AddressBus++;
@@ -1039,10 +1045,6 @@ namespace Anode
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
                 op_c = (byte)(opcode & 0x3);
-                if (logging)
-                {
-                    Tracelogger(opcode);
-                }
             }
             else
             {
