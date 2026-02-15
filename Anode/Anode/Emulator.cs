@@ -205,11 +205,40 @@ namespace Anode
 
         void Read_Operand()
         {
-            if (op_b == 2 || (op_b == 0 && op_c != 1))
+            if (op_b == 2 || op_b == 0)
             {
                 if (op_c == 2 && op_a < 4)
                 {
                     CPU_Halted = true;
+                }
+                else if (op_c == 1 && op_b == 0)
+                {
+                    // X, Indirect
+                    switch (t)
+                    {
+                        case 1:
+                            Read();
+                            ProgramCounter++;
+                            AddressBus = DataBus;
+                            break;
+                        case 2:
+                            Read(); // Dummy Read
+                            AddressBus = (byte)(AddressBus + X);
+                            break;
+                        case 3:
+                            Read();
+                            ADD = DataBus;
+                            AddressBus = (byte)(AddressBus + 1);
+                            break;
+                        case 4:
+                            Read();
+                            AddressBus = (ushort)((DataBus << 8) | ADD);
+                            break;
+                        case 5:
+                            Read();
+                            inc_op_t = true;
+                            break;
+                    }
                 }
                 else
                 {
@@ -222,49 +251,166 @@ namespace Anode
             else if (op_b == 1)
             {
                 // Zero page
-                if (t == 1)
+                switch (t)
                 {
-                    Read();
-                    ProgramCounter++;
-                }
-                else if (t == 2)
-                {
-                    AddressBus = DataBus;
-                    Read();
-                    inc_op_t = true;
+                    case 1:
+                        Read();
+                        ProgramCounter++;
+                        break;
+                    case 2:
+                        AddressBus = DataBus;
+                        Read();
+                        inc_op_t = true;
+                        break;
                 }
             }
             else if (op_b == 3)
             {
                 // Absolute
-                if (t == 1)
+                switch (t)
                 {
-                    // Hi
-                    Read();
-                    ProgramCounter++;
-                    AddressBus++;
-                }
-                else if (t == 2)
-                {
-                    // Lo
-                    ADD = DataBus;
-                    Read();
-                    ProgramCounter++;
-                }
-                else if (t == 3)
-                {
-                    AddressBus = (ushort)((DataBus << 8) | ADD);
-                    Read();
-                    inc_op_t = true;
+                    case 1:
+                        // Hi
+                        Read();
+                        ProgramCounter++;
+                        AddressBus++;
+                        break;
+                    case 2:
+                        // Lo
+                        ADD = DataBus;
+                        Read();
+                        ProgramCounter++;
+                        break;
+                    case 3:
+                        AddressBus = (ushort)((DataBus << 8) | ADD);
+                        Read();
+                        inc_op_t = true;
+                        break;
                 }
             }
             else if (op_b == 4)
             {
-                // Ind, Y
                 if (op_c == 2)
                 {
                     // HLT
                     CPU_Halted = true;
+                }
+                else
+                {
+                    // Indirect, Y
+                    switch (t)
+                    {
+                        case 1:
+                            Read();
+                            ProgramCounter++;
+                            AddressBus = DataBus;
+                            break;
+                        case 2:
+                            Read();
+                            AddressBus = (byte)(AddressBus + 1);
+                            ADD = DataBus;
+                            break;
+                        case 3:
+                            Read();
+                            AddressBus = (ushort)((DataBus << 8) | ADD);
+                            break;
+                        case 4:
+                            ushort AddressTemp = (ushort)(AddressBus + Y);
+                            AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
+                            if (AddressTemp != AddressBus)
+                            {
+                                signedTemp = (AddressTemp - AddressBus);
+                            }
+                            else
+                            {
+                                inc_op_t = true;
+                                t = 5;
+                            }
+                            Read();
+                            break;
+                        case 5:
+                            AddressBus = (ushort)(AddressBus + signedTemp);
+                            Read();
+                            inc_op_t = true;
+                            break;
+                    }
+                }
+            }
+            else if (op_b == 5)
+            {
+                switch (t)
+                {
+                    case 1:
+                        Read();
+                        ProgramCounter++;
+                        break;
+                    case 2:
+                        AddressBus = DataBus;
+                        Read();
+                        if (op_c < 3 || !(op_a == 4 || op_a == 5))
+                        {
+                            // Zero Page, X
+                            AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + X));
+                        }
+                        else
+                        {
+                            // Zero Page, Y
+                            AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + Y));
+                        }
+                        break;
+                    case 3:
+                        Read();
+                        inc_op_t = true;
+                        break;
+                }
+                
+            }
+            else if (op_b == 6 || op_b == 7) // No.
+            {
+                switch (t)
+                {
+                    case 1:
+                        // Hi
+                        Read();
+                        ProgramCounter++;
+                        AddressBus++;
+                        break;
+                    case 2:
+                        // Lo
+                        ADD = DataBus;
+                        Read();
+                        ProgramCounter++;
+                        break;
+                    case 3:
+                        AddressBus = (ushort)((DataBus << 8) | ADD);
+                        ushort AddressTemp;
+                        if ((op_c < 2 || !(op_a == 4 || op_a == 5)) && op_b == 7)
+                        {
+                            // Absolute, X
+                            AddressTemp = (ushort)(AddressBus + X);
+                        }
+                        else
+                        {
+                            // Absolute, Y
+                            AddressTemp = (ushort)(AddressBus + Y);
+                        }
+                        AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
+                        if (AddressTemp != AddressBus)
+                        {
+                            signedTemp = (AddressTemp - AddressBus);
+                        }
+                        else
+                        {
+                            inc_op_t = true;
+                            t = 4;
+                        }
+                        Read();
+                        break;
+                    case 4:
+                        AddressBus = (ushort)(AddressBus + signedTemp);
+                        Read();
+                        inc_op_t = true;
+                        break;
                 }
             }
         }
@@ -373,35 +519,158 @@ namespace Anode
         void Store_Instr()
         {
             // Read addresses, this is different
+            // A lot of code copied from read code. Replace with subroutines in the future?
             if (!inc_op_t)
             {
-                if (op_b == 1)
+                switch (op_b)
                 {
-                    // Zero page
-                    Read();
-                    ProgramCounter++;
-                    AddressBus = DataBus;
-                    inc_op_t = true;
-                }
-                else if (op_b == 3)
-                {
-                    // Absolute
-                    if (t == 1)
-                    {
-                        // Hi
+                    case 0:
+                        // X, Indirect
+                        switch (t)
+                        {
+                            case 1:
+                                Read();
+                                ProgramCounter++;
+                                AddressBus = DataBus;
+                                break;
+                            case 2:
+                                Read(); // Dummy Read
+                                AddressBus = (byte)(AddressBus + X);
+                                break;
+                            case 3:
+                                Read();
+                                ADD = DataBus;
+                                AddressBus = (byte)(AddressBus + 1);
+                                break;
+                            case 4:
+                                Read();
+                                AddressBus = (ushort)((DataBus << 8) | ADD);
+                                inc_op_t = true;
+                                break;
+                        }
+                        break;
+                    case 1:
+                        // Zero page
                         Read();
                         ProgramCounter++;
-                        AddressBus++;
-                    }
-                    else if (t == 2)
-                    {
-                        // Lo
-                        ADD = DataBus;
-                        Read();
-                        ProgramCounter++;
-                        AddressBus = (ushort)((DataBus << 8) | ADD);
+                        AddressBus = DataBus;
                         inc_op_t = true;
-                    }
+                        break;
+                    case 3:
+                        // Absolute
+                        if (t == 1)
+                        {
+                            // Hi
+                            Read();
+                            ProgramCounter++;
+                            AddressBus++;
+                        }
+                        else if (t == 2)
+                        {
+                            // Lo
+                            ADD = DataBus;
+                            Read();
+                            ProgramCounter++;
+                            AddressBus = (ushort)((DataBus << 8) | ADD);
+                            inc_op_t = true;
+                        }
+                        break;
+                    case 4:
+                        // Indirect, Y
+                        switch (t)
+                        {
+                            case 1:
+                                Read();
+                                ProgramCounter++;
+                                AddressBus = DataBus;
+                                break;
+                            case 2:
+                                Read();
+                                AddressBus = (byte)(AddressBus + 1);
+                                ADD = DataBus;
+                                break;
+                            case 3:
+                                Read();
+                                AddressBus = (ushort)((DataBus << 8) | ADD);
+                                break;
+                            case 4:
+                                ushort AddressTemp = (ushort)(AddressBus + Y);
+                                AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
+                                signedTemp = (AddressTemp - AddressBus);
+                                Read();
+                                AddressBus = (ushort)(AddressBus + signedTemp); // Shortcut, what could possibly go wrong?
+                                inc_op_t = true;
+                                break;
+                        }
+                        break;
+                    case 5:
+                        switch (t)
+                        {
+                            case 1:
+                                Read();
+                                ProgramCounter++;
+                                break;
+                            case 2:
+                                AddressBus = DataBus;
+                                Read();
+                                if (op_c < 3 || !(op_a == 4 || op_a == 5))
+                                {
+                                    // Zero Page, X
+                                    AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + X));
+                                }
+                                else
+                                {
+                                    // Zero Page, Y
+                                    AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + Y));
+                                }
+                                inc_op_t = true;
+                                break;
+                        }
+                        break;
+                    case 6:
+                        switch (t)
+                        {
+                            case 1:
+                                // Hi
+                                Read();
+                                ProgramCounter++;
+                                AddressBus++;
+                                break;
+                            case 2:
+                                // Lo
+                                ADD = DataBus;
+                                Read();
+                                ProgramCounter++;
+                                break;
+                            case 3:
+                                AddressBus = (ushort)((DataBus << 8) | ADD);
+                                ushort AddressTemp;
+                                if ((op_c < 2 || !(op_a == 4 || op_a == 5)) && op_b == 7)
+                                {
+                                    // Absolute, X
+                                    AddressTemp = (ushort)(AddressBus + X);
+                                }
+                                else
+                                {
+                                    // Absolute, Y
+                                    AddressTemp = (ushort)(AddressBus + Y);
+                                }
+                                AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
+                                if (AddressTemp != AddressBus)
+                                {
+                                    signedTemp = (AddressTemp - AddressBus);
+                                }
+                                else
+                                {
+                                    inc_op_t = true;
+                                    t = 4;
+                                }
+                                Read();
+                                AddressBus = (ushort)(AddressBus + signedTemp); // Again, shortcut.
+                                inc_op_t = true;
+                                break;
+                        }
+                        break;
                 }
             }
             else
@@ -650,7 +919,7 @@ namespace Anode
                 {
                     if (op_a == 3)
                     {
-                        // Implied
+                        // Indirect
                         switch (t)
                         {
                             case 1:
@@ -661,6 +930,7 @@ namespace Anode
                             case 2:
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
+                                inc_op_t = true;
                                 break;
                         }
                     }
