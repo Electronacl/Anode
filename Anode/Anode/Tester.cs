@@ -17,11 +17,11 @@ namespace Anode
             { 0x550, 0x80 }
         };*/
         // 3_Branches & 4_TheStack
-        uint[,] ram_test = {
-            { 0, 1 }
-        };
-        // 5_Instructions1
         /*uint[,] ram_test = {
+            { 0, 1 }
+        };*/
+        // 5_Instructions1
+        uint[,] ram_test = {
             { 0, 0x02 },
             { 1, 0x01 },
             { 2, 0xfd },
@@ -35,7 +35,7 @@ namespace Anode
             { 10, 0x70 },
             { 11, 0x01 },
             { 12, 0x01 }
-        };*/
+        };
         // 6_Instructions2
         /*uint[,] ram_test = {
             { 0, 0x01 },

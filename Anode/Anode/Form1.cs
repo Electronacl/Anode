@@ -20,6 +20,7 @@ namespace Anode
         string rompath;
         Thread processThread;
         bool testenabled = false;
+        bool tracelogging = false;
         public Form1()
         {
             InitializeComponent();
@@ -57,6 +58,8 @@ namespace Anode
             // Setup emulator
             emulator = new Emulator();
             emulator.filepath = rompath;
+            emulator.logging = tracelogging;
+            emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
             emulator.Reset();
             while (!emulator.CPU_Halted)
             {
@@ -98,6 +101,12 @@ namespace Anode
         {
             testenabled = !testenabled;
             Console.WriteLine($"Testing: {testenabled}");
+        }
+
+        private void toggleTracelogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tracelogging = !tracelogging;
+            Console.WriteLine($"Tracelogging: {tracelogging}");
         }
     }
 }
