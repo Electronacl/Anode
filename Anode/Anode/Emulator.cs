@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,9 @@ namespace Anode
 {
     internal class Emulator
     {
-        // CPU Regisers
+        // PPU code from 100th coin's tutorial, I will refine it for accuuracy later but I need to just get this working atm
+
+        // ----- CPU Regisers
         ushort ProgramCounter;
         byte X;
         byte Y;
@@ -31,33 +34,103 @@ namespace Anode
         ushort AddressBus;
         byte DataBus;
 
-        // Clock
+        // ----- PPU Registers and render info
+        bool ppu_w; // Write Latch
+        ushort ppu_t; // Transfer Address
+        ushort ppu_v; // VRAM Address
+        byte ppu_x; // PPU X scroll
+
+        byte ppuDataBus;
+        ushort ppuAddressBus;
+
+        ushort ppuShiftRegister_patternL;
+        ushort ppuShiftRegister_patternH;
+        ushort ppuShiftRegister_attributeL;
+        ushort ppuShiftRegister_attributeH;
+
+        byte ppu8Step_patternLowBitPlane;
+        byte ppu8Step_patternHighBitPlane;
+        byte ppu8Step_attribute;
+        byte ppu8Step_temp;
+        byte ppu8Step_NextCharacter;
+
+        /*byte[] ppu_SpriteShiftRegisterL = new byte[8];
+        byte[] ppu_SpriteShiftRegisterH = new byte[8];
+
+        byte[] ppu_SpriteAttribute = new byte[8];
+        byte[] ppu_SpritePattern = new byte[8];
+        byte[] ppu_SpriteXposition = new byte[8];
+        byte[] ppu_SpriteYposition = new byte[8];*/
+
+        int ppuDot;
+        int ppuScanLine;
+        bool ppuVBlank;
+
+        ushort TempVRAMAddress;
+        byte PPUReadBuffer;
+
+        // ----- PPU Flags
+        int ppuNametableSelect;
+
+        bool ppuVRAMInc32Mode;
+        bool ppuSpritePatternTable;
+        bool ppuBGPatternTable;
+        bool ppuUse8x16Sprites;
+        bool ppuEnableNMI;
+
+        bool ppuMask_8pxMaskBG;
+        bool ppuMask_8pxMaskSprites;
+        bool ppuMask_RenderBG;
+        bool ppuMask_RenderSprites;
+
+        bool ppuStatusOverflow;
+        bool ppuStatusSprZeroHit;
+
+        // ----- NMI
+        bool NMILevelDetector;
+        bool DoNMI;
+
+        // ----- Clock
         byte Master_Clock = 1;
 
-        // Storage
+        // ----- Storage
         public byte[] RAM = new byte[0x800];
         byte[] ROM = new byte[0x8000];
+        byte[] CHRData = new byte[0x2000];
         byte[] Header = new byte[0x10];
+        byte[] VRAM = new byte[0x800];
+        byte[] PaletteRAM = new byte[32];
+        byte[] OAM = new byte[0x100]; // Object Attribute Memory
+        byte[] SecondaryOAM = new byte[0x20];
 
-        // Emulator specific
+        // ----- Emulator specific
+        // Timing
         byte op_t;
         bool inc_op_t;
         int signedTemp;
 
         public bool CPU_Halted;
 
+        // Opcode splits
         byte op_a;
         byte op_b;
         byte op_c;
 
+        // Accumulator, badly named but resharper brokey
         bool a_indexed = false;
 
+        // Paths and logging
         public string filepath;
         public string tracepath;
         public bool logging;
 
         string this_trace = "";
         StreamWriter tracelog;
+
+        // PPU output data
+        public Bitmap output;
+        bool NTSC = true; // PAL or NTSC?
+        public bool frame_Ready = false;
 
 
         // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
@@ -80,6 +153,18 @@ namespace Anode
             "CPX", "SBC", "NOP", "ISC", "CPX", "SBC", "INC", "ISC", "INX", "SBC", "NOP", "SBC", "CPX", "SBC", "INC", "ISC",
             "BEQ", "SBC", "HLT", "ISC", "NOP", "SBC", "INC", "ISC", "SED", "SBC", "NOP", "ISC", "NOP", "SBC", "INC", "ISC",
         };
+
+        // PPU Palette, from 100th Coin's tutorial. I will probably keep this as the NTSC variant, but it'll be temporary for PAL
+        // as I'll use my own if I figure out how to.
+        byte[] Pal = {
+            0x65, 0x65, 0x65, 0x00, 0x2A, 0x84, 0x15, 0x13, 0xA2, 0x3A, 0x01, 0x9E, 0x59, 0x00, 0x7A, 0x6A, 0x00, 0x3E, 0x68, 0x08, 0x00, 0x53, 0x1D, 0x00, 0x32, 0x34, 0x00, 0x0D, 0x46, 0x00, 0x00, 0x4F, 0x00, 0x00, 0x4C, 0x09, 0x00, 0x3F, 0x4B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0xAE, 0xAE, 0xAE, 0x17, 0x5F, 0xD6, 0x43, 0x41, 0xFF, 0x75, 0x29, 0xFA, 0x9E, 0x1D, 0xCA, 0xB4, 0x20, 0x7B, 0xB1, 0x33, 0x22, 0x96, 0x4E, 0x00, 0x6A, 0x6C, 0x00, 0x39, 0x84, 0x00, 0x0F, 0x90, 0x00, 0x00, 0x8D, 0x33, 0x00, 0x7B, 0x8C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0xFE, 0xFE, 0xFE, 0x66, 0xAF, 0xFF, 0x93, 0x90, 0xFF, 0xC5, 0x78, 0xFF, 0xEE, 0x6C, 0xFF, 0xFF, 0x6F, 0xCA, 0xFF, 0x82, 0x71, 0xE6, 0x9E, 0x25, 0xBA, 0xBC, 0x00, 0x88, 0xD5, 0x01, 0x5E, 0xE1, 0x32, 0x47, 0xDD, 0x82, 0x4A, 0xCB, 0xDC, 0x4E, 0x4E, 0x4E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0xFE, 0xFE, 0xFE, 0xC0, 0xDE, 0xFF, 0xD2, 0xD1, 0xFF, 0xE7, 0xC7, 0xFF, 0xF8, 0xC2, 0xFF, 0xFF, 0xC3, 0xE9, 0xFF, 0xCB, 0xC4, 0xF5, 0xD7, 0xA5, 0xE2, 0xE3, 0x94, 0xCE, 0xED, 0x96, 0xBC, 0xF2, 0xAA, 0xB3, 0xF1, 0xCB, 0xB4, 0xE9, 0xF0, 0xB6, 0xB6, 0xB6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        };
+
+        Color[] Palette = new Color[64];
+        int pal_i = 0;
 
         void Tracelogger(byte opcode)
         {
@@ -112,6 +197,11 @@ namespace Anode
             byte size = Header[4];
             Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
 
+            if (Header[5] != 0)
+            {
+                Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
+            }
+
             byte PC_Lo = Read_Raw(0xFFFC);
             byte PC_Hi = Read_Raw(0xFFFD);
             ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
@@ -123,6 +213,16 @@ namespace Anode
             {
                 tracelog = new StreamWriter(tracepath);
             }
+
+            if (NTSC)
+            {
+                output = new Bitmap(32 * 8, 30 * 8);
+            }
+
+            for (int j = 0; j < 64; j++)
+            {
+                Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
+            }
         }
 
         public void Run()
@@ -132,7 +232,7 @@ namespace Anode
             {
                 if ((Master_Clock - 1) % 4 == 0)
                 {
-                    // Emulate_PPU();
+                    Emulate_PPU();
                 }
 
                 if (Master_Clock % 12 == 0)
@@ -150,12 +250,21 @@ namespace Anode
             if (CPU_Halted)
             {
                 Console.WriteLine($"CPU Halted at address {ProgramCounter:X}!");
+                //MessageBox.Show($"Encountered a halt instruction (opcode {opcode:X}) at {ProgramCounter:X}",
+                //    "NES Error: Halted", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 if (logging)
                 {
                     tracelog.Close();
                     Console.WriteLine("Tracelog saved!");
                 }
+                Render();
+                // Also make pixel red
             }
+        }
+
+        void Render()
+        {
+            frame_Ready = true;
         }
 
         byte Read_Raw(ushort Address)
@@ -164,9 +273,47 @@ namespace Anode
             {
                 return RAM[Address & 0x7FF];
             }
-            if (Address >= 0x8000)
+            else if (Address < 0x4000)
             {
-                return ROM[Address - 0x8000];
+                // Read from PPU
+                Address &= 0x2007;
+                switch (Address)
+                {
+                    case 0x2007:
+                        byte temp = PPUReadBuffer;
+
+                        if (ppu_v > 0x3F00)
+                        {
+                            temp = ReadPPU(ppu_v);
+                        }
+                        else
+                        {
+                            PPUReadBuffer = ReadPPU(ppu_v);
+                        }
+
+                        ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
+                        ppu_v &= 0x3FFF;
+                        return temp;
+                    case 0x2002:
+                        byte ppustatus = 0;
+                        ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
+                        /*ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
+                        ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);*/
+                        ppustatus |= 0x40;
+
+                        ppuVBlank = false;
+                        ppu_w = false;
+                        return ppustatus;
+                    case 0x2004:
+                        return 0;
+                    default:
+                        Console.WriteLine($"Unknown PPU read - {Address:X}");
+                        return 0;
+                }
+            }
+            else if (Address >= 0x8000)
+            {
+                return ROM[(Address - 0x8000) & ((Header[4] * 0x4000) - 1)];
             }
             return 0;
         }
@@ -182,11 +329,144 @@ namespace Anode
             {
                 RAM[Address & 0x7FF] = Value;
             }
+            else if (Address < 0x4000)
+            {
+                // Write to PPU
+                Address &= 0x2007; // Mirroring
+                switch (Address)
+                {
+                    case 0x2000: // PPUCTRL
+                        ppuNametableSelect = Value & 3;
+                        ppuVRAMInc32Mode = (Value & 4) != 0;
+                        ppuSpritePatternTable = (Value & 8) != 0;
+                        ppuBGPatternTable = (Value & 0x10) != 0;
+                        ppuUse8x16Sprites = (Value & 0x20) != 0;
+                        ppuEnableNMI = (Value & 0x80) != 0;
+                        break;
+                    case 0x2001: // PPUMASK
+                        ppuMask_8pxMaskBG = (Value & 2) != 0;
+                        ppuMask_8pxMaskSprites = (Value & 4) != 0;
+                        ppuMask_RenderBG = (Value & 8) != 0;
+                        ppuMask_RenderSprites = (Value & 0x10) != 0;
+                        break;
+                    case 0x2002: // PPUSTATUS
+                        Console.WriteLine("PPUSTATUS not implemented");
+                        break;
+                    case 0x2003: // OAMADDR
+                        Console.WriteLine("OAMADDR not implemented");
+                        // ppuOAMAddress = Value;
+                        break;
+                    case 0x2004: // OAMDATA
+                        Console.WriteLine("OAMDATA not implemented");
+                        break;
+                    case 0x2005: // PPUSCROLL
+                        if (!ppu_w)
+                        {
+                            ppu_x = (byte)(Value & 7);
+                            TempVRAMAddress = (ushort)((TempVRAMAddress & 0b0111111111100000) | (Value >> 3));
+                        }
+                        else
+                        {
+                            ppu_t = (ushort)((TempVRAMAddress & 0b0000110000011111) | (((Value & 0xF8) << 2) | ((Value & 7) << 12)));
+                        }
+                        ppu_w = !ppu_w;
+                        break;
+                    case 0x2006: // PPUADDR
+                        if (!ppu_w)
+                        {
+                            // First write sets high byte
+                            TempVRAMAddress = (ushort)((Value & 0x3F) << 8);
+                        }
+                        else
+                        {
+                            // Then second sets the low
+                            ppu_v = (ushort)(TempVRAMAddress | Value);
+                            ppu_t = ppu_v;
+                        }
+                        ppu_w = !ppu_w;
+                        break;
+                    case 0x2007: // PPUDATA
+                        if (ppu_v < 0x2000)
+                        {
+                            // Write to pattern table if supported by the cartridge
+                            if (Header[5] == 0)
+                            {
+                                CHRData[ppu_v] = Value;
+                            }
+                            // Else, it's read only, and nothing happens.
+                        }
+                        else if (ppu_v < 0x3F00)
+                        {
+                            // Write to nametables
+                            if ((Header[6] & 1) == 0)
+                            {
+                                // Horizontal mirror
+                                VRAM[(ppu_v & 0x3FF) | (ppu_v & 0x800) >> 1] = Value;
+                            }
+                            else
+                            {
+                                // Vertical mirror
+                                VRAM[ppu_v & 0x7FF] = Value;
+                            }
+                        }
+                        else
+                        {
+                            // Write to palette RAM
+                            if ((ppu_v & 3) == 0)
+                            {
+                                PaletteRAM[ppu_v & 0x0F] = Value;
+                            }
+                            else
+                            {
+                                PaletteRAM[ppu_v & 0x1F] = Value;
+                            }
+                        }
+
+                        ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
+                        ppu_v &= 0x3FFF;
+                        break;
+                }
+            }
         }
 
         void Write()
         {
             Write_Raw(AddressBus, DataBus);
+        }
+
+        byte ReadPPU(ushort Address)
+        {
+            if (Address < 0x2000)
+            {
+                // Read from pattern table
+                return CHRData[Address];
+            }
+            else if (Address < 0x3F00)
+            {
+                // Read from nametables
+                if ((Header[6] & 1) == 0)
+                {
+                    // Horizontal mirror
+                    return VRAM[(Address & 0x3FF) | (Address & 0x800) >> 1];
+                }
+                else
+                {
+                    // Vertical mirror
+                    return VRAM[Address & 0x7FF];
+                }
+            }
+            else
+            {
+                // Read palette RAM
+                if ((Address & 3) == 0)
+                {
+                    return PaletteRAM[Address & 0x0F];
+                }
+                else
+                {
+                    return PaletteRAM[Address & 0x1F];
+                }
+            }
         }
 
         void Push()
@@ -210,6 +490,7 @@ namespace Anode
                 if (op_c == 2 && op_a < 4)
                 {
                     CPU_Halted = true;
+                    Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
                 }
                 else if (op_c == 1 && op_b == 0)
                 {
@@ -294,6 +575,7 @@ namespace Anode
                 {
                     // HLT
                     CPU_Halted = true;
+                    Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
                 }
                 else
                 {
@@ -786,9 +1068,12 @@ namespace Anode
                             case 1:
                                 // Dummy read
                                 Read();
+                                if (!DoNMI)
+                                {
+                                    ProgramCounter++;
+                                }
                                 break;
                             case 2:
-                                ProgramCounter++;
                                 DataBus = (byte)(ProgramCounter >> 8);
                                 Push();
                                 break;
@@ -802,21 +1087,26 @@ namespace Anode
                                 DataBus |= (byte)(flag_Zero ? 2 : 0);
                                 DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
                                 DataBus |= (byte)(flag_Decimal ? 8 : 0);
-                                DataBus |= 0x10;
+                                DataBus += (byte)(DoNMI ? 0 : 0x10);
                                 DataBus |= 0x20;
                                 DataBus |= (byte)(flag_Overflow ? 0x40 : 0);
                                 DataBus |= (byte)(flag_Negative ? 0x80 : 0);
                                 Push();
                                 break;
                             case 5:
-                                AddressBus = 0xFFFE;
+                                // For NMI, FFFA
+                                // For RES, FFFC
+                                // For BRK, FFFE
+                                AddressBus = (ushort)(DoNMI ? 0xFFFA : 0xFFFE);
                                 Read();
                                 ADD = DataBus;
                                 break;
                             case 6:
                                 AddressBus++;
                                 Read();
+                                AddressBus = (ushort)((DataBus << 8) | ADD);
                                 ProgramCounter = (ushort)((DataBus << 8) | ADD);
+                                DoNMI = false;
                                 t = 255;
                                 break;
                         }
@@ -1296,21 +1586,39 @@ namespace Anode
 
         void Emulate_CPU()
         {
+            bool PreviousNMILevelDetector = NMILevelDetector;
+            NMILevelDetector = ppuEnableNMI && ppuVBlank;
+            if (!PreviousNMILevelDetector && NMILevelDetector)
+            {
+                DoNMI = true;
+            }
+
             if (t == 0)
             {
                 op_t = 0; // 1st instr on 1
                 inc_op_t = false;
                 // Read next opcode
                 AddressBus = ProgramCounter;
-                Read();
-                opcode = DataBus;
-                if (logging)
+                if (!DoNMI)
                 {
-                    Tracelogger(opcode);
+                    Read();
+                    opcode = DataBus;
+                    if (logging)
+                    {
+                        Tracelogger(opcode);
+                    }
+                    // Increment addresses
+                    ProgramCounter++;
+                    AddressBus++;
                 }
-                // Increment addresses
-                ProgramCounter++;
-                AddressBus++;
+                else
+                {
+                    opcode = 0x00;
+                    if (logging)
+                    {
+                        Tracelogger(opcode);
+                    }
+                }
                 // Split it up, as this can be used to determine what to do
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
@@ -1365,8 +1673,185 @@ namespace Anode
             if (t > 20)
             {
                 CPU_Halted = true;
-                Console.WriteLine($"Opcode {opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t exceeded 20.");
+                Console.WriteLine($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.");
+                MessageBox.Show($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20. This error should not occur, and should be reported to the developer.", 
+                    "CPU Emulation Error: Instruction Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        void Emulate_PPU()
+        {
+            // Again, from my old emulator & the tutorial
+            // I need to switch all 0b values for 0x values.
+
+            if (ppuDot == 1 && ppuScanLine == 241)
+            {
+                Render();
+                ppuVBlank = true;
+            }
+            else if (ppuDot == 1 && ppuScanLine == 261)
+            {
+                ppuVBlank = false;
+                ppuStatusOverflow = false;
+                ppuStatusSprZeroHit = false;
+            }
+
+            if (ppuScanLine < 240 || ppuScanLine == 261)
+            {
+                // Visible scanline or pre-render line
+                if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
+                {
+                    // Visible pixel or preparing next scanline
+                    if (ppuMask_RenderBG || ppuMask_RenderSprites)
+                    {
+                        byte cycleTick;
+                        cycleTick = (byte)((ppuDot - 1) & 7);
+                        switch (cycleTick)
+                        {
+                            case 0:
+                                ppuShiftRegister_patternL = (ushort)((ppuShiftRegister_patternL & 0xFF00) | ppu8Step_patternLowBitPlane);
+                                ppuShiftRegister_patternH = (ushort)((ppuShiftRegister_patternH & 0xFF00) | ppu8Step_patternHighBitPlane);
+                                ppuShiftRegister_attributeL = (ushort)((ppuShiftRegister_attributeL & 0xFF00) | ((ppu8Step_attribute & 1) == 1 ? 0xFF : 0));
+                                ppuShiftRegister_attributeH = (ushort)((ppuShiftRegister_attributeH & 0xFF00) | ((ppu8Step_attribute & 2) == 2 ? 0xFF : 0));
+                                ppuAddressBus = (ushort)(0x2000 + (ppu_v & 0x0FFF));
+                                ppu8Step_temp = ReadPPU(ppuAddressBus);
+                                break;
+                            case 1:
+                                ppu8Step_NextCharacter = ppu8Step_temp;
+                                break;
+                            case 2:
+                                ppuAddressBus = (ushort)(0x23C0 | (ppu_v & 0xC00) | ((ppu_v >> 4) & 0x38) | ((ppu_v >> 2) & 0x07));
+                                ppu8Step_temp = ReadPPU(ppuAddressBus);
+                                break;
+                            case 3:
+                                ppu8Step_attribute = ppu8Step_temp;
+                                // Determine which tile attribute data is for
+                                if ((ppu_v & 3) >= 2) // Right tile
+                                {
+                                    ppu8Step_attribute = (byte)(ppu8Step_attribute >> 2);
+                                }
+                                if ((((ppu_v & 0b0000001111100000) >> 5) & 3) >= 2) // Bottom tile
+                                {
+                                    ppu8Step_attribute = (byte)(ppu8Step_attribute >> 4);
+                                }
+                                ppu8Step_attribute = (byte)(ppu8Step_attribute & 3);
+                                break;
+                            case 4:
+                                ppuAddressBus = (ushort)(((ppu_v & 0b0111000000000000) >> 12) | ppu8Step_NextCharacter * 16 | (ppuBGPatternTable ? 0x1000 : 0));
+                                ppu8Step_temp = ReadPPU(ppuAddressBus);
+                                break;
+                            case 5:
+                                ppu8Step_patternLowBitPlane = ppu8Step_temp;
+                                ppuAddressBus += 8;
+                                break;
+                            case 6:
+                                ppu8Step_temp = ReadPPU(ppuAddressBus);
+                                break;
+                            case 7:
+                                ppu8Step_patternHighBitPlane = ppu8Step_temp;
+                                if ((ppu_v & 0x001F) == 31)
+                                {
+                                    ppu_v &= 0xFFE0; // Reset scroll
+                                    ppu_v ^= 0x0400; // Cross into next nametable
+                                }
+                                else
+                                {
+                                    ppu_v++;
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                if (ppuMask_RenderBG || ppuMask_RenderSprites)
+                {
+                    if (ppuScanLine < 240)
+                    {
+                        if (ppuDot == 256)
+                        {
+                            PPU_IncrementScrollY();
+                        }
+                        else if (ppuDot == 257)
+                        {
+                            PPU_ResetXScroll();
+                        }
+                    }
+                    if (ppuDot >= 280 && ppuDot <= 304 && ppuScanLine == 261)
+                    {
+                        PPU_ResetYScroll();
+                    }
+                }
+            }
+
+            if (ppuScanLine < 240 && ppuDot > 0 && ppuDot <= 256)
+            {
+                byte PalHi = 0; // Colour palette
+                byte PalLow = 0; // Index in palette
+                if (ppuMask_RenderBG && (ppuDot > 8 || ppuMask_8pxMaskBG))
+                {
+                    byte col0 = (byte)((ppuShiftRegister_patternL >> (15 - ppu_x)) & 1);
+                    byte col1 = (byte)((ppuShiftRegister_patternH >> (15 - ppu_x)) & 1);
+                    PalLow = (byte)((col1 << 1) | col0);
+
+                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (15 - ppu_x)) & 1);
+                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (15 - ppu_x)) & 1);
+                    PalHi = (byte)((pal1 << 1) | pal0);
+
+                    if (PalLow == 0 && PalHi != 0)
+                    {
+                        PalHi = 0;
+                    }
+                }
+
+                Color outColour = Palette[PaletteRAM[PalHi * 4 + PalLow]];
+
+                output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
+            }
+
+            ppuDot++;
+            if (ppuDot > 341)
+            {
+                ppuDot = 0;
+                ppuScanLine++;
+                if (ppuScanLine > 261)
+                {
+                    ppuScanLine = 0;
+                }
+            }
+        }
+        void PPU_IncrementScrollY()
+        {
+            if ((ppu_v & 0x7000) != 0x7000)
+            {
+                ppu_v += 0x1000;
+            }
+            else
+            {
+                ppu_v &= 0x0FFF;
+                int y = (ppu_v & 0x03E0) >> 5;
+
+                if (y == 29)
+                {
+                    y = 0;
+                    ppu_v ^= 0x0800;
+                }
+                else
+                {
+                    y++;
+                    y &= 0x1F;
+                }
+                ppu_v = (ushort)((ppu_v & 0xFC1F) | (y << 5));
+            }
+        }
+
+        void PPU_ResetXScroll()
+        {
+            ppu_v = (ushort)((ppu_v & 0b0111101111100000) | (ppu_t & 0b0000010000011111));
+        }
+
+        void PPU_ResetYScroll()
+        {
+            ppu_v = (ushort)((ppu_v & 0b0000010000011111) | (ppu_t & 0b0111101111100000));
         }
     }
 }

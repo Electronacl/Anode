@@ -21,6 +21,7 @@ namespace Anode
         Thread processThread;
         bool testenabled = false;
         bool tracelogging = false;
+        PictureBox ScreenObject;
         public Form1()
         {
             InitializeComponent();
@@ -61,9 +62,31 @@ namespace Anode
             emulator.logging = tracelogging;
             emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
             emulator.Reset();
+            ScreenObject = pictureBox1;
             while (!emulator.CPU_Halted)
             {
                 emulator.Run();
+                if (emulator.frame_Ready)
+                {
+                    lock (ScreenObject)
+                    {
+                        if (pictureBox1.InvokeRequired)
+                        {
+                            pictureBox1.Invoke(new MethodInvoker(
+                                delegate ()
+                                {
+                                    pictureBox1.Image = emulator.output;
+                                    pictureBox1.Update();
+                                }));
+                        }
+                        else
+                        {
+                            pictureBox1.Image = emulator.output;
+                            pictureBox1.Update();
+                        }
+                        emulator.frame_Ready = false;
+                    }
+                }
             }
 
             if (testenabled)

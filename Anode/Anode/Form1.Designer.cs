@@ -34,9 +34,8 @@
             this.emulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hardResetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.haltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.debugTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -73,7 +72,6 @@
             this.emulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.hardResetToolStripMenuItem,
             this.haltToolStripMenuItem,
-            this.debugTestToolStripMenuItem,
             this.toggleTracelogToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
@@ -93,28 +91,21 @@
             this.haltToolStripMenuItem.Text = "Halt";
             this.haltToolStripMenuItem.Click += new System.EventHandler(this.haltToolStripMenuItem_Click);
             // 
-            // debugTestToolStripMenuItem
-            // 
-            this.debugTestToolStripMenuItem.Name = "debugTestToolStripMenuItem";
-            this.debugTestToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.debugTestToolStripMenuItem.Text = "[Debug] Test";
-            this.debugTestToolStripMenuItem.Click += new System.EventHandler(this.debugTestToolStripMenuItem_Click);
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
-            this.pictureBox1.TabIndex = 1;
-            this.pictureBox1.TabStop = false;
-            // 
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
             this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.toggleTracelogToolStripMenuItem.Text = "Toggle tracelog";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
+            this.pictureBox1.TabIndex = 1;
+            this.pictureBox1.TabStop = false;
             // 
             // Form1
             // 
@@ -124,7 +115,7 @@
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "Form1";
             this.menuStrip1.ResumeLayout(false);
@@ -144,7 +135,6 @@
         private System.Windows.Forms.ToolStripMenuItem hardResetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem haltToolStripMenuItem;
         private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.ToolStripMenuItem debugTestToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleTracelogToolStripMenuItem;
     }
 }
