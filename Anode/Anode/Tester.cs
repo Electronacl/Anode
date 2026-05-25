@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Anode
 {
@@ -110,6 +111,8 @@ namespace Anode
 
             string result = fails > 0 ? "failed" : "passed";
             Console.WriteLine($"Test {result}, with {passes} pass(es) and {fails} fail(s)");
+            MessageBox.Show($"Test {result}, with {passes} pass(es) and {fails} fail(s).\nMore info in console",
+                "Test results", MessageBoxButtons.OK, MessageBoxIcon.Stop);
         }
     }
 }

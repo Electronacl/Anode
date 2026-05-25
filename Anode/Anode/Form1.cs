@@ -57,6 +57,10 @@ namespace Anode
         void Run_Emulator()
         { 
             // Setup emulator
+
+            // Personal debug only
+            // testenabled = true;
+
             emulator = new Emulator();
             emulator.filepath = rompath;
             emulator.logging = tracelogging;

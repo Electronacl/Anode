@@ -483,14 +483,21 @@ namespace Anode
             Read();
         }
 
+        void Halt_Instr()
+        {
+            MessageBox.Show($"Encountered a halt instruction: opcode ${opcode:X}({op_a}, {op_b}, {op_c}) at {ProgramCounter:X})",
+                "NES Error: Halted", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            CPU_Halted = true;
+            Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
+        }
+
         void Read_Operand()
         {
             if (op_b == 2 || op_b == 0)
             {
                 if (op_c == 2 && op_a < 4)
                 {
-                    CPU_Halted = true;
-                    Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
+                    Halt_Instr();
                 }
                 else if (op_c == 1 && op_b == 0)
                 {
@@ -574,8 +581,7 @@ namespace Anode
                 if (op_c == 2)
                 {
                     // HLT
-                    CPU_Halted = true;
-                    Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
+                    Halt_Instr();
                 }
                 else
                 {
@@ -1129,7 +1135,7 @@ namespace Anode
                                 Push();
                                 break;
                             case 4:
-                                DataBus = (byte)(ProgramCounter);
+                                DataBus = (byte)ProgramCounter;
                                 Push();
                                 break;
                             case 5:
@@ -1192,9 +1198,9 @@ namespace Anode
                                 ProgramCounter = (ushort)((DataBus << 8) | ADD);
                                 break;
                             case 5:
+                                ProgramCounter++;
                                 AddressBus = ProgramCounter;
                                 Read();
-                                ProgramCounter++;
                                 t = 255;
                                 break;
 
@@ -1674,7 +1680,7 @@ namespace Anode
             {
                 CPU_Halted = true;
                 Console.WriteLine($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.");
-                MessageBox.Show($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20. This error should not occur, and should be reported to the developer.", 
+                MessageBox.Show($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.\nThis error should not occur, and should be reported to the developer.", 
                     "CPU Emulation Error: Instruction Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
