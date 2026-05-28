@@ -47,8 +47,8 @@
             this.emulationToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
-            this.menuStrip1.Size = new System.Drawing.Size(600, 24);
+            this.menuStrip1.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
+            this.menuStrip1.Size = new System.Drawing.Size(800, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -63,8 +63,9 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
+            this.openToolStripMenuItem.ToolTipText = "Brings up dialogue for which ROM to use";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // emulationToolStripMenuItem
@@ -82,6 +83,7 @@
             this.hardResetToolStripMenuItem.Name = "hardResetToolStripMenuItem";
             this.hardResetToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.hardResetToolStripMenuItem.Text = "Hard reset";
+            this.hardResetToolStripMenuItem.ToolTipText = "Completely resets RAM and registers";
             this.hardResetToolStripMenuItem.Click += new System.EventHandler(this.hardResetToolStripMenuItem_Click);
             // 
             // haltToolStripMenuItem
@@ -89,33 +91,35 @@
             this.haltToolStripMenuItem.Name = "haltToolStripMenuItem";
             this.haltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.haltToolStripMenuItem.Text = "Halt";
+            this.haltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, preventing it from running more instructions";
             this.haltToolStripMenuItem.Click += new System.EventHandler(this.haltToolStripMenuItem_Click);
             // 
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
             this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.toggleTracelogToolStripMenuItem.Text = "Toggle tracelog";
+            this.toggleTracelogToolStripMenuItem.Text = "Enable tracelog";
+            this.toggleTracelogToolStripMenuItem.ToolTipText = "Toggles whether tracelog is enabled or not";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
+            this.pictureBox1.Location = new System.Drawing.Point(12, 27);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
+            this.pictureBox1.Size = new System.Drawing.Size(372, 346);
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 366);
+            this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.Text = "Form1";
             this.menuStrip1.ResumeLayout(false);

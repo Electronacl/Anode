@@ -4,15 +4,21 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 
 namespace Anode
 {
     internal class Emulator
     {
         // PPU code from 100th coin's tutorial, I will refine it for accuuracy later but I need to just get this working atm
+
+        // Potential change to be made:
+        // Set the R/W register and then read or write accordingly at the end of the cycle
+        
+        // Requirements:
+        // Get video working
+        // Fix the CPU
+        // Improve memory usage (fix the small leak)
 
         // ----- CPU Regisers
         ushort ProgramCounter;
@@ -22,8 +28,9 @@ namespace Anode
         byte SP; // Stack pointer
         byte t;
         byte opcode;
-        byte ADD;
+        byte ADD; // Used as temporary storage
 
+        // P register as separate bools for readability and ease of use
         bool flag_Carry;
         bool flag_Zero;
         bool flag_InterruptDisable;
@@ -31,8 +38,9 @@ namespace Anode
         bool flag_Overflow;
         bool flag_Negative;
 
-        ushort AddressBus;
-        byte DataBus;
+        // Bus registers/lines
+        ushort AddressBus; // Stores current accessing address
+        byte DataBus; // Stores the data in use
 
         // ----- PPU Registers and render info
         bool ppu_w; // Write Latch
@@ -54,6 +62,7 @@ namespace Anode
         byte ppu8Step_temp;
         byte ppu8Step_NextCharacter;
 
+        // Sprite registers which aren't implemented yet
         /*byte[] ppu_SpriteShiftRegisterL = new byte[8];
         byte[] ppu_SpriteShiftRegisterH = new byte[8];
 
@@ -62,6 +71,7 @@ namespace Anode
         byte[] ppu_SpriteXposition = new byte[8];
         byte[] ppu_SpriteYposition = new byte[8];*/
 
+        // Screen position and info
         int ppuDot;
         int ppuScanLine;
         bool ppuVBlank;
@@ -192,33 +202,40 @@ namespace Anode
 
         public void Reset()
         {
+            // Read the ROM and deposit it into the variables
             byte[] HeaderedROM = File.ReadAllBytes(filepath);
             Array.Copy(HeaderedROM, Header, 0x10);
             byte size = Header[4];
             Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
 
+            // Does the ROM support graphics?
             if (Header[5] != 0)
             {
                 Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
             }
 
+            // Find where the program counter should start
             byte PC_Lo = Read_Raw(0xFFFC);
             byte PC_Hi = Read_Raw(0xFFFD);
             ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
 
+            // Setup some initial variables (more stuff will be needed when I add the soft reset)
             SP = 0xFD;
             flag_InterruptDisable = true;
 
+            // Check if logging and start writing if so
             if (logging)
             {
                 tracelog = new StreamWriter(tracepath);
             }
 
+            // PAL support coming somewhen, but the display size is different IIRC - Unless the NES doesn't do that...
             if (NTSC)
             {
                 output = new Bitmap(32 * 8, 30 * 8);
             }
 
+            // Init palette
             for (int j = 0; j < 64; j++)
             {
                 Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
@@ -230,16 +247,19 @@ namespace Anode
             // Clocking
             if (!CPU_Halted)
             {
+                // PPU runs 1:4
                 if ((Master_Clock - 1) % 4 == 0)
                 {
                     Emulate_PPU();
                 }
 
+                // CPU runs 1:12
                 if (Master_Clock % 12 == 0)
                 {
                     Emulate_CPU();
                 }
 
+                // Reset to prevent weird overflows
                 Master_Clock++;
                 if (Master_Clock > 12)
                 {
@@ -259,18 +279,21 @@ namespace Anode
                 }
                 Render();
                 // Also make pixel red
+                // Not really applicable at the moment.
             }
         }
 
         void Render()
         {
             frame_Ready = true;
+            // Sometimes extra code is necessary
         }
 
         byte Read_Raw(ushort Address)
         {
             if (Address < 0x2000)
             {
+                // Returns mirrored RAM
                 return RAM[Address & 0x7FF];
             }
             else if (Address < 0x4000)
@@ -284,10 +307,12 @@ namespace Anode
 
                         if (ppu_v > 0x3F00)
                         {
+                            // Palette RAM has no buffer
                             temp = ReadPPU(ppu_v);
                         }
                         else
                         {
+                            // Buffer data (VRAM)
                             PPUReadBuffer = ReadPPU(ppu_v);
                         }
 
@@ -295,24 +320,29 @@ namespace Anode
                         ppu_v &= 0x3FFF;
                         return temp;
                     case 0x2002:
+                        // Returns PPU status flags
                         byte ppustatus = 0;
                         ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
                         /*ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
                         ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);*/
                         ppustatus |= 0x40;
 
+                        // Also clears VBlank and Write Latch
                         ppuVBlank = false;
                         ppu_w = false;
                         return ppustatus;
                     case 0x2004:
+                        // OAM stuff, not emulated yet
                         return 0;
                     default:
+                        // Stuff I haven't implemented
                         Console.WriteLine($"Unknown PPU read - {Address:X}");
                         return 0;
                 }
             }
             else if (Address >= 0x8000)
             {
+                // Read from ROM (this line also mirrors for smaller ROMs)
                 return ROM[(Address - 0x8000) & ((Header[4] * 0x4000) - 1)];
             }
             return 0;
@@ -320,6 +350,7 @@ namespace Anode
 
         void Read()
         {
+            // Avoids a repeated line in case this needs to be used in the future
             DataBus = Read_Raw(AddressBus);
         }
 
@@ -327,6 +358,7 @@ namespace Anode
         {
             if (Address < 0x2000)
             {
+                // Write to RAM (with mirroring)
                 RAM[Address & 0x7FF] = Value;
             }
             else if (Address < 0x4000)
@@ -431,6 +463,7 @@ namespace Anode
 
         void Write()
         {
+            // Again, repeated line
             Write_Raw(AddressBus, DataBus);
         }
 
@@ -471,6 +504,7 @@ namespace Anode
 
         void Push()
         {
+            // Writes to stack, then decrements stack pointer
             AddressBus = (ushort)(0x100 + SP);
             Write();
             SP--;
@@ -478,6 +512,7 @@ namespace Anode
 
         void Pull()
         {
+            // Increments stack pointer, then reads from stack
             SP++;
             AddressBus = (ushort)(0x100 + SP);
             Read();
@@ -485,6 +520,7 @@ namespace Anode
 
         void Halt_Instr()
         {
+            // Groups the musltiple sections containing halts
             MessageBox.Show($"Encountered a halt instruction: opcode ${opcode:X}({op_a}, {op_b}, {op_c}) at {ProgramCounter:X})",
                 "NES Error: Halted", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             CPU_Halted = true;
@@ -505,24 +541,29 @@ namespace Anode
                     switch (t)
                     {
                         case 1:
+                            // Reads the operand
                             Read();
                             ProgramCounter++;
                             AddressBus = DataBus;
                             break;
                         case 2:
                             Read(); // Dummy Read
+                            // Adds X to the operand
                             AddressBus = (byte)(AddressBus + X);
                             break;
                         case 3:
+                            // Reads high byte of the indirect operand
                             Read();
                             ADD = DataBus;
                             AddressBus = (byte)(AddressBus + 1);
                             break;
                         case 4:
+                            // Reads low byte of the indirect operand, then moves
                             Read();
                             AddressBus = (ushort)((DataBus << 8) | ADD);
                             break;
                         case 5:
+                            // Gets the data at the address
                             Read();
                             inc_op_t = true;
                             break;
@@ -531,6 +572,7 @@ namespace Anode
                 else
                 {
                     // Immediate
+                    // Reads operand and that's it
                     Read();
                     ProgramCounter++;
                     inc_op_t = true;
@@ -542,10 +584,12 @@ namespace Anode
                 switch (t)
                 {
                     case 1:
+                        // Reads the operand
                         Read();
                         ProgramCounter++;
                         break;
                     case 2:
+                        // Gets the data at the address
                         AddressBus = DataBus;
                         Read();
                         inc_op_t = true;
@@ -558,18 +602,19 @@ namespace Anode
                 switch (t)
                 {
                     case 1:
-                        // Hi
+                        // Reads the high byte of the operand
                         Read();
                         ProgramCounter++;
                         AddressBus++;
                         break;
                     case 2:
-                        // Lo
+                        // Reads the low byte of the operand
                         ADD = DataBus;
                         Read();
                         ProgramCounter++;
                         break;
                     case 3:
+                        // Gets the data at the adress
                         AddressBus = (ushort)((DataBus << 8) | ADD);
                         Read();
                         inc_op_t = true;
@@ -580,7 +625,7 @@ namespace Anode
             {
                 if (op_c == 2)
                 {
-                    // HLT
+                    // Always a HLT instruction
                     Halt_Instr();
                 }
                 else
@@ -589,34 +634,41 @@ namespace Anode
                     switch (t)
                     {
                         case 1:
+                            // Read the operand and move the address bus there
                             Read();
                             ProgramCounter++;
                             AddressBus = DataBus;
                             break;
                         case 2:
+                            // Read the high byte at the new address
                             Read();
                             AddressBus = (byte)(AddressBus + 1);
                             ADD = DataBus;
                             break;
                         case 3:
+                            // Read the low byte at the new adress, then move again
                             Read();
                             AddressBus = (ushort)((DataBus << 8) | ADD);
                             break;
                         case 4:
+                            // Add Y to the address
                             ushort AddressTemp = (ushort)(AddressBus + Y);
                             AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
                             if (AddressTemp != AddressBus)
                             {
+                                // Boundary crossed, this is updated on the next cycle
                                 signedTemp = (AddressTemp - AddressBus);
                             }
                             else
                             {
+                                // No boundary crossed, finish and move on
                                 inc_op_t = true;
                                 t = 5;
                             }
                             Read();
                             break;
                         case 5:
+                            // Update the high byte if page boundary crossed
                             AddressBus = (ushort)(AddressBus + signedTemp);
                             Read();
                             inc_op_t = true;
@@ -629,10 +681,12 @@ namespace Anode
                 switch (t)
                 {
                     case 1:
+                        // Read the operand
                         Read();
                         ProgramCounter++;
                         break;
                     case 2:
+                        // Move to the new position, but don't cross the page boundary
                         AddressBus = DataBus;
                         Read();
                         if (op_c < 3 || !(op_a == 4 || op_a == 5))
@@ -647,29 +701,31 @@ namespace Anode
                         }
                         break;
                     case 3:
+                        // Read the value at the address
                         Read();
                         inc_op_t = true;
                         break;
                 }
                 
             }
-            else if (op_b == 6 || op_b == 7) // No.
+            else if (op_b == 6 || op_b == 7) // Stop it, get some help
             {
                 switch (t)
                 {
                     case 1:
-                        // Hi
+                        // Read the high byte of the operand
                         Read();
                         ProgramCounter++;
                         AddressBus++;
                         break;
                     case 2:
-                        // Lo
+                        // Read the low byte of the operand
                         ADD = DataBus;
                         Read();
                         ProgramCounter++;
                         break;
                     case 3:
+                        // Move there, then add either X or Y depending on the addressing mode
                         AddressBus = (ushort)((DataBus << 8) | ADD);
                         ushort AddressTemp;
                         if ((op_c < 2 || !(op_a == 4 || op_a == 5)) && op_b == 7)
@@ -682,19 +738,24 @@ namespace Anode
                             // Absolute, Y
                             AddressTemp = (ushort)(AddressBus + Y);
                         }
+
+                        // Change the low byte
                         AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
                         if (AddressTemp != AddressBus)
                         {
+                            // Page boundary crossed, wait
                             signedTemp = (AddressTemp - AddressBus);
                         }
                         else
                         {
+                            // No boundary crossed
                             inc_op_t = true;
                             t = 4;
                         }
                         Read();
                         break;
                     case 4:
+                        // Update after page boundary crossed
                         AddressBus = (ushort)(AddressBus + signedTemp);
                         Read();
                         inc_op_t = true;
@@ -705,10 +766,9 @@ namespace Anode
 
         void RMW_Instr()
         {
-            
             if (op_c != 1 && op_b == 2 & t == 1)
             {
-                // Accumulator instruction
+                // Accumulator (A) instruction
                 a_indexed = true;
                 DataBus = A;
                 inc_op_t = true;
@@ -716,6 +776,7 @@ namespace Anode
             }
             else if (t == 1)
             {
+                // Not an A instruction
                 a_indexed = false;
             }
 
@@ -729,23 +790,25 @@ namespace Anode
                 {
                     if (!a_indexed)
                     {
+                        // Perform a dummy write
                         Write();
                     }
                     else
                     {
+                        // Probably isn't important as I don't think this behaviour can be verified
                         A = DataBus;
                     }
                     switch (op_a)
                     {
                         case 0:
-                            // ASL
+                            // ASL - Arithmetic Shift Left
                             flag_Carry = DataBus > 127;
                             DataBus <<= 1;
                             flag_Zero = DataBus == 0;
                             flag_Negative = DataBus > 127;
                             break;
                         case 1:
-                            // ROL
+                            // ROL - Rotate Left
                             bool Futureflag_Carry = DataBus >= 0x80;
                             DataBus <<= 1;
                             if (flag_Carry)
@@ -757,14 +820,14 @@ namespace Anode
                             flag_Zero = DataBus == 0;
                             break;
                         case 2:
-                            // LSR
+                            // LSR - Logical Shift Right
                             flag_Carry = (DataBus & 1) != 0;
                             DataBus >>= 1;
                             flag_Negative = DataBus > 127;
                             flag_Zero = DataBus == 0;
                             break;
                         case 3:
-                            // ROR
+                            // ROR - Rotate Right
                             bool FutureFlag_Carry = (DataBus & 1) != 0;
                             DataBus >>= 1;
                             if (flag_Carry)
@@ -776,13 +839,13 @@ namespace Anode
                             flag_Zero = DataBus == 0;
                             break;
                         case 6:
-                            // DEC
+                            // DEC - Decrement
                             DataBus--;
                             flag_Negative = DataBus > 127;
                             flag_Zero = DataBus == 0;
                             break;
                         case 7:
-                            // INC
+                            // INC - Increment
                             DataBus++;
                             flag_Negative = DataBus > 127;
                             flag_Zero = DataBus == 0;
@@ -793,12 +856,14 @@ namespace Anode
                 {
                     if (!a_indexed)
                     {
+                        // Write properly this time
                         Write();
                     }
                     else
                     {
                         A = DataBus;
                     }
+                    // Overflow for use in next inctruction
                     t = 255;
                 }
             }
@@ -817,20 +882,24 @@ namespace Anode
                         switch (t)
                         {
                             case 1:
+                                // Read the operand
                                 Read();
                                 ProgramCounter++;
                                 AddressBus = DataBus;
                                 break;
                             case 2:
                                 Read(); // Dummy Read
+                                // Move, to X index
                                 AddressBus = (byte)(AddressBus + X);
                                 break;
                             case 3:
+                                // Read indirect high byte
                                 Read();
                                 ADD = DataBus;
                                 AddressBus = (byte)(AddressBus + 1);
                                 break;
                             case 4:
+                                // Read indirect low byte
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
                                 inc_op_t = true;
@@ -839,6 +908,7 @@ namespace Anode
                         break;
                     case 1:
                         // Zero page
+                        // Read operand
                         Read();
                         ProgramCounter++;
                         AddressBus = DataBus;
@@ -848,14 +918,14 @@ namespace Anode
                         // Absolute
                         if (t == 1)
                         {
-                            // Hi
+                            // Read high byte
                             Read();
                             ProgramCounter++;
                             AddressBus++;
                         }
                         else if (t == 2)
                         {
-                            // Lo
+                            // Read low byte
                             ADD = DataBus;
                             Read();
                             ProgramCounter++;
@@ -868,25 +938,30 @@ namespace Anode
                         switch (t)
                         {
                             case 1:
+                                // Read operand
                                 Read();
                                 ProgramCounter++;
                                 AddressBus = DataBus;
                                 break;
                             case 2:
+                                // Read indirect high byte
                                 Read();
                                 AddressBus = (byte)(AddressBus + 1);
                                 ADD = DataBus;
                                 break;
                             case 3:
+                                // Read indirect low byte
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
                                 break;
                             case 4:
+                                // Add Y, then update lower byte only
                                 ushort AddressTemp = (ushort)(AddressBus + Y);
                                 AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
                                 signedTemp = (AddressTemp - AddressBus);
-                                Read();
-                                AddressBus = (ushort)(AddressBus + signedTemp); // Shortcut, what could possibly go wrong?
+                                Read(); // Dummy read
+                                // Update high byte
+                                AddressBus = (ushort)(AddressBus + signedTemp); // Shortcut (in the same cycle), what could possibly go wrong?
                                 inc_op_t = true;
                                 break;
                         }
@@ -895,12 +970,14 @@ namespace Anode
                         switch (t)
                         {
                             case 1:
+                                // Read operand
                                 Read();
                                 ProgramCounter++;
                                 break;
                             case 2:
                                 AddressBus = DataBus;
-                                Read();
+                                Read(); // Dummy read
+                                // Index by either X or Y, depending on the addressing mode
                                 if (op_c < 3 || !(op_a == 4 || op_a == 5))
                                 {
                                     // Zero Page, X
@@ -916,21 +993,23 @@ namespace Anode
                         }
                         break;
                     case 6:
+                    case 7:
                         switch (t)
                         {
                             case 1:
-                                // Hi
+                                // Read high byte
                                 Read();
                                 ProgramCounter++;
                                 AddressBus++;
                                 break;
                             case 2:
-                                // Lo
+                                // Read low byte
                                 ADD = DataBus;
                                 Read();
                                 ProgramCounter++;
                                 break;
                             case 3:
+                                // Move, then index by X or Y depending on addressing mode
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
                                 ushort AddressTemp;
                                 if ((op_c < 2 || !(op_a == 4 || op_a == 5)) && op_b == 7)
@@ -943,17 +1022,11 @@ namespace Anode
                                     // Absolute, Y
                                     AddressTemp = (ushort)(AddressBus + Y);
                                 }
+                                // Apply to low byte only
                                 AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
-                                if (AddressTemp != AddressBus)
-                                {
-                                    signedTemp = (AddressTemp - AddressBus);
-                                }
-                                else
-                                {
-                                    inc_op_t = true;
-                                    t = 4;
-                                }
+                                signedTemp = AddressTemp - AddressBus;
                                 Read();
+                                // Apply to high byte
                                 AddressBus = (ushort)(AddressBus + signedTemp); // Again, shortcut.
                                 inc_op_t = true;
                                 break;
@@ -963,6 +1036,7 @@ namespace Anode
             }
             else
             {
+                // Write to the correct location using the relavent register
                 if (op_c == 0)
                 {
                     // STY
@@ -991,6 +1065,7 @@ namespace Anode
             {
                 case 1:
                     Read();
+                    // Determine the branch condition
                     ProgramCounter++;
                     bool branch_condition = false;
                     switch (op_a)
@@ -1030,30 +1105,37 @@ namespace Anode
                     }
                     if (!branch_condition)
                     {
+                        // Don't take the branch
                         t = 255;
                     }
                     break;
                 case 2:
                     signedTemp = DataBus;
-                    Read();
+                    Read(); // Dummy read
+                    // Convert to signed
                     if (signedTemp > 127)
                     {
                         signedTemp -= 256;
                     }
 
+                    // Change the lower byte only...
                     ushort BranchTemp = (ushort)(((ProgramCounter + signedTemp) & 0xFF) | (ProgramCounter & 0xFF00));
-                    signedTemp = (int)((ProgramCounter + signedTemp) - BranchTemp);
+                    // ... and use it to figure out whether it crosses a page boundary
+                    signedTemp = ProgramCounter + signedTemp - BranchTemp;
 
+                    // Update the program counter
                     ProgramCounter = BranchTemp;
                     AddressBus = ProgramCounter;
 
+                    // Check if it has crossed a boundary
                     if (signedTemp == 0)
                     {
                         t = 255;
                     }
                     break;
                 case 3:
-                    Read();
+                    Read(); // Dummy read
+                    // Move to the new position
                     AddressBus = (ushort)(AddressBus + signedTemp);
                     ProgramCounter = AddressBus;
                     t = 255;
@@ -1074,26 +1156,31 @@ namespace Anode
                             case 1:
                                 // Dummy read
                                 Read();
+                                // As the NMI is based on the BRK instruction, but has slight changes
+                                // Add to the program counter to go to the next instruction when not an NMI
                                 if (!DoNMI)
                                 {
                                     ProgramCounter++;
                                 }
                                 break;
                             case 2:
+                                // Push high byte of PC to the stack
                                 DataBus = (byte)(ProgramCounter >> 8);
                                 Push();
                                 break;
                             case 3:
+                                // Push low byte of PC to the stack
                                 DataBus = (byte)(ProgramCounter);
                                 Push();
                                 break;
                             case 4:
+                                // Push processor flags to the stack
                                 DataBus = 0;
                                 DataBus |= (byte)(flag_Carry ? 1 : 0);
                                 DataBus |= (byte)(flag_Zero ? 2 : 0);
                                 DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
                                 DataBus |= (byte)(flag_Decimal ? 8 : 0);
-                                DataBus += (byte)(DoNMI ? 0 : 0x10);
+                                DataBus += (byte)(DoNMI ? 0 : 0x10); // NMI has no B flag
                                 DataBus |= 0x20;
                                 DataBus |= (byte)(flag_Overflow ? 0x40 : 0);
                                 DataBus |= (byte)(flag_Negative ? 0x80 : 0);
@@ -1103,11 +1190,13 @@ namespace Anode
                                 // For NMI, FFFA
                                 // For RES, FFFC
                                 // For BRK, FFFE
+                                // Find where the program counter moves to for the low byte
                                 AddressBus = (ushort)(DoNMI ? 0xFFFA : 0xFFFE);
                                 Read();
                                 ADD = DataBus;
                                 break;
                             case 6:
+                                // Find high byte for PC
                                 AddressBus++;
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
@@ -1121,24 +1210,30 @@ namespace Anode
                         // JSR
                         switch (t)
                         {
+                            // Order is weird, but that's just how it is on the CPU itself
                             case 1:
+                                // Find low byte of PC
                                 Read();
                                 ProgramCounter++;
                                 ADD = DataBus;
                                 break;
                             case 2:
+                                //Dummy read from stack
                                 AddressBus = (ushort)(0x100 + SP);
                                 Read();
                                 break;
                             case 3:
+                                // Push high byte of PC to the stack
                                 DataBus = (byte)(ProgramCounter >> 8);
                                 Push();
                                 break;
                             case 4:
+                                // Push low byte of PC to the stack
                                 DataBus = (byte)ProgramCounter;
                                 Push();
                                 break;
                             case 5:
+                                // Finally, get high byte of PC and move back
                                 AddressBus = ProgramCounter;
                                 Read();
                                 ProgramCounter = (ushort)((DataBus << 8) | ADD);
@@ -1159,6 +1254,7 @@ namespace Anode
                                 Read(); // And another
                                 break;
                             case 3:
+                                // Processor flags pulled from the stack and transferred
                                 Pull();
                                 flag_Carry = (DataBus & 1) != 0;
                                 flag_Zero = (DataBus & 2) != 0;
@@ -1168,10 +1264,12 @@ namespace Anode
                                 flag_Negative = (DataBus & 0x80) != 0;
                                 break;
                             case 4:
+                                // Get low byte of PC
                                 Pull();
                                 ADD = DataBus;
                                 break;
                             case 5:
+                                // Get high byte of PC
                                 Pull();
                                 ProgramCounter = (ushort)((DataBus << 8) | ADD);
                                 t = 255;
@@ -1182,22 +1280,29 @@ namespace Anode
                         // RTS
                         switch (t)
                         {
+                            // There's a lot of dummy reads in this one...
+                            // Anyways, I suspect that I could maybe get RTI to share this code
                             case 1:
+                                // Dummy read
                                 Read();
                                 break;
                             case 2:
+                                // Dummy read from stack
                                 AddressBus = (ushort)(SP + 0x100);
                                 Read();
                                 break;
                             case 3:
+                                // Get low byte of PC
                                 Pull();
                                 ADD = DataBus;
                                 break;
                             case 4:
+                                // Get high byte of PC
                                 Pull();
                                 ProgramCounter = (ushort)((DataBus << 8) | ADD);
                                 break;
                             case 5:
+                                // Dummy read
                                 ProgramCounter++;
                                 AddressBus = ProgramCounter;
                                 Read();
@@ -1219,11 +1324,13 @@ namespace Anode
                         switch (t)
                         {
                             case 1:
+                                // Get the low byte of PC
                                 Read();
                                 ADD = DataBus;
                                 AddressBus++;
                                 break;
                             case 2:
+                                // Get the high byte of PC
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
                                 inc_op_t = true;
@@ -1233,18 +1340,21 @@ namespace Anode
                     else
                     {
                         // Absolute
-                        inc_op_t = true;
+                        // Can skip straight to the new PC position
                         op_t = 1;
                     }
+                    inc_op_t = true;
                 }
                 switch (op_t)
                 {
                     case 1:
+                        // Read low byte of address
                         Read();
                         ADD = DataBus;
                         AddressBus++;
                         break;
                     case 2:
+                        // Read high byte of address
                         Read();
                         ProgramCounter = (ushort)((DataBus << 8) | ADD);
                         t = 255;
@@ -1257,7 +1367,7 @@ namespace Anode
         {
             if ((op_a & 1) == 0)
             {
-                // Push instruction
+                // Push instructions
                 switch (t)
                 {
                     case 1:
@@ -1273,8 +1383,8 @@ namespace Anode
                             DataBus |= (byte)(flag_Zero             ? 2 : 0);
                             DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
                             DataBus |= (byte)(flag_Decimal          ? 8 : 0);
-                            DataBus |=                              0x10;
-                            DataBus |=                              0x20;
+                            DataBus |=                              0x10; // Always set
+                            DataBus |=                              0x20; // Always set
                             DataBus |= (byte)(flag_Overflow         ? 0x40 : 0);
                             DataBus |= (byte)(flag_Negative         ? 0x80 : 0);
                         }
@@ -1337,24 +1447,28 @@ namespace Anode
                     {
                         case 4:
                             // DEY
+                            // Subtract 1 from Y and update flags
                             Y--;
                             flag_Zero = Y == 0;
                             flag_Negative = Y > 127;
                             break;
                         case 5:
                             // TAY
+                            // Sets Y to A and then updates flags
                             Y = A;
                             flag_Zero = Y == 0;
                             flag_Negative = Y > 127;
                             break;
                         case 6:
                             // INY
+                            // Increments 1 on Y and update flags
                             Y++;
                             flag_Zero = Y == 0;
                             flag_Negative = Y > 127;
                             break;
                         case 7:
                             // INX
+                            // Increments 1 on X and updates flags
                             X++;
                             flag_Zero = X == 0;
                             flag_Negative = X > 127;
@@ -1368,36 +1482,44 @@ namespace Anode
                     {
                         case 0:
                             // CLC
+                            // Clears the carry flag
                             flag_Carry = false;
                             break;
                         case 1:
                             // SEC
+                            // Sets the carry flag
                             flag_Carry = true;
                             break;
                         case 2:
                             // CLI
+                            // Clears the interrupt disable flag
                             flag_InterruptDisable = false;
                             break;
                         case 3:
                             // SEI
+                            // Sets the interrupt disable flag
                             flag_InterruptDisable = true;
                             break;
                         case 4:
                             // TYA
+                            // Copies Y over to the A register and sets flags
                             A = Y;
                             flag_Zero = A == 0;
                             flag_Negative = A > 127;
                             break;
                         case 5:
                             // CLV
+                            // Clears the overflow register
                             flag_Overflow = false;
                             break;
                         case 6:
                             // CLD
+                            // Clears the decimal register
                             flag_Decimal = false;
                             break;
                         case 7:
                             // SED
+                            // Sets the decimal register
                             flag_Decimal = true;
                             break;
                     }
@@ -1411,18 +1533,21 @@ namespace Anode
                     {
                         case 4:
                             // TXA
+                            // Copies the X register to the A register and sets flags
                             A = X;
                             flag_Zero = A == 0;
                             flag_Negative = A > 127;
                             break;
                         case 5:
                             // TAX
+                            // Copies the A register to the X register and sets flags
                             X = A;
                             flag_Zero = X == 0;
                             flag_Negative = X > 127;
                             break;
                         case 6:
                             // DEX
+                            // Subtracts 1 from the X register and sets flags
                             X--;
                             flag_Zero = X == 0;
                             flag_Negative = X > 127;
@@ -1436,10 +1561,13 @@ namespace Anode
                     {
                         case 4:
                             // TXS
+                            // Transfers the X to the SP
+                            // Doesn't set flags
                             SP = X;
                             break;
                         case 5:
                             // TSX
+                            // Transfers the SP to X and sets flags
                             X = SP;
                             flag_Zero = X == 0;
                             flag_Negative = X > 127;
@@ -1455,6 +1583,7 @@ namespace Anode
         {
             if (!inc_op_t)
             {
+                // All of these nead to read the operand first
                 Read_Operand();
             }
 
@@ -1467,6 +1596,7 @@ namespace Anode
                         if (op_c == 1)
                         {
                             // ORA
+                            // Binary ORs with the value and sets flags
                             A |= DataBus;
                             flag_Negative = A > 127;
                             flag_Zero = A == 0;
@@ -1478,12 +1608,14 @@ namespace Anode
                         {
                             case 0:
                                 // BIT
+                                // I don't really know why this exists, but it isn't commonly used.
                                 flag_Zero = (A & DataBus) == 0;
                                 flag_Negative = (DataBus & 0x80) != 0;
                                 flag_Overflow = (DataBus & 0x40) != 0;
                                 break;
                             case 1:
                                 // AND
+                                // Binary ands with value and sets flags
                                 A &= DataBus;
                                 flag_Negative = A > 127;
                                 flag_Zero = A == 0;
@@ -1495,6 +1627,7 @@ namespace Anode
                         if (op_c == 1)
                         {
                             // EOR
+                            // Binary exclusive ORs, aka XOR, and sets flags
                             A ^= DataBus;
                             flag_Negative = A > 127;
                             flag_Zero = A == 0;
@@ -1505,9 +1638,20 @@ namespace Anode
                         {
                             case 1:
                                 // ADC
+                                // Add with carry - this one is kinda complex...
+
+                                // Find the result of the calculation
                                 int IntSum = DataBus + A + (flag_Carry ? 1 : 0);
+
+                                // Figure out whether it causes an overflow (2 positives
+                                // ends up being negative, or 2 negatives is positive)
+                                // This is used in signed calculations
                                 flag_Overflow = (~(A ^ DataBus) & (A ^ IntSum) & 0x80) != 0;
+
+                                // Find whether it carries over to the next bit
                                 flag_Carry = IntSum > 0xFF;
+
+                                // Now store in A and set other flags as normal
                                 A = (byte)IntSum;
                                 flag_Negative = A > 127;
                                 flag_Zero = A == 0;
@@ -1516,6 +1660,7 @@ namespace Anode
                         break;
                     case 5:
                         // Load instruction
+                        // Transfers into the correct register and then sets flags
                         if (op_c == 0)
                         {
                             // LDY
@@ -1539,12 +1684,14 @@ namespace Anode
                         {
                             case 0:
                                 // CPY
+                                // Compares the Y register with the data bus to set flags
                                 flag_Carry = DataBus >= Y;
                                 flag_Zero = DataBus == Y;
                                 flag_Negative = (byte)(Y - DataBus) > 127;
                                 break;
                             case 1:
                                 // CMP
+                                // Compares the accumulator with the data bus to set flags
                                 flag_Carry = DataBus >= A;
                                 flag_Zero = DataBus == A;
                                 flag_Negative = (byte)(A - DataBus) > 127;
@@ -1556,15 +1703,22 @@ namespace Anode
                         {
                             case 0:
                                 // CPX
+                                // Compares the x register with the data bus to set flags
                                 flag_Carry = DataBus >= X;
                                 flag_Zero = DataBus == X;
                                 flag_Negative = (byte)(X - DataBus) > 127;
                                 break;
                             case 1:
                                 // SBC
+                                // Ahh, another complex one
+
+                                // Get the result of the calculation
                                 int IntSum = A - DataBus - (flag_Carry ? 0 : 1);
+                                // In case of the signed overflow
                                 flag_Overflow = ((A ^ DataBus) & (A ^ DataBus) & 0x80) != 0;
-                                flag_Carry = IntSum > 0;
+                                // Unsigned overflow
+                                flag_Carry = IntSum >= 0;
+                                // Transfer to A and set regular flags
                                 A = (byte)IntSum;
                                 flag_Negative = A > 127;
                                 flag_Zero = A == 0;
@@ -1592,6 +1746,7 @@ namespace Anode
 
         void Emulate_CPU()
         {
+            // Check whether NMI should occur
             bool PreviousNMILevelDetector = NMILevelDetector;
             NMILevelDetector = ppuEnableNMI && ppuVBlank;
             if (!PreviousNMILevelDetector && NMILevelDetector)
@@ -1599,14 +1754,16 @@ namespace Anode
                 DoNMI = true;
             }
 
+            // Reading opcodes or starting NMI.
             if (t == 0)
             {
-                op_t = 0; // 1st instr on 1
+                op_t = 0; // 1st instruction on 1
                 inc_op_t = false;
                 // Read next opcode
                 AddressBus = ProgramCounter;
                 if (!DoNMI)
                 {
+                    // Read the opcode
                     Read();
                     opcode = DataBus;
                     if (logging)
@@ -1619,6 +1776,7 @@ namespace Anode
                 }
                 else
                 {
+                    // NMI is similar to BRK
                     opcode = 0x00;
                     if (logging)
                     {
@@ -1632,12 +1790,12 @@ namespace Anode
             }
             else
             {
-                if ((op_c == 2 && (op_a < 4 || (op_a > 5 && (op_b & 1) == 1))))
+                if ((op_c == 2) && ((op_a < 4) || ((op_a > 5) && ((op_b & 1) != 0))))
                 {
                     // RMW instructions
                     RMW_Instr();
                 }
-                else if (op_a == 4 && ((op_c == 1 && op_b != 2) || (op_b & 1) == 1))
+                else if ((op_a == 4) && (((op_c == 1) && (op_b != 2)) || ((op_b & 1) != 0)))
                 {
                     // Store instructions
                     Store_Instr();
@@ -1649,12 +1807,12 @@ namespace Anode
                         // Branches
                         Branch_Instr();
                     }
-                    else if ((op_b == 0 && op_a < 4) || (op_b == 3 && op_a > 1 && op_a < 4))
+                    else if (((op_b == 0) && (op_a < 4)) || ((op_b == 3) && (op_a > 1) && (op_a < 4)))
                     {
                         // Movement
                         Move_Instr();
                     }
-                    else if (op_b == 2 && op_a < 4)
+                    else if ((op_b == 2) && (op_a < 4))
                     {
                         // Stack instructions
                         Stack_Instr();
@@ -1676,6 +1834,7 @@ namespace Anode
             t++;
             if (inc_op_t) { op_t++; }
 
+            // In case of failure.
             if (t > 20)
             {
                 CPU_Halted = true;
@@ -1685,6 +1844,7 @@ namespace Anode
             }
         }
 
+        // The PPU code is temporary
         void Emulate_PPU()
         {
             // Again, from my old emulator & the tutorial
@@ -1825,6 +1985,7 @@ namespace Anode
                 }
             }
         }
+
         void PPU_IncrementScrollY()
         {
             if ((ppu_v & 0x7000) != 0x7000)
