@@ -1688,14 +1688,14 @@ namespace Anode
                             case 0:
                                 // CPY
                                 // Compares the Y register with the data bus to set flags
-                                flag_Carry = DataBus >= Y;
+                                flag_Carry = Y >= DataBus;
                                 flag_Zero = DataBus == Y;
                                 flag_Negative = (byte)(Y - DataBus) > 127;
                                 break;
                             case 1:
                                 // CMP
                                 // Compares the accumulator with the data bus to set flags
-                                flag_Carry = DataBus >= A;
+                                flag_Carry = A >= DataBus;
                                 flag_Zero = DataBus == A;
                                 flag_Negative = (byte)(A - DataBus) > 127;
                                 break;
@@ -1707,7 +1707,7 @@ namespace Anode
                             case 0:
                                 // CPX
                                 // Compares the x register with the data bus to set flags
-                                flag_Carry = DataBus >= X;
+                                flag_Carry = X >= DataBus;
                                 flag_Zero = DataBus == X;
                                 flag_Negative = (byte)(X - DataBus) > 127;
                                 break;

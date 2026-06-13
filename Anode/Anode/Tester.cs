@@ -22,7 +22,7 @@ namespace Anode
             { 0, 1 }
         };*/
         // 5_Instructions1
-        /*uint[,] ram_test = {
+        uint[,] ram_test = {
             { 0, 0x02 },
             { 1, 0x01 },
             { 2, 0xfd },
@@ -36,9 +36,9 @@ namespace Anode
             { 10, 0x70 },
             { 11, 0x01 },
             { 12, 0x01 }
-        };*/
+        };
         // 6_Instructions2
-        uint[,] ram_test = {
+        /*uint[,] ram_test = {
             { 0, 0x01 },
             { 1, 0x01 },
             { 2, 0x02 },
@@ -84,11 +84,13 @@ namespace Anode
             { 49, 0x10 },
             { 50, 0x90 },
             { 51, 0x01 }
-        };
+        };*/
 
         uint[] ram_list = { };
         uint fails = 0;
         uint passes = 0;
+
+
         public void Test_Ram(Emulator emulator)
         {
             for (int i = 0; i < ram_test.GetLength(0); i++)
