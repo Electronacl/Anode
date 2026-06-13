@@ -147,14 +147,6 @@ namespace Anode
             Console.WriteLine($"Testing: {testenabled}");
         }
 
-        private void toggleTracelogToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Toggles the tracelog
-            tracelogging = !tracelogging;
-            Console.WriteLine($"Tracelogging: {tracelogging}");
-            toggleTracelogToolStripMenuItem.Text = (tracelogging ? "Disable" : "Enable") + " tracelog";
-        }
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
@@ -164,6 +156,14 @@ namespace Anode
             {
                 processThread.Abort();
             }
+        }
+
+        private void toggleTracelogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Toggles the tracelog
+            tracelogging = !tracelogging;
+            Console.WriteLine($"Tracelogging: {tracelogging}");
+            toggleTracelogToolStripMenuItem.Text = (tracelogging ? "Disable" : "Enable") + " tracelog";
         }
     }
 }

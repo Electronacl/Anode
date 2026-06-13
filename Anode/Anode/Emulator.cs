@@ -20,6 +20,9 @@ namespace Anode
         // Fix the CPU
         // Improve memory usage (fix the small leak)
 
+        // Swap the always new variables for permanent ones?? I'm not the most sure as to
+        // C# optimisation.
+
         // ----- CPU Regisers
         ushort ProgramCounter;
         byte X;
@@ -649,27 +652,24 @@ namespace Anode
                             // Read the low byte at the new adress, then move again
                             Read();
                             AddressBus = (ushort)((DataBus << 8) | ADD);
+                            // Get the address without the Y index
+                            ushort AddrTemp = (ushort)(((AddressBus + Y) & 0xFF) | (AddressBus & 0xFF00));
+                            // Get the distance to move in the high byte
+                            signedTemp = AddressBus + Y - AddrTemp;
+                            // Transfer to the address bus
+                            AddressBus = AddrTemp;
+                            // Skips next cycle if this is the new address
+                            if (signedTemp == 0)
+                            {
+                                t = 4;
+                            }
                             break;
                         case 4:
-                            // Add Y to the address
-                            ushort AddressTemp = (ushort)(AddressBus + Y);
-                            AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
-                            if (AddressTemp != AddressBus)
-                            {
-                                // Boundary crossed, this is updated on the next cycle
-                                signedTemp = (AddressTemp - AddressBus);
-                            }
-                            else
-                            {
-                                // No boundary crossed, finish and move on
-                                inc_op_t = true;
-                                t = 5;
-                            }
-                            Read();
+                            Read(); // Dummy read
+                            AddressBus = (ushort)(AddressBus + signedTemp);
                             break;
                         case 5:
-                            // Update the high byte if page boundary crossed
-                            AddressBus = (ushort)(AddressBus + signedTemp);
+                            // Final read
                             Read();
                             inc_op_t = true;
                             break;
@@ -953,15 +953,18 @@ namespace Anode
                                 // Read indirect low byte
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
+
+                                // Get the address without the Y index
+                                ushort AddrTemp = (ushort)(((AddressBus + Y) & 0xFF) | (AddressBus & 0xFF00));
+                                // Get the distance to move in the high byte
+                                signedTemp = AddressBus + Y - AddrTemp;
+                                // Transfer to the address bus
+                                AddressBus = AddrTemp;
                                 break;
                             case 4:
-                                // Add Y, then update lower byte only
-                                ushort AddressTemp = (ushort)(AddressBus + Y);
-                                AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
-                                signedTemp = (AddressTemp - AddressBus);
                                 Read(); // Dummy read
                                 // Update high byte
-                                AddressBus = (ushort)(AddressBus + signedTemp); // Shortcut (in the same cycle), what could possibly go wrong?
+                                AddressBus = (ushort)(AddressBus + signedTemp);
                                 inc_op_t = true;
                                 break;
                         }
@@ -1342,8 +1345,8 @@ namespace Anode
                         // Absolute
                         // Can skip straight to the new PC position
                         op_t = 1;
+                        inc_op_t = true;
                     }
-                    inc_op_t = true;
                 }
                 switch (op_t)
                 {

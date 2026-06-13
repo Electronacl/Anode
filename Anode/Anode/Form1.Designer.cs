@@ -34,6 +34,7 @@
             this.emulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hardResetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.haltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
@@ -44,7 +45,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.emulationToolStripMenuItem});
+            this.emulationToolStripMenuItem,
+            this.debuggingToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(5, 2, 0, 2);
@@ -63,7 +65,7 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.ToolTipText = "Brings up dialogue for which ROM to use";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
@@ -72,8 +74,7 @@
             // 
             this.emulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.hardResetToolStripMenuItem,
-            this.haltToolStripMenuItem,
-            this.toggleTracelogToolStripMenuItem});
+            this.haltToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
             this.emulationToolStripMenuItem.Text = "Emulation";
@@ -81,7 +82,7 @@
             // hardResetToolStripMenuItem
             // 
             this.hardResetToolStripMenuItem.Name = "hardResetToolStripMenuItem";
-            this.hardResetToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.hardResetToolStripMenuItem.Size = new System.Drawing.Size(128, 22);
             this.hardResetToolStripMenuItem.Text = "Hard reset";
             this.hardResetToolStripMenuItem.ToolTipText = "Completely resets RAM and registers";
             this.hardResetToolStripMenuItem.Click += new System.EventHandler(this.hardResetToolStripMenuItem_Click);
@@ -89,17 +90,24 @@
             // haltToolStripMenuItem
             // 
             this.haltToolStripMenuItem.Name = "haltToolStripMenuItem";
-            this.haltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.haltToolStripMenuItem.Size = new System.Drawing.Size(128, 22);
             this.haltToolStripMenuItem.Text = "Halt";
             this.haltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, preventing it from running more instructions";
             this.haltToolStripMenuItem.Click += new System.EventHandler(this.haltToolStripMenuItem_Click);
+            // 
+            // debuggingToolStripMenuItem
+            // 
+            this.debuggingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toggleTracelogToolStripMenuItem});
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(78, 20);
+            this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
             this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.toggleTracelogToolStripMenuItem.Text = "Enable tracelog";
-            this.toggleTracelogToolStripMenuItem.ToolTipText = "Toggles whether tracelog is enabled or not";
+            this.toggleTracelogToolStripMenuItem.Text = "Enable Tracelog";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
             // 
             // pictureBox1
@@ -139,6 +147,7 @@
         private System.Windows.Forms.ToolStripMenuItem hardResetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem haltToolStripMenuItem;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.ToolStripMenuItem debuggingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toggleTracelogToolStripMenuItem;
     }
 }
