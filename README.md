@@ -40,6 +40,15 @@ Example: `2.4b` would have had 2 major changes, 4 minor changes, and be in the b
 If you're looking for accuracy and optimisation, use the stable builds only (unless there isn't one available for the version you're looking to use).<br>
 If you want the latest features only, use the unstable builds.
 
+## Accuracy info (as of 2026.1-0.0b-xs)
+### AccuracyCoin
+<img width="263" height="251" alt="Screenshot 2026-07-07 121657" src="https://github.com/user-attachments/assets/d813c219-44db-44a7-ad6f-118f72df142d" /><br>
+### nestest
+*Official opcodes*<br>
+<img width="264" height="248" alt="image" src="https://github.com/user-attachments/assets/22ca34bc-a050-48ee-bdd1-2faef3abc280" /><br>
+*Unofficial opcodes*<br>
+<img width="265" height="251" alt="image" src="https://github.com/user-attachments/assets/ffaa854f-c85d-441c-a295-8773a5398c06" /><br>
+
 ## Licenses
 This project is licensed under my own license, _Electronacl Content License V2.0_. 
 As per the requirements, here are the things I must state
