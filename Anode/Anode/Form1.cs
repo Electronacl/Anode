@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -16,7 +17,7 @@ namespace Anode
         PictureBox ScreenObject;
 
 
-        bool FileUpdated = false;
+        bool fileUpdated = false;
 
         bool paused = false;
         bool waitingForFrame = false;
@@ -25,10 +26,36 @@ namespace Anode
         public Form1()
         {
             InitializeComponent();
+            this.AllowDrop = true;
+            this.DragEnter += new DragEventHandler(dragDropEnter);
+            this.DragDrop += new DragEventHandler(dragDropFile);
+        }
+
+        private void dragDropEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void dragDropFile(object sender, DragEventArgs e)
+        {
+            string[] files = e.Data.GetData(DataFormats.FileDrop) as string[];
+            if (files != null && files.Any())
+            {
+                rompath = files.First();
+                init_Emulator();
+            }
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            fileUpdated = false;
             // Base code from
             // https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.openfiledialog
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -42,10 +69,10 @@ namespace Anode
                 {
                     //Get the path of specified file
                     rompath = openFileDialog.FileName;
-                    FileUpdated = true;
+                    fileUpdated = true;
                 }
             }
-            if (rompath != null && FileUpdated == true)
+            if (rompath != null && fileUpdated == true)
             {
                 // A new ROM has been added, so the emulator should start
                 // A new thread is created to run the emulator
