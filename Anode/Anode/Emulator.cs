@@ -606,10 +606,10 @@ namespace Anode
 
         void Unstable_Cross(byte CrossVal)
         {
-            // iirc this fails due to an edge case with the R/W line (bool)
+            // The edge case might not be applicable at the moment as DMA is not a thing.
             if (changedBoundary)
             {
-                AddressBus = (ushort)(((AddressBus & 0xFF00) & (CrossVal << 8)) | (AddressBus & 0xFF));
+                AddressBus = (ushort)((AddressBus & 0xFF00 & (CrossVal << 8)) | (AddressBus & 0xFF));
             }
         }
 
@@ -1127,6 +1127,7 @@ namespace Anode
                             case 4:
                                 Read(); // Dummy read
                                 // Update high byte
+                                changedBoundary = signedTemp != 0;
                                 AddressBus = (ushort)(AddressBus + signedTemp);
                                 inc_op_t = true;
                                 break;
@@ -1195,6 +1196,7 @@ namespace Anode
                                 signedTemp = AddressTemp - AddressBus;
                                 Read();
                                 // Apply to high byte
+                                changedBoundary = signedTemp != 0;
                                 AddressBus = (ushort)(AddressBus + signedTemp); // Again, shortcut.
                                 inc_op_t = true;
                                 break;
@@ -1220,6 +1222,7 @@ namespace Anode
                         DataBus = X;
                         break;
                     case 3:
+                        // SHA, SHS
                         DataBus = (byte)(A & X);
                         break;
                 }
@@ -1869,8 +1872,13 @@ namespace Anode
                                 break;
                             case 3:
                                 // LAX (Unofficial)
-                                A = DataBus;
-                                X = DataBus;
+                                if (op_b == 6)
+                                {
+                                    // LAR/LAS
+                                    DataBus &= SP;
+                                    SP = DataBus;
+                                }
+                                A = X = DataBus;
                                 break;
                         }
                         flag_Zero = DataBus == 0;
