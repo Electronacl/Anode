@@ -304,7 +304,7 @@ namespace Anode
             }
         }
 
-        public void Run()
+        public void Advance_Cycle()
         {
             // Clocking
             if (!CPU_Halted)
@@ -342,6 +342,14 @@ namespace Anode
                 Render();
                 // Also make pixel red
                 // Not really applicable at the moment.
+            }
+        }
+
+        public void Advance_Frame()
+        {
+            while (!frame_Ready)
+            {
+                Advance_Cycle();
             }
         }
 

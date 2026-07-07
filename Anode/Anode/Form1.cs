@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using ThreadState = System.Threading.ThreadState;
 
 namespace Anode
 {
@@ -23,6 +14,12 @@ namespace Anode
         bool testenabled = false;
         bool tracelogging = false;
         PictureBox ScreenObject;
+
+
+        bool FileUpdated = false;
+
+        bool paused = false;
+        bool waitingForFrame = false;
 
         // Winforms stuff
         public Form1()
@@ -45,22 +42,15 @@ namespace Anode
                 {
                     //Get the path of specified file
                     rompath = openFileDialog.FileName;
+                    FileUpdated = true;
                 }
             }
-            if (rompath != null)
+            if (rompath != null && FileUpdated == true)
             {
                 // A new ROM has been added, so the emulator should start
                 // A new thread is created to run the emulator
 
-                if (processThread != null)
-                {
-                    processThread.Abort();
-                }
-
-                processThread = new Thread(Run_Emulator);
-                processThread.SetApartmentState(ApartmentState.STA);
-                processThread.IsBackground = true;
-                processThread.Start();
+                init_Emulator();
             }
         }
 
@@ -87,11 +77,11 @@ namespace Anode
 
             while (!emulator.CPU_Halted)
             {
-                // 1 cycle at a time
-                emulator.Run();
-                // When the emulator has completed a frame, or crashed
-                if (emulator.frame_Ready)
+                if ((!paused) || waitingForFrame)
                 {
+                    // 1 cycle at a time
+                    emulator.Advance_Frame();
+                    // When the emulator has completed a frame, or crashed
                     lock (ScreenObject)
                     {
                         // Update the frame
@@ -110,9 +100,14 @@ namespace Anode
                             pictureBox1.Update();
                         }
                         emulator.frame_Ready = false;
+                        waitingForFrame = false;
                     }
                 }
             }
+
+            enableMenuItem(forceHaltToolStripMenuItem, false);
+            enableMenuItem(pauseToolStripMenuItem, false);
+            enableMenuItem(advanceFrameToolStripMenuItem, false);
 
             // Use the tester if I've enabled that
             if (testenabled)
@@ -134,15 +129,7 @@ namespace Anode
         private void hardResetToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Effectively power cycles and resets all RAM and registers.
-            if (processThread != null)
-            {
-                // Check if the process is already running and stop it if it is
-                processThread.Abort();
-                processThread = new Thread(Run_Emulator);
-                processThread.SetApartmentState(ApartmentState.STA);
-                processThread.IsBackground = true;
-                processThread.Start();
-            }
+            init_Emulator();
         }
 
         private void debugTestToolStripMenuItem_Click(object sender, EventArgs e)
@@ -170,6 +157,56 @@ namespace Anode
             tracelogging = !tracelogging;
             Console.WriteLine($"Tracelogging: {tracelogging}");
             toggleTracelogToolStripMenuItem.Text = (tracelogging ? "Disable" : "Enable") + " tracelog";
+        }
+
+        private void init_Emulator()
+        {
+            pauseToolStripMenuItem.Text = "Pause";
+            pauseToolStripMenuItem.Enabled = true;
+            forceHaltToolStripMenuItem.Enabled = true;
+            hardResetToolStripMenuItem.Enabled = true;
+            if (processThread != null)
+            {
+                processThread.Abort();
+            }
+
+            processThread = new Thread(Run_Emulator);
+            processThread.SetApartmentState(ApartmentState.STA);
+            processThread.IsBackground = true;
+            processThread.Start();
+        }
+
+        private void forceHaltToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            emulator.CPU_Halted = true;
+        }
+
+        private void enableMenuItem(ToolStripMenuItem menuItem, bool enabled)
+        {
+            this.BeginInvoke(new MethodInvoker(delegate ()
+            {
+                menuItem.Enabled = enabled;
+            }));
+        }
+
+        private void pauseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            paused = !paused;
+            if (paused)
+            {
+                pauseToolStripMenuItem.Text = "Play";
+                enableMenuItem(advanceFrameToolStripMenuItem, true);
+            }
+            else
+            {
+                pauseToolStripMenuItem.Text = "Pause";
+                enableMenuItem(advanceFrameToolStripMenuItem, false);
+            }
+        }
+
+        private void advanceFrameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            waitingForFrame = true;
         }
     }
 }
