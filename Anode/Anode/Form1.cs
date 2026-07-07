@@ -137,10 +137,7 @@ namespace Anode
             if (processThread != null)
             {
                 // Check if the process is already running and stop it if it is
-                if (processThread.ThreadState == ThreadState.Running)
-                {
-                    processThread.Abort();
-                }
+                processThread.Abort();
                 processThread = new Thread(Run_Emulator);
                 processThread.SetApartmentState(ApartmentState.STA);
                 processThread.IsBackground = true;

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -262,17 +264,44 @@ namespace Anode
             }
         }
 
+        // Focus check
+        /// <summary>Returns true if the current application has focus, false otherwise</summary>
+        public static bool ApplicationIsActivated()
+        {
+            var activatedHandle = GetForegroundWindow();
+            if (activatedHandle == IntPtr.Zero)
+            {
+                return false;       // No window is currently activated
+            }
+
+            var procId = Process.GetCurrentProcess().Id;
+            int activeProcId;
+            GetWindowThreadProcessId(activatedHandle, out activeProcId);
+
+            return activeProcId == procId;
+        }
+
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
+
         void Update_Controller()
         {
-            controller1 = 0;
-            if (Keyboard.IsKeyDown(Key.X)) { controller1 |= 0x80; }
-            if (Keyboard.IsKeyDown(Key.Z)) { controller1 |= 0x40; }
-            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) { controller1 |= 0x20; }
-            if (Keyboard.IsKeyDown(Key.Enter)) { controller1 |= 0x10; }
-            if (Keyboard.IsKeyDown(Key.Up)) { controller1 |= 0x08; }
-            if (Keyboard.IsKeyDown(Key.Down)) { controller1 |= 0x04; }
-            if (Keyboard.IsKeyDown(Key.Left)) { controller1 |= 0x02; }
-            if (Keyboard.IsKeyDown(Key.Right)) { controller1 |= 0x01; }
+            if (ApplicationIsActivated())
+            {
+                controller1 = 0;
+                if (Keyboard.IsKeyDown(Key.X)) { controller1 |= 0x80; }
+                if (Keyboard.IsKeyDown(Key.Z)) { controller1 |= 0x40; }
+                if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) { controller1 |= 0x20; }
+                if (Keyboard.IsKeyDown(Key.Enter)) { controller1 |= 0x10; }
+                if (Keyboard.IsKeyDown(Key.Up)) { controller1 |= 0x08; }
+                if (Keyboard.IsKeyDown(Key.Down)) { controller1 |= 0x04; }
+                if (Keyboard.IsKeyDown(Key.Left)) { controller1 |= 0x02; }
+                if (Keyboard.IsKeyDown(Key.Right)) { controller1 |= 0x01; }
+            }
         }
 
         public void Run()
