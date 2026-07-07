@@ -51,6 +51,12 @@ namespace Anode
             {
                 // A new ROM has been added, so the emulator should start
                 // A new thread is created to run the emulator
+
+                if (processThread != null)
+                {
+                    processThread.Abort();
+                }
+
                 processThread = new Thread(Run_Emulator);
                 processThread.SetApartmentState(ApartmentState.STA);
                 processThread.IsBackground = true;
@@ -72,6 +78,9 @@ namespace Anode
 
             // Get the emulator to prepare for running
             emulator.Reset();
+
+            // override for nestest only
+            // emulator.ProgramCounter = 0xC000;
 
             // For locking
             ScreenObject = pictureBox1;

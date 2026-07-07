@@ -5,16 +5,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace Anode
 {
     internal class Emulator
     {
+        // Current issue: LSR A (4A - 2, 2, 2) is considered halt
+
         // PPU code from 100th coin's tutorial, I will refine it for accuuracy later but I need to just get this working atm
 
         // Potential change to be made:
         // Set the R/W register and then read or write accordingly at the end of the cycle
-        
+
         // Requirements:
         // Get video working
         // Fix the CPU
@@ -23,8 +26,15 @@ namespace Anode
         // Swap the always new variables for permanent ones?? I'm not the most sure as to
         // C# optimisation.
 
+        // ----- Interchangeable values dependiung on console, temp, etc
+        byte unstable_magic = 0xCC;
+
+        // ----- Unstable data
+        bool changedBoundary = false;
+        byte preIndex_Hi;
+
         // ----- CPU Regisers
-        ushort ProgramCounter;
+        public ushort ProgramCounter;
         byte X;
         byte Y;
         byte A; // Accumulator
@@ -116,11 +126,18 @@ namespace Anode
         byte[] OAM = new byte[0x100]; // Object Attribute Memory
         byte[] SecondaryOAM = new byte[0x20];
 
+        // ----- Controller
+        public byte controller1;
+        byte Controller1ShiftRegister;
+
         // ----- Emulator specific
         // Timing
         byte op_t;
         bool inc_op_t;
+
         int signedTemp;
+        int IntSum;
+        bool FutureFlag_Carry;
 
         public bool CPU_Halted;
 
@@ -245,6 +262,19 @@ namespace Anode
             }
         }
 
+        void Update_Controller()
+        {
+            controller1 = 0;
+            if (Keyboard.IsKeyDown(Key.X)) { controller1 |= 0x80; }
+            if (Keyboard.IsKeyDown(Key.Z)) { controller1 |= 0x40; }
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) { controller1 |= 0x20; }
+            if (Keyboard.IsKeyDown(Key.Enter)) { controller1 |= 0x10; }
+            if (Keyboard.IsKeyDown(Key.Up)) { controller1 |= 0x08; }
+            if (Keyboard.IsKeyDown(Key.Down)) { controller1 |= 0x04; }
+            if (Keyboard.IsKeyDown(Key.Left)) { controller1 |= 0x02; }
+            if (Keyboard.IsKeyDown(Key.Right)) { controller1 |= 0x01; }
+        }
+
         public void Run()
         {
             // Clocking
@@ -343,12 +373,18 @@ namespace Anode
                         return 0;
                 }
             }
+            else if (Address == 0x4016)
+            {
+                byte controllerBit = (byte)((Controller1ShiftRegister & 0x80) >> 7);
+                Controller1ShiftRegister <<= 1;
+                return controllerBit;
+            }
             else if (Address >= 0x8000)
             {
                 // Read from ROM (this line also mirrors for smaller ROMs)
                 return ROM[(Address - 0x8000) & ((Header[4] * 0x4000) - 1)];
             }
-            return 0;
+            return DataBus;
         }
 
         void Read()
@@ -371,18 +407,18 @@ namespace Anode
                 switch (Address)
                 {
                     case 0x2000: // PPUCTRL
-                        ppuNametableSelect = Value & 3;
-                        ppuVRAMInc32Mode = (Value & 4) != 0;
-                        ppuSpritePatternTable = (Value & 8) != 0;
-                        ppuBGPatternTable = (Value & 0x10) != 0;
-                        ppuUse8x16Sprites = (Value & 0x20) != 0;
-                        ppuEnableNMI = (Value & 0x80) != 0;
+                        ppuNametableSelect =    Value & 3;
+                        ppuVRAMInc32Mode =      (Value & 4)    != 0;
+                        ppuSpritePatternTable = (Value & 8)    != 0;
+                        ppuBGPatternTable =     (Value & 0x10) != 0;
+                        ppuUse8x16Sprites =     (Value & 0x20) != 0;
+                        ppuEnableNMI =          (Value & 0x80) != 0;
                         break;
                     case 0x2001: // PPUMASK
-                        ppuMask_8pxMaskBG = (Value & 2) != 0;
-                        ppuMask_8pxMaskSprites = (Value & 4) != 0;
-                        ppuMask_RenderBG = (Value & 8) != 0;
-                        ppuMask_RenderSprites = (Value & 0x10) != 0;
+                        ppuMask_8pxMaskBG =      (Value & 2)    != 0;
+                        ppuMask_8pxMaskSprites = (Value & 4)    != 0;
+                        ppuMask_RenderBG =       (Value & 8)    != 0;
+                        ppuMask_RenderSprites =  (Value & 0x10) != 0;
                         break;
                     case 0x2002: // PPUSTATUS
                         Console.WriteLine("PPUSTATUS not implemented");
@@ -402,7 +438,7 @@ namespace Anode
                         }
                         else
                         {
-                            ppu_t = (ushort)((TempVRAMAddress & 0b0000110000011111) | (((Value & 0xF8) << 2) | ((Value & 7) << 12)));
+                            ppu_t = (ushort)((TempVRAMAddress & 0b0000110000011111) | ((Value & 0xF8) << 2) | ((Value & 7) << 12));
                         }
                         ppu_w = !ppu_w;
                         break;
@@ -460,6 +496,15 @@ namespace Anode
                         ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
                         ppu_v &= 0x3FFF;
                         break;
+                }
+            }
+            else if (Address == 0x4016)
+            {
+                // Controller write
+                if ((Value & 1) != 0)
+                {
+                    Update_Controller();
+                    Controller1ShiftRegister = controller1;
                 }
             }
         }
@@ -530,6 +575,15 @@ namespace Anode
             Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
         }
 
+        void Unstable_Cross(byte CrossVal)
+        {
+            // iirc this fails due to an edge case with the R/W line (bool)
+            if (changedBoundary)
+            {
+                AddressBus = (ushort)(((AddressBus & 0xFF00) & (CrossVal << 8)) | (AddressBus & 0xFF));
+            }
+        }
+
         void Read_Operand()
         {
             if (op_b == 2 || op_b == 0)
@@ -538,7 +592,7 @@ namespace Anode
                 {
                     Halt_Instr();
                 }
-                else if (op_c == 1 && op_b == 0)
+                else if (((op_c & 1) != 0) && op_b == 0)
                 {
                     // X, Indirect
                     switch (t)
@@ -651,6 +705,7 @@ namespace Anode
                         case 3:
                             // Read the low byte at the new adress, then move again
                             Read();
+                            preIndex_Hi = DataBus;
                             AddressBus = (ushort)((DataBus << 8) | ADD);
                             // Get the address without the Y index
                             ushort AddrTemp = (ushort)(((AddressBus + Y) & 0xFF) | (AddressBus & 0xFF00));
@@ -689,15 +744,17 @@ namespace Anode
                         // Move to the new position, but don't cross the page boundary
                         AddressBus = DataBus;
                         Read();
-                        if (op_c < 3 || !(op_a == 4 || op_a == 5))
+                        if (op_c < 2 || !(op_a == 4 || op_a == 5))
                         {
                             // Zero Page, X
-                            AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + X));
+                            // AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + X));
+                            AddressBus = (byte)(AddressBus + X);
                         }
                         else
                         {
                             // Zero Page, Y
-                            AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + Y));
+                            // AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + Y));
+                            AddressBus = (byte)(AddressBus + Y);
                         }
                         break;
                     case 3:
@@ -722,6 +779,7 @@ namespace Anode
                         // Read the low byte of the operand
                         ADD = DataBus;
                         Read();
+                        preIndex_Hi = DataBus;
                         ProgramCounter++;
                         break;
                     case 3:
@@ -739,8 +797,7 @@ namespace Anode
                             AddressTemp = (ushort)(AddressBus + Y);
                         }
 
-                        // Change the low byte
-                        AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
+                        AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)AddressTemp);
                         if (AddressTemp != AddressBus)
                         {
                             // Page boundary crossed, wait
@@ -766,15 +823,16 @@ namespace Anode
 
         void RMW_Instr()
         {
-            if (op_c != 1 && op_b == 2 & t == 1)
+            if (((op_c & 1) == 0) && op_b == 2)
             {
+                Read();
                 // Accumulator (A) instruction
                 a_indexed = true;
                 DataBus = A;
                 inc_op_t = true;
                 op_t = 1;
             }
-            else if (t == 1)
+            else
             {
                 // Not an A instruction
                 a_indexed = false;
@@ -793,76 +851,147 @@ namespace Anode
                         // Perform a dummy write
                         Write();
                     }
+                    if (op_c != 3)
+                    {
+                        switch (op_a)
+                        {
+                            case 0:
+                                // ASL - Arithmetic Shift Left
+                                flag_Carry = DataBus >= 0x80;
+                                DataBus <<= 1;
+                                flag_Zero = DataBus == 0;
+                                flag_Negative = DataBus >= 0x80;
+                                break;
+                            case 1:
+                                // ROL - Rotate Left
+                                bool Futureflag_Carry = DataBus >= 0x80;
+                                DataBus <<= 1;
+                                if (flag_Carry)
+                                {
+                                    DataBus |= 1;
+                                }
+                                flag_Carry = Futureflag_Carry;
+                                flag_Negative = DataBus >= 0x80;
+                                flag_Zero = DataBus == 0;
+                                break;
+                            case 2:
+                                // LSR - Logical Shift Right
+                                flag_Carry = (DataBus & 1) != 0;
+                                DataBus >>= 1;
+                                flag_Negative = DataBus >= 0x80;
+                                flag_Zero = DataBus == 0;
+                                break;
+                            case 3:
+                                // ROR - Rotate Right
+                                bool FutureFlag_Carry = (DataBus & 1) != 0;
+                                DataBus >>= 1;
+                                if (flag_Carry)
+                                {
+                                    DataBus |= 0x80;
+                                }
+                                flag_Carry = FutureFlag_Carry;
+                                flag_Negative = DataBus >= 0x80;
+                                flag_Zero = DataBus == 0;
+                                break;
+                            case 6:
+                                // DEC - Decrement
+                                DataBus--;
+                                flag_Negative = DataBus >= 0x80;
+                                flag_Zero = DataBus == 0;
+                                break;
+                            case 7:
+                                // INC - Increment
+                                DataBus++;
+                                flag_Negative = DataBus >= 0x80;
+                                flag_Zero = DataBus == 0;
+                                break;
+                        }
+                    }
                     else
                     {
-                        // Probably isn't important as I don't think this behaviour can be verified
-                        A = DataBus;
+                        switch (op_a)
+                        {
+                            case 0:
+                                // SLO (Unofficial)
+                                flag_Carry = DataBus >= 0x80;
+                                DataBus <<= 1;
+                                A |= DataBus;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 1:
+                                // RLA (Unofficial)
+                                FutureFlag_Carry = DataBus >= 0x80;
+                                DataBus <<= 1;
+                                if (flag_Carry)
+                                {
+                                    DataBus |= 1;
+                                }
+                                flag_Carry = FutureFlag_Carry;
+                                A &= DataBus;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 2:
+                                // SRE (Unofficial)
+                                flag_Carry = (DataBus & 1) != 0;
+                                DataBus >>= 1;
+
+                                A ^= DataBus;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 3:
+                                // RRA
+                                FutureFlag_Carry = (DataBus & 1) != 0;
+                                DataBus >>= 1;
+                                if (flag_Carry)
+                                {
+                                    DataBus |= 0x80;
+                                }
+                                flag_Carry = FutureFlag_Carry;
+
+                                IntSum = DataBus + A + (flag_Carry ? 1 : 0);
+                                flag_Overflow = (~(A ^ DataBus) & (A ^ IntSum) & 0x80) != 0; // Signed overflow
+                                flag_Carry = IntSum > 0xFF; // Unsigned overflow
+                                A = (byte)IntSum;
+
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 6:
+                                // DCP (Unofficial)
+                                DataBus--;
+                                flag_Carry = A >= DataBus;
+                                flag_Zero = DataBus == A;
+                                flag_Negative = (byte)(A - DataBus) >= 0x80;
+                                break;
+                            case 7:
+                                // ISC (Unofficial)
+                                DataBus++;
+                                // Get the result of the calculation
+                                IntSum = A - DataBus - (flag_Carry ? 0 : 1);
+                                // In case of the signed overflow
+                                flag_Overflow = ((A ^ DataBus) & (A ^ IntSum) & 0x80) != 0;
+                                // Unsigned overflow
+                                flag_Carry = IntSum >= 0;
+                                // Transfer to A and set regular flags
+                                A = (byte)IntSum;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                        }
                     }
-                    switch (op_a)
+                    if (a_indexed)
                     {
-                        case 0:
-                            // ASL - Arithmetic Shift Left
-                            flag_Carry = DataBus > 127;
-                            DataBus <<= 1;
-                            flag_Zero = DataBus == 0;
-                            flag_Negative = DataBus > 127;
-                            break;
-                        case 1:
-                            // ROL - Rotate Left
-                            bool Futureflag_Carry = DataBus >= 0x80;
-                            DataBus <<= 1;
-                            if (flag_Carry)
-                            {
-                                DataBus |= 1;
-                            }
-                            flag_Carry = Futureflag_Carry;
-                            flag_Negative = DataBus > 127;
-                            flag_Zero = DataBus == 0;
-                            break;
-                        case 2:
-                            // LSR - Logical Shift Right
-                            flag_Carry = (DataBus & 1) != 0;
-                            DataBus >>= 1;
-                            flag_Negative = DataBus > 127;
-                            flag_Zero = DataBus == 0;
-                            break;
-                        case 3:
-                            // ROR - Rotate Right
-                            bool FutureFlag_Carry = (DataBus & 1) != 0;
-                            DataBus >>= 1;
-                            if (flag_Carry)
-                            {
-                                DataBus |= 0x80;
-                            }
-                            flag_Carry = FutureFlag_Carry;
-                            flag_Negative = DataBus > 127;
-                            flag_Zero = DataBus == 0;
-                            break;
-                        case 6:
-                            // DEC - Decrement
-                            DataBus--;
-                            flag_Negative = DataBus > 127;
-                            flag_Zero = DataBus == 0;
-                            break;
-                        case 7:
-                            // INC - Increment
-                            DataBus++;
-                            flag_Negative = DataBus > 127;
-                            flag_Zero = DataBus == 0;
-                            break;
+                        A = DataBus;
+                        t = 255;
                     }
                 }
                 else if (op_t == 2)
                 {
-                    if (!a_indexed)
-                    {
-                        // Write properly this time
-                        Write();
-                    }
-                    else
-                    {
-                        A = DataBus;
-                    }
+                    // Write properly this time
+                    Write();
                     // Overflow for use in next inctruction
                     t = 255;
                 }
@@ -914,18 +1043,22 @@ namespace Anode
                         AddressBus = DataBus;
                         inc_op_t = true;
                         break;
+                    case 2:
+                        MessageBox.Show($"Reached an immediate store: opcode ${opcode:X}({op_a}, {op_b}, {op_c}) at {ProgramCounter:X})",
+                            "NES Error: Accuracy Fail", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                        break;
                     case 3:
                         // Absolute
                         if (t == 1)
                         {
-                            // Read high byte
+                            // Read low byte
                             Read();
                             ProgramCounter++;
                             AddressBus++;
                         }
                         else if (t == 2)
                         {
-                            // Read low byte
+                            // Read high byte
                             ADD = DataBus;
                             Read();
                             ProgramCounter++;
@@ -944,14 +1077,15 @@ namespace Anode
                                 AddressBus = DataBus;
                                 break;
                             case 2:
-                                // Read indirect high byte
+                                // Read indirect low byte
                                 Read();
                                 AddressBus = (byte)(AddressBus + 1);
                                 ADD = DataBus;
                                 break;
                             case 3:
-                                // Read indirect low byte
+                                // Read indirect high byte
                                 Read();
+                                preIndex_Hi = DataBus;
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
 
                                 // Get the address without the Y index
@@ -981,15 +1115,16 @@ namespace Anode
                                 AddressBus = DataBus;
                                 Read(); // Dummy read
                                 // Index by either X or Y, depending on the addressing mode
-                                if (op_c < 3 || !(op_a == 4 || op_a == 5))
+                                // I'm unsure as to whether last part of this statement applies - check later when optimising
+                                if (op_c < 2 || !(op_a == 4 || op_a == 5))
                                 {
                                     // Zero Page, X
-                                    AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + X));
+                                    AddressBus = (byte)(AddressBus + X);
                                 }
                                 else
                                 {
                                     // Zero Page, Y
-                                    AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + Y));
+                                    AddressBus = (byte)(AddressBus + Y);
                                 }
                                 inc_op_t = true;
                                 break;
@@ -1000,15 +1135,16 @@ namespace Anode
                         switch (t)
                         {
                             case 1:
-                                // Read high byte
+                                // Read low byte
                                 Read();
                                 ProgramCounter++;
                                 AddressBus++;
                                 break;
                             case 2:
-                                // Read low byte
+                                // Read high byte
                                 ADD = DataBus;
                                 Read();
+                                preIndex_Hi = DataBus;
                                 ProgramCounter++;
                                 break;
                             case 3:
@@ -1026,7 +1162,7 @@ namespace Anode
                                     AddressTemp = (ushort)(AddressBus + Y);
                                 }
                                 // Apply to low byte only
-                                AddressBus = (ushort)((AddressBus & 0xFF) | (byte)AddressTemp);
+                                AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)AddressTemp);
                                 signedTemp = AddressTemp - AddressBus;
                                 Read();
                                 // Apply to high byte
@@ -1040,24 +1176,43 @@ namespace Anode
             else
             {
                 // Write to the correct location using the relavent register
-                if (op_c == 0)
+                switch (op_c)
                 {
-                    // STY
-                    DataBus = Y;
-                    Write();
+                    case 0:
+                        // STY
+                        DataBus = Y;
+                        break;
+                    case 1:
+                        // STA
+                        DataBus = A;
+                        break;
+                    case 2:
+                        // STX
+                        DataBus = X;
+                        break;
+                    case 3:
+                        DataBus = (byte)(A & X);
+                        break;
                 }
-                else if (op_c == 1)
+                if ((op_c != 1) && (op_b == 4 || op_b == 7 || op_b == 6))
                 {
-                    // STA
-                    DataBus = A;
-                    Write();
+                    if (op_c == 2 && op_b == 4)
+                    {
+                        // Specific halt
+                        Halt_Instr();
+                    }
+
+                    if (op_b == 6)
+                    {
+                        // SHS (TAS)
+                        SP = DataBus;
+                    }
+
+                    // SHX, SHA, SHY
+                    Unstable_Cross(DataBus);
+                    DataBus = (byte)(DataBus & (preIndex_Hi + 1));
                 }
-                else if (op_c == 2)
-                {
-                    // STX
-                    DataBus = X;
-                    Write();
-                }
+                Write();
                 t = 255;
             }
         }
@@ -1074,39 +1229,27 @@ namespace Anode
                     switch (op_a)
                     {
                         case 0:
-                            // BPL
-                            branch_condition = !flag_Negative;
-                            break;
                         case 1:
-                            // BMI
+                            // BPL, BMI
                             branch_condition = flag_Negative;
                             break;
                         case 2:
-                            // BVC
-                            branch_condition = !flag_Overflow;
-                            break;
                         case 3:
-                            // BVS
+                            // BVC, BVS
                             branch_condition = flag_Overflow;
                             break;
                         case 4:
-                            // BCC
-                            branch_condition = !flag_Carry;
-                            break;
                         case 5:
-                            // BCS
+                            // BCC, BCS
                             branch_condition = flag_Carry;
                             break;
                         case 6:
-                            // BNE
-                            branch_condition = !flag_Zero;
-                            break;
                         case 7:
-                            // BEQ
+                            // BNE, BEQ
                             branch_condition = flag_Zero;
                             break;
                     }
-                    if (!branch_condition)
+                    if ((!branch_condition && ((op_a & 1) != 0)) || (branch_condition && ((op_a & 1) == 0)))
                     {
                         // Don't take the branch
                         t = 255;
@@ -1133,6 +1276,7 @@ namespace Anode
                     // Check if it has crossed a boundary
                     if (signedTemp == 0)
                     {
+                        // And if not, the next cycle is skipped
                         t = 255;
                     }
                     break;
@@ -1173,20 +1317,20 @@ namespace Anode
                                 break;
                             case 3:
                                 // Push low byte of PC to the stack
-                                DataBus = (byte)(ProgramCounter);
+                                DataBus = (byte)ProgramCounter;
                                 Push();
                                 break;
                             case 4:
                                 // Push processor flags to the stack
                                 DataBus = 0;
-                                DataBus |= (byte)(flag_Carry ? 1 : 0);
-                                DataBus |= (byte)(flag_Zero ? 2 : 0);
+                                DataBus |= (byte)(flag_Carry            ? 1 : 0);
+                                DataBus |= (byte)(flag_Zero             ? 2 : 0);
                                 DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
-                                DataBus |= (byte)(flag_Decimal ? 8 : 0);
-                                DataBus += (byte)(DoNMI ? 0 : 0x10); // NMI has no B flag
-                                DataBus |= 0x20;
-                                DataBus |= (byte)(flag_Overflow ? 0x40 : 0);
-                                DataBus |= (byte)(flag_Negative ? 0x80 : 0);
+                                DataBus |= (byte)(flag_Decimal          ? 8 : 0);
+                                DataBus += (byte)(DoNMI                 ? 0 : 0x10); // NMI has no B flag
+                                DataBus |= 0x20; // Always set
+                                DataBus |= (byte)(flag_Overflow         ? 0x40 : 0);
+                                DataBus |= (byte)(flag_Negative         ? 0x80 : 0);
                                 Push();
                                 break;
                             case 5:
@@ -1203,7 +1347,7 @@ namespace Anode
                                 AddressBus++;
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
-                                ProgramCounter = (ushort)((DataBus << 8) | ADD);
+                                ProgramCounter = AddressBus;
                                 DoNMI = false;
                                 t = 255;
                                 break;
@@ -1259,12 +1403,12 @@ namespace Anode
                             case 3:
                                 // Processor flags pulled from the stack and transferred
                                 Pull();
-                                flag_Carry = (DataBus & 1) != 0;
-                                flag_Zero = (DataBus & 2) != 0;
-                                flag_InterruptDisable = (DataBus & 4) != 0;
-                                flag_Decimal = (DataBus & 8) != 0;
-                                flag_Overflow = (DataBus & 0x40) != 0;
-                                flag_Negative = (DataBus & 0x80) != 0;
+                                flag_Carry =            (DataBus & 1)    != 0;
+                                flag_Zero =             (DataBus & 2)    != 0;
+                                flag_InterruptDisable = (DataBus & 4)    != 0;
+                                flag_Decimal =          (DataBus & 8)    != 0;
+                                flag_Overflow =         (DataBus & 0x40) != 0;
+                                flag_Negative =         (DataBus & 0x80) != 0;
                                 break;
                             case 4:
                                 // Get low byte of PC
@@ -1354,7 +1498,14 @@ namespace Anode
                         // Read low byte of address
                         Read();
                         ADD = DataBus;
-                        AddressBus++;
+                        if (op_a == 3)
+                        {
+                            AddressBus = (ushort)((AddressBus & 0xFF00) | (byte)(AddressBus + 1));
+                        }
+                        else
+                        {
+                            AddressBus++;
+                        }
                         break;
                     case 2:
                         // Read high byte of address
@@ -1432,6 +1583,8 @@ namespace Anode
                         {
                             // PLA
                             A = DataBus;
+                            flag_Zero = A == 0;
+                            flag_Negative = A >= 0x80;
                         }
                         t = 255;
                         break;
@@ -1453,28 +1606,28 @@ namespace Anode
                             // Subtract 1 from Y and update flags
                             Y--;
                             flag_Zero = Y == 0;
-                            flag_Negative = Y > 127;
+                            flag_Negative = Y >= 0x80;
                             break;
                         case 5:
                             // TAY
                             // Sets Y to A and then updates flags
                             Y = A;
                             flag_Zero = Y == 0;
-                            flag_Negative = Y > 127;
+                            flag_Negative = Y >= 0x80;
                             break;
                         case 6:
                             // INY
                             // Increments 1 on Y and update flags
                             Y++;
                             flag_Zero = Y == 0;
-                            flag_Negative = Y > 127;
+                            flag_Negative = Y >= 0x80;
                             break;
                         case 7:
                             // INX
                             // Increments 1 on X and updates flags
                             X++;
                             flag_Zero = X == 0;
-                            flag_Negative = X > 127;
+                            flag_Negative = X >= 0x80;
                             break;
                     }
                     
@@ -1508,7 +1661,7 @@ namespace Anode
                             // Copies Y over to the A register and sets flags
                             A = Y;
                             flag_Zero = A == 0;
-                            flag_Negative = A > 127;
+                            flag_Negative = A >= 0x80;
                             break;
                         case 5:
                             // CLV
@@ -1539,21 +1692,21 @@ namespace Anode
                             // Copies the X register to the A register and sets flags
                             A = X;
                             flag_Zero = A == 0;
-                            flag_Negative = A > 127;
+                            flag_Negative = A >= 0x80;
                             break;
                         case 5:
                             // TAX
                             // Copies the A register to the X register and sets flags
                             X = A;
                             flag_Zero = X == 0;
-                            flag_Negative = X > 127;
+                            flag_Negative = X >= 0x80;
                             break;
                         case 6:
                             // DEX
                             // Subtracts 1 from the X register and sets flags
                             X--;
                             flag_Zero = X == 0;
-                            flag_Negative = X > 127;
+                            flag_Negative = X >= 0x80;
                             break;
                         // 7 is NOP
                     }
@@ -1573,7 +1726,7 @@ namespace Anode
                             // Transfers the SP to X and sets flags
                             X = SP;
                             flag_Zero = X == 0;
-                            flag_Negative = X > 127;
+                            flag_Negative = X >= 0x80;
                             break;
                         // Others are unofficial NOPs
                     }
@@ -1601,7 +1754,7 @@ namespace Anode
                             // ORA
                             // Binary ORs with the value and sets flags
                             A |= DataBus;
-                            flag_Negative = A > 127;
+                            flag_Negative = A >= 0x80;
                             flag_Zero = A == 0;
                         }
                         break;
@@ -1610,17 +1763,21 @@ namespace Anode
                         switch (op_c)
                         {
                             case 0:
-                                // BIT
-                                // I don't really know why this exists, but it isn't commonly used.
-                                flag_Zero = (A & DataBus) == 0;
-                                flag_Negative = (DataBus & 0x80) != 0;
-                                flag_Overflow = (DataBus & 0x40) != 0;
+                                if (op_b < 4)
+                                {
+                                    // BIT
+                                    // This isn't commonly used, but still important to implement
+                                    flag_Zero = (A & DataBus) == 0;
+                                    flag_Negative = (DataBus & 0x80) != 0;
+                                    flag_Overflow = (DataBus & 0x40) != 0;
+                                }
+                                // In other cases, NOP
                                 break;
                             case 1:
                                 // AND
                                 // Binary ands with value and sets flags
                                 A &= DataBus;
-                                flag_Negative = A > 127;
+                                flag_Negative = A >= 0x80;
                                 flag_Zero = A == 0;
                                 break;
                         }
@@ -1632,7 +1789,7 @@ namespace Anode
                             // EOR
                             // Binary exclusive ORs, aka XOR, and sets flags
                             A ^= DataBus;
-                            flag_Negative = A > 127;
+                            flag_Negative = A >= 0x80;
                             flag_Zero = A == 0;
                         }
                         break;
@@ -1644,7 +1801,7 @@ namespace Anode
                                 // Add with carry - this one is kinda complex...
 
                                 // Find the result of the calculation
-                                int IntSum = DataBus + A + (flag_Carry ? 1 : 0);
+                                IntSum = DataBus + A + (flag_Carry ? 1 : 0);
 
                                 // Figure out whether it causes an overflow (2 positives
                                 // ends up being negative, or 2 negatives is positive)
@@ -1656,49 +1813,62 @@ namespace Anode
 
                                 // Now store in A and set other flags as normal
                                 A = (byte)IntSum;
-                                flag_Negative = A > 127;
+                                flag_Negative = A >= 0x80;
                                 flag_Zero = A == 0;
                                 break;
                         }
                         break;
+                    case 4:
+                        // NOP
+                        break;
                     case 5:
                         // Load instruction
                         // Transfers into the correct register and then sets flags
-                        if (op_c == 0)
+                        switch (op_c)
                         {
-                            // LDY
-                            Y = DataBus;
-                        }
-                        else if (op_c == 1)
-                        {
-                            // LDA
-                            A = DataBus;
-                        }
-                        else if (op_c == 2)
-                        {
-                            // LDX
-                            X = DataBus;
+                            case 0:
+                                // LDY
+                                Y = DataBus;
+                                break;
+                            case 1:
+                                // LDA
+                                A = DataBus;
+                                break;
+                            case 2:
+                                // LDX
+                                X = DataBus;
+                                break;
+                            case 3:
+                                // LAX (Unofficial)
+                                A = DataBus;
+                                X = DataBus;
+                                break;
                         }
                         flag_Zero = DataBus == 0;
-                        flag_Negative = DataBus > 127;
+                        flag_Negative = DataBus >= 0x80;
                         break;
                     case 6:
                         switch (op_c)
                         {
                             case 0:
-                                // CPY
-                                // Compares the Y register with the data bus to set flags
-                                flag_Carry = Y >= DataBus;
-                                flag_Zero = DataBus == Y;
-                                flag_Negative = (byte)(Y - DataBus) > 127;
+                                if (op_b < 4)
+                                {
+                                    // CPY
+                                    // Compares the Y register with the data bus to set flags
+                                    flag_Carry = Y >= DataBus;
+                                    flag_Zero = DataBus == Y;
+                                    flag_Negative = (byte)(Y - DataBus) >= 0x80;
+                                }
+                                // In other cases, NOP
                                 break;
                             case 1:
                                 // CMP
                                 // Compares the accumulator with the data bus to set flags
                                 flag_Carry = A >= DataBus;
                                 flag_Zero = DataBus == A;
-                                flag_Negative = (byte)(A - DataBus) > 127;
+                                flag_Negative = (byte)(A - DataBus) >= 0x80;
                                 break;
+                            // Case 2 is NOP
                         }
                         break;
                     case 7:
@@ -1707,25 +1877,30 @@ namespace Anode
                             case 0:
                                 // CPX
                                 // Compares the x register with the data bus to set flags
-                                flag_Carry = X >= DataBus;
-                                flag_Zero = DataBus == X;
-                                flag_Negative = (byte)(X - DataBus) > 127;
+                                if (op_b < 4)
+                                {
+                                    flag_Carry = X >= DataBus;
+                                    flag_Zero = DataBus == X;
+                                    flag_Negative = (byte)(X - DataBus) >= 0x80;
+                                }
+                                // In other cases, NOP
                                 break;
                             case 1:
                                 // SBC
                                 // Ahh, another complex one
 
                                 // Get the result of the calculation
-                                int IntSum = A - DataBus - (flag_Carry ? 0 : 1);
+                                IntSum = A - DataBus - (flag_Carry ? 0 : 1);
                                 // In case of the signed overflow
-                                flag_Overflow = ((A ^ DataBus) & (A ^ DataBus) & 0x80) != 0;
+                                flag_Overflow = ((A ^ DataBus) & (A ^ IntSum) & 0x80) != 0;
                                 // Unsigned overflow
                                 flag_Carry = IntSum >= 0;
                                 // Transfer to A and set regular flags
                                 A = (byte)IntSum;
-                                flag_Negative = A > 127;
+                                flag_Negative = A >= 0x80;
                                 flag_Zero = A == 0;
                                 break;
+                            // Case 2 is NOP
                         }
                         break;
                 }
@@ -1733,9 +1908,117 @@ namespace Anode
             }
         }
 
+        void Unofficial_Immediate_Instr()
+        {
+            Read();
+            ProgramCounter++;
+            AddressBus++;
+            switch (op_a)
+            {
+                case 0:
+                case 1:
+                    // ANC
+                    // First AND
+                    A &= DataBus;
+                    flag_Negative = A >= 0x80;
+                    flag_Zero = A == 0;
+
+                    // Then carry flag is set
+                    flag_Carry = DataBus >= 0x80;
+                    break;
+                case 2:
+                    // ALR
+                    // First AND
+                    A &= DataBus;
+
+                    DataBus = A;
+
+                    // Then LSR
+                    flag_Carry = (DataBus & 1) != 0;
+                    DataBus >>= 1;
+                    flag_Negative = DataBus >= 0x80;
+                    flag_Zero = DataBus == 0;
+
+                    // Affects A
+                    A = DataBus;
+                    break;
+                case 3:
+                    // ARR
+                    // Shiver me timbers!
+                    // First AND
+                    A &= DataBus;
+                    flag_Negative = A >= 0x80;
+                    flag_Zero = A == 0;
+
+                    // Then ROR
+                    bool FutureFlag_Carry = (DataBus & 1) != 0;
+                    DataBus >>= 1;
+                    if (flag_Carry)
+                    {
+                        DataBus |= 0x80;
+                    }
+                    flag_Carry = FutureFlag_Carry;
+                    flag_Negative = DataBus >= 0x80;
+                    flag_Zero = DataBus == 0;
+
+                    // Affects A
+                    A = DataBus;
+
+                    // Sets flags based on certain conditions
+                    flag_Carry = (A & 0b01000000) != 0; // Flag is set if bit 6 is set
+                    flag_Overflow = flag_Carry != ((A & 0b00100000) != 0); // Flag is set if either bit 6 OR 5 is set but NOT both
+                    break;
+                case 4:
+                    // ANE (XXA)
+                    // Unstable opcode using a magic value. The magic value fluctuates on real
+                    // hardware based on temperature and other factors, but this isn't done in emulation,
+                    // as it prevents repeatability. The constant is currently chosen based on a realistic
+                    // value, albeit I don't have a flash cart to check real hardware.
+                    A = (byte)((unstable_magic | A) & X & DataBus);
+                    flag_Zero = A == 0;
+                    flag_Negative = A >= 0x80;
+                    break;
+                case 5:
+                    // LXA
+                    // immediate version of LAX, but it's unstable
+                    DataBus = (byte)((A | unstable_magic) & DataBus);
+                    A = DataBus;
+                    X = DataBus;
+                    flag_Negative = DataBus >= 0x80;
+                    flag_Zero = DataBus == 0;
+                    break;
+                case 6:
+                    // SBX (AXS, SAX)
+                    DataBus = (byte)((A & X) - DataBus);
+                    flag_Zero = DataBus == 0;
+                    flag_Negative = DataBus >= 0x80;
+                    flag_Carry = DataBus < (A & X);
+                    X = (byte)(A & X);
+                    DataBus = X; // Unsure wheter it retains or does this
+                    break;
+                case 7:
+                    // USBC (Wow, USB-C! The NES was really ahead of it's time /j)
+                    // Literally just SBC #
+
+                    // Get the result of the calculation
+                    IntSum = A - DataBus - (flag_Carry ? 0 : 1);
+                    // In case of the signed overflow
+                    flag_Overflow = ((A ^ DataBus) & (A ^ IntSum) & 0x80) != 0;
+                    // Unsigned overflow
+                    flag_Carry = IntSum >= 0;
+                    // Transfer to A and set regular flags
+                    A = (byte)IntSum;
+                    flag_Negative = A >= 0x80;
+                    flag_Zero = A == 0;
+                    break;
+            }
+            t = 255;
+        }
+
         void General_Instr()
         {
-            if ((op_b == 2 || op_b == 6) && (op_c == 0 || (op_c == 2 && op_a >= 4) || op_b == 6))
+            // op_b 3 == 2?
+            if ((op_b == 2 || op_b == 6) && (op_c == 0 || (op_c == 2 && (op_a >= 4 || op_b == 6))))
             {
                 // Single byte instructions
                 Single_Byte_Instr();
@@ -1743,7 +2026,14 @@ namespace Anode
             else
             {
                 // Internal memory execution
-                Internal_Mem_Instr();
+                if (!(op_c == 3 && op_b == 2))
+                {
+                    Internal_Mem_Instr();
+                }
+                else
+                {
+                    Unofficial_Immediate_Instr();
+                }
             }
         }
 
@@ -1783,6 +2073,7 @@ namespace Anode
                     opcode = 0x00;
                     if (logging)
                     {
+                        tracelog.WriteLine("-- NMI");
                         Tracelogger(opcode);
                     }
                 }
@@ -1793,12 +2084,17 @@ namespace Anode
             }
             else
             {
-                if ((op_c == 2) && ((op_a < 4) || ((op_a > 5) && ((op_b & 1) != 0))))
+                // I'm sure these logic statements could be optimised if I tried to spot binary
+                // patterns, but I just want to get it working at the moment
+
+                // Saying that, there's no permanent solution like a temporary solution, am I right?!
+
+                if (((op_c == 2) && ((op_a < 4) || ((op_a > 5) && ((op_b & 1) != 0))) && op_b != 6) || (op_c == 3 && !(op_a == 4 || op_a == 5) && !(op_b == 2)))
                 {
                     // RMW instructions
                     RMW_Instr();
                 }
-                else if ((op_a == 4) && (((op_c == 1) && (op_b != 2)) || ((op_b & 1) != 0)))
+                else if ((op_a == 4) && (((op_c == 1) && (op_b != 2)) || (op_c == 3 && op_b != 2) || ((op_b & 1) != 0)))
                 {
                     // Store instructions
                     Store_Instr();
@@ -1870,6 +2166,14 @@ namespace Anode
                 // Visible scanline or pre-render line
                 if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
                 {
+                    if (ppuMask_RenderBG)
+                    {
+                        ppuShiftRegister_patternL <<= 1;
+                        ppuShiftRegister_patternH <<= 1;
+                        ppuShiftRegister_attributeL <<= 1;
+                        ppuShiftRegister_attributeH <<= 1;
+                    }
+
                     // Visible pixel or preparing next scanline
                     if (ppuMask_RenderBG || ppuMask_RenderSprites)
                     {
