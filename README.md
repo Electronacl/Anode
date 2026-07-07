@@ -19,6 +19,7 @@ This emulator does not come with any games or test programs.
 Tutorial for basics: https://www.patreon.com/posts/making-your-nes-137873901<br>
 Info on CPU instructions: https://www.masswerk.at/6502/6502_instruction_set.html<br>
 CPU Details: https://www.princeton.edu/~mae412/HANDOUTS/Datasheets/6502.pdf<br>
+Window Focus check: https://stackoverflow.com/questions/7162834/determine-if-current-application-is-activated-has-focus<br>
 
 ## Understanging the version system for releases
 The version is split into 3 sections, with different parts within each section. Here, a different letter represents each part. The sections are separated by dashes:<br>
