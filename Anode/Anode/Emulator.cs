@@ -1953,10 +1953,10 @@ namespace Anode
                     flag_Zero = A == 0;
 
                     // Then carry flag is set
-                    flag_Carry = DataBus >= 0x80;
+                    flag_Carry = A >= 0x80;
                     break;
                 case 2:
-                    // ALR
+                    // ALR / ASR
                     // First AND
                     A &= DataBus;
 
@@ -1978,6 +1978,8 @@ namespace Anode
                     A &= DataBus;
                     flag_Negative = A >= 0x80;
                     flag_Zero = A == 0;
+
+                    DataBus = A;
 
                     // Then ROR
                     bool FutureFlag_Carry = (DataBus & 1) != 0;
@@ -2021,9 +2023,8 @@ namespace Anode
                     DataBus = (byte)((A & X) - DataBus);
                     flag_Zero = DataBus == 0;
                     flag_Negative = DataBus >= 0x80;
-                    flag_Carry = DataBus < (A & X);
-                    X = (byte)(A & X);
-                    DataBus = X; // Unsure wheter it retains or does this
+                    flag_Carry = DataBus <= (A & X);
+                    X = DataBus;
                     break;
                 case 7:
                     // USBC (Wow, USB-C! The NES was really ahead of it's time /j)
