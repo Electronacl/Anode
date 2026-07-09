@@ -8,6 +8,9 @@ namespace Anode
 {
     public partial class Form1 : Form
     {
+        // Anode windows
+        Form aboutForm;
+
         // Initialise variables which are used later
         Emulator emulator;
         string rompath;
@@ -245,7 +248,13 @@ namespace Anode
             waitingForFrame = true;
         }
 
-        private void useNewPPUToolStripMenuItem_Click(object sender, EventArgs e)
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            aboutForm = new AnodeAbout();
+            aboutForm.Show();
+        }
+
+        private void useNewPPUToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
             ppu_version = !ppu_version;
             if (emulator != null)

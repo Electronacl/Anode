@@ -38,9 +38,11 @@
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forceHaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.experimentalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.useNewPPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.anodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.experimentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.useNewPPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -51,11 +53,11 @@
             this.fileToolStripMenuItem,
             this.emulationToolStripMenuItem,
             this.debuggingToolStripMenuItem,
-            this.experimentalToolStripMenuItem});
+            this.anodeToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Padding = new System.Windows.Forms.Padding(4, 2, 0, 2);
-            this.menuStrip1.Size = new System.Drawing.Size(600, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(296, 24);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -143,21 +145,6 @@
             this.forceHaltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, crashing it.";
             this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
             // 
-            // experimentalToolStripMenuItem
-            // 
-            this.experimentalToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.useNewPPUToolStripMenuItem});
-            this.experimentalToolStripMenuItem.Name = "experimentalToolStripMenuItem";
-            this.experimentalToolStripMenuItem.Size = new System.Drawing.Size(87, 20);
-            this.experimentalToolStripMenuItem.Text = "Experimental";
-            // 
-            // useNewPPUToolStripMenuItem
-            // 
-            this.useNewPPUToolStripMenuItem.Name = "useNewPPUToolStripMenuItem";
-            this.useNewPPUToolStripMenuItem.Size = new System.Drawing.Size(143, 22);
-            this.useNewPPUToolStripMenuItem.Text = "Use new PPU";
-            this.useNewPPUToolStripMenuItem.Click += new System.EventHandler(this.useNewPPUToolStripMenuItem_Click);
-            // 
             // pictureBox1
             // 
             this.pictureBox1.Location = new System.Drawing.Point(9, 22);
@@ -167,11 +154,42 @@
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
             // 
+            // anodeToolStripMenuItem
+            // 
+            this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem,
+            this.experimentsToolStripMenuItem});
+            this.anodeToolStripMenuItem.Name = "anodeToolStripMenuItem";
+            this.anodeToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
+            this.anodeToolStripMenuItem.Text = "Anode";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
+            // experimentsToolStripMenuItem
+            // 
+            this.experimentsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.useNewPPUToolStripMenuItem});
+            this.experimentsToolStripMenuItem.Name = "experimentsToolStripMenuItem";
+            this.experimentsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.experimentsToolStripMenuItem.Text = "Experiments";
+            // 
+            // useNewPPUToolStripMenuItem
+            // 
+            this.useNewPPUToolStripMenuItem.Name = "useNewPPUToolStripMenuItem";
+            this.useNewPPUToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.useNewPPUToolStripMenuItem.Text = "Use new PPU";
+            this.useNewPPUToolStripMenuItem.Click += new System.EventHandler(this.useNewPPUToolStripMenuItem_Click_1);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 366);
+            this.ClientSize = new System.Drawing.Size(296, 310);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -199,7 +217,9 @@
         private System.Windows.Forms.ToolStripMenuItem forceHaltToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem pauseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem advanceFrameToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem experimentalToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem experimentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem useNewPPUToolStripMenuItem;
     }
 }
