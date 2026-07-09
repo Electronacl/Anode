@@ -91,8 +91,13 @@ namespace Anode
         int ppuScanLine;
         bool ppuVBlank;
 
+        // PPU registers
         ushort TempVRAMAddress;
         byte PPUReadBuffer;
+
+        byte ppuSecondaryOAMAddress;
+
+        bool ppuSecondaryOAMFull;
 
         // ----- PPU Flags
         int ppuNametableSelect;
@@ -110,6 +115,17 @@ namespace Anode
 
         bool ppuStatusOverflow;
         bool ppuStatusSprZeroHit;
+
+        // Updated PPU data
+        byte PPUAddressBus;
+        byte PPUDataBus;
+        ushort PPUTargetAddress;
+
+        bool ALE; // Address latch enable
+
+        bool RDL; // Whether to write or read data
+
+        bool PPUcycle = false;
 
         // ----- NMI
         bool NMILevelDetector;
@@ -142,6 +158,14 @@ namespace Anode
         bool FutureFlag_Carry;
 
         public bool CPU_Halted;
+        public bool use_new_ppu = false;
+
+        byte OAM_DMA_Address;
+        byte OAM_POS = 0xFF;
+        bool OAM_cycle = false;
+        bool odd_cycle = false;
+        byte OAM_cycle_init_t = 0;
+        byte OAM_Temp_Value; // Unsure where this is actually stored, I can swap this later
 
         // Opcode splits
         byte op_a;
@@ -312,7 +336,14 @@ namespace Anode
                 // PPU runs 1:4
                 if ((Master_Clock - 1) % 4 == 0)
                 {
-                    Emulate_PPU();
+                    if (use_new_ppu)
+                    {
+                        New_PPU();
+                    }
+                    else
+                    {
+                        Emulate_PPU();
+                    }
                 }
 
                 // CPU runs 1:12
@@ -379,6 +410,9 @@ namespace Anode
                         {
                             // Palette RAM has no buffer
                             temp = ReadPPU(ppu_v);
+
+                            // Other than this quirk. This doesn't seem to work atm, as I think ppu_v is wrong.
+                            PPUReadBuffer = ReadPPU((ushort)(ppu_v & 0x27FF));
                         }
                         else
                         {
@@ -534,6 +568,13 @@ namespace Anode
                         ppu_v &= 0x3FFF;
                         break;
                 }
+            }
+            else if (Address == 0x4014)
+            {
+                // Perform an OAM DMA.
+                OAM_POS = Value;
+                OAM_DMA_Address = 0;
+                OAM_cycle_init_t = 0;
             }
             else if (Address == 0x4016)
             {
@@ -2085,6 +2126,35 @@ namespace Anode
 
         void Emulate_CPU()
         {
+            if (OAM_DMA_Address != 0xFF)
+            {
+                if (OAM_cycle_init_t < (odd_cycle ? 2 : 1))
+                {
+                    // Blank cycles - I just use these to init.
+                    OAM_cycle = false;
+                    OAM_cycle_init_t++;
+                }
+                else
+                {
+                    if (!OAM_cycle)
+                    {
+                        OAM_Temp_Value = Read_Raw((ushort)((OAM_POS << 8) + OAM_DMA_Address));
+                    }
+                    else
+                    {
+                        OAM[OAM_DMA_Address] = OAM_Temp_Value;
+                        OAM_DMA_Address++;
+                    }
+
+                    OAM_cycle = !OAM_cycle;
+                }
+                return;
+            }
+            else
+            {
+                odd_cycle = !odd_cycle;
+            }
+
             // Check whether NMI should occur
             bool PreviousNMILevelDetector = NMILevelDetector;
             NMILevelDetector = ppuEnableNMI && ppuVBlank;
@@ -2187,6 +2257,174 @@ namespace Anode
                 MessageBox.Show($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.\nThis error should not occur, and should be reported to the developer.", 
                     "CPU Emulation Error: Instruction Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        void SpriteEval()
+        {
+
+        }
+
+        void New_PPU()
+        {
+            if (ppuDot == 1 && ppuScanLine == 241)
+            {
+                Render();
+                ppuVBlank = true;
+            }
+            else if (ppuDot == 1 && ppuScanLine == 261)
+            {
+                ppuVBlank = false;
+                ppuStatusOverflow = false;
+                ppuStatusSprZeroHit = false;
+            }
+
+            // Read
+            if (PPUcycle)
+            {
+                ALE = false;
+                RDL = true;
+                PPUDataBus = ReadPPU((ushort)((PPUAddressBus << 8) | PPUDataBus));
+            }
+
+            if (ppuScanLine < 240 || ppuScanLine == 261)
+            {
+                SpriteEval();
+                // Visible scanline or pre-render line
+                if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
+                {
+                    if (ppuMask_RenderBG)
+                    {
+                        ppuShiftRegister_patternL <<= 1;
+                        ppuShiftRegister_patternH <<= 1;
+                        ppuShiftRegister_attributeL <<= 1;
+                        ppuShiftRegister_attributeH <<= 1;
+                    }
+
+                    // Visible pixel or preparing next scanline
+                    if (ppuMask_RenderBG || ppuMask_RenderSprites)
+                    {
+                        byte cycleTick;
+                        cycleTick = (byte)((ppuDot - 1) & 7);
+                        switch (cycleTick)
+                        {
+                            case 0:
+                                PPUcycle = false;
+                                ppuShiftRegister_patternL = (ushort)((ppuShiftRegister_patternL & 0xFF00) | ppu8Step_patternLowBitPlane);
+                                ppuShiftRegister_patternH = (ushort)((ppuShiftRegister_patternH & 0xFF00) | ppu8Step_patternHighBitPlane);
+                                ppuShiftRegister_attributeL = (ushort)((ppuShiftRegister_attributeL & 0xFF00) | ((ppu8Step_attribute & 1) == 1 ? 0xFF : 0));
+                                ppuShiftRegister_attributeH = (ushort)((ppuShiftRegister_attributeH & 0xFF00) | ((ppu8Step_attribute & 2) == 2 ? 0xFF : 0));
+                                PPUTargetAddress = (ushort)(0x2000 + (ppu_v & 0x0FFF));
+                                break;
+                            case 1:
+                                ppu8Step_NextCharacter = PPUDataBus;
+                                break;
+                            case 2:
+                                PPUTargetAddress = (ushort)(0x23C0 | (ppu_v & 0xC00) | ((ppu_v >> 4) & 0x38) | ((ppu_v >> 2) & 0x07));
+                                break;
+                            case 3:
+                                ppu8Step_attribute = PPUDataBus;
+                                // Determine which tile attribute data is for
+                                if ((ppu_v & 3) >= 2) // Right tile
+                                {
+                                    ppu8Step_attribute = (byte)(ppu8Step_attribute >> 2);
+                                }
+                                if ((((ppu_v & 0b0000001111100000) >> 5) & 3) >= 2) // Bottom tile
+                                {
+                                    ppu8Step_attribute = (byte)(ppu8Step_attribute >> 4);
+                                }
+                                ppu8Step_attribute = (byte)(ppu8Step_attribute & 3);
+                                break;
+                            case 4:
+                                PPUTargetAddress = (ushort)(((ppu_v & 0b0111000000000000) >> 12) | ppu8Step_NextCharacter * 16 | (ppuBGPatternTable ? 0x1000 : 0));
+                                break;
+                            case 5:
+                                ppu8Step_patternLowBitPlane = PPUDataBus;
+                                break;
+                            case 6:
+                                PPUTargetAddress += 8;
+                                break;
+                            case 7:
+                                ppu8Step_patternHighBitPlane = PPUDataBus;
+                                if ((ppu_v & 0x001F) == 31)
+                                {
+                                    ppu_v &= 0xFFE0; // Reset scroll
+                                    ppu_v ^= 0x0400; // Cross into next nametable
+                                }
+                                else
+                                {
+                                    ppu_v++;
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                if (ppuMask_RenderBG || ppuMask_RenderSprites)
+                {
+                    if (ppuScanLine < 240)
+                    {
+                        if (ppuDot == 256)
+                        {
+                            PPU_IncrementScrollY();
+                        }
+                        else if (ppuDot == 257)
+                        {
+                            PPU_ResetXScroll();
+                        }
+                    }
+                    if (ppuDot >= 280 && ppuDot <= 304 && ppuScanLine == 261)
+                    {
+                        PPU_ResetYScroll();
+                    }
+                }
+            }
+
+            if (ppuScanLine < 240 && ppuDot > 0 && ppuDot <= 256)
+            {
+                byte PalHi = 0; // Colour palette
+                byte PalLow = 0; // Index in palette
+                if (ppuMask_RenderBG && (ppuDot > 8 || ppuMask_8pxMaskBG))
+                {
+                    byte col0 = (byte)((ppuShiftRegister_patternL >> (15 - ppu_x)) & 1);
+                    byte col1 = (byte)((ppuShiftRegister_patternH >> (15 - ppu_x)) & 1);
+                    PalLow = (byte)((col1 << 1) | col0);
+
+                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (15 - ppu_x)) & 1);
+                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (15 - ppu_x)) & 1);
+                    PalHi = (byte)((pal1 << 1) | pal0);
+
+                    if (PalLow == 0 && PalHi != 0)
+                    {
+                        PalHi = 0;
+                    }
+                }
+
+                Color outColour = Palette[PaletteRAM[PalHi * 4 + PalLow]];
+
+                output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
+            }
+
+            ppuDot++;
+            if (ppuDot > 341)
+            {
+                ppuDot = 0;
+                ppuScanLine++;
+                if (ppuScanLine > 261)
+                {
+                    ppuScanLine = 0;
+                }
+            }
+
+            if (!PPUcycle)
+            {
+                // Set the data and address buses
+                ALE = true;
+                RDL = false;
+                PPUDataBus = (byte)PPUTargetAddress;
+                PPUAddressBus = (byte)(PPUTargetAddress >> 8);
+            }
+
+            PPUcycle = !PPUcycle;
         }
 
         // The PPU code is temporary

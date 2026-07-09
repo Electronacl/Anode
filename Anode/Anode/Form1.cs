@@ -11,6 +11,7 @@ namespace Anode
         // Initialise variables which are used later
         Emulator emulator;
         string rompath;
+        string romname;
         Thread processThread;
         bool testenabled = false;
         bool tracelogging = false;
@@ -21,6 +22,8 @@ namespace Anode
 
         bool paused = false;
         bool waitingForFrame = false;
+
+        bool ppu_version = false;
 
         // Winforms stuff
         public Form1()
@@ -92,6 +95,8 @@ namespace Anode
             emulator.filepath = rompath;
             emulator.logging = tracelogging;
             emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
+
+            emulator.use_new_ppu = ppu_version;
 
             // Get the emulator to prepare for running
             emulator.Reset();
@@ -188,6 +193,10 @@ namespace Anode
 
         private void init_Emulator()
         {
+            romname = Path.GetFileName(rompath);
+
+            this.Text = $"Anode - {romname}";
+
             pauseToolStripMenuItem.Text = "Pause";
             pauseToolStripMenuItem.Enabled = true;
             forceHaltToolStripMenuItem.Enabled = true;
@@ -234,6 +243,23 @@ namespace Anode
         private void advanceFrameToolStripMenuItem_Click(object sender, EventArgs e)
         {
             waitingForFrame = true;
+        }
+
+        private void useNewPPUToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ppu_version = !ppu_version;
+            if (emulator != null)
+            {
+                emulator.use_new_ppu = ppu_version;
+            }
+            if (ppu_version)
+            {
+                useNewPPUToolStripMenuItem.Text = "Use old PPU";
+            }
+            else
+            {
+                useNewPPUToolStripMenuItem.Text = "Use new PPU";
+            }
         }
     }
 }
