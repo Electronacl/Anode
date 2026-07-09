@@ -187,7 +187,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Name = "AnodeAbout";
-            this.Text = "AnodeAbout";
+            this.Text = "About";
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);
