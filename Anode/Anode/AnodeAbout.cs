@@ -47,5 +47,18 @@ namespace Anode
                 MessageBox.Show("An error occurred when trying to open the link");
             }
         }
+
+        private void versionText_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Ehehehehehe
+                OpenLink("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+            }
+            catch
+            {
+                // Do nothing
+            }
+        }
     }
 }

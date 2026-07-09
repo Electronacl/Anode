@@ -33,14 +33,15 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.label4 = new System.Windows.Forms.Label();
-            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
+            this.versionText = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -81,10 +82,21 @@
             // 
             this.panel1.Controls.Add(this.linkLabel2);
             this.panel1.Controls.Add(this.linkLabel1);
-            this.panel1.Location = new System.Drawing.Point(12, 400);
+            this.panel1.Location = new System.Drawing.Point(12, 394);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(440, 23);
             this.panel1.TabIndex = 3;
+            // 
+            // linkLabel2
+            // 
+            this.linkLabel2.AutoSize = true;
+            this.linkLabel2.Location = new System.Drawing.Point(51, 4);
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.Size = new System.Drawing.Size(62, 13);
+            this.linkLabel2.TabIndex = 1;
+            this.linkLabel2.TabStop = true;
+            this.linkLabel2.Text = "Bug tracker";
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
             // linkLabel1
             // 
@@ -107,17 +119,6 @@
             this.label4.TabIndex = 4;
             this.label4.Text = resources.GetString("label4.Text");
             // 
-            // linkLabel2
-            // 
-            this.linkLabel2.AutoSize = true;
-            this.linkLabel2.Location = new System.Drawing.Point(51, 4);
-            this.linkLabel2.Name = "linkLabel2";
-            this.linkLabel2.Size = new System.Drawing.Size(62, 13);
-            this.linkLabel2.TabIndex = 1;
-            this.linkLabel2.TabStop = true;
-            this.linkLabel2.Text = "Bug tracker";
-            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
-            // 
             // label5
             // 
             this.label5.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -134,15 +135,16 @@
             this.label6.Size = new System.Drawing.Size(439, 2);
             this.label6.TabIndex = 6;
             // 
-            // label7
+            // versionText
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(9, 139);
-            this.label7.Name = "label7";
-            this.label7.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.label7.Size = new System.Drawing.Size(118, 13);
-            this.label7.TabIndex = 7;
-            this.label7.Text = "Version: 2026.1-5.2b-xs";
+            this.versionText.AutoSize = true;
+            this.versionText.Location = new System.Drawing.Point(9, 139);
+            this.versionText.Name = "versionText";
+            this.versionText.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.versionText.Size = new System.Drawing.Size(118, 13);
+            this.versionText.TabIndex = 7;
+            this.versionText.Text = "Version: 2026.1-5.3b-xs";
+            this.versionText.Click += new System.EventHandler(this.versionText_Click);
             // 
             // label8
             // 
@@ -155,19 +157,28 @@
             // label9
             // 
             this.label9.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label9.Location = new System.Drawing.Point(12, 395);
+            this.label9.Location = new System.Drawing.Point(12, 389);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(439, 2);
             this.label9.TabIndex = 9;
+            // 
+            // label7
+            // 
+            this.label7.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.label7.Location = new System.Drawing.Point(12, 421);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(439, 2);
+            this.label7.TabIndex = 10;
             // 
             // AnodeAbout
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(464, 461);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
-            this.Controls.Add(this.label7);
+            this.Controls.Add(this.versionText);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -195,8 +206,9 @@
         private System.Windows.Forms.LinkLabel linkLabel2;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label versionText;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label7;
     }
 }
