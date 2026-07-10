@@ -40,7 +40,6 @@
             this.forceHaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.anodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.experimentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -147,8 +146,7 @@
             // anodeToolStripMenuItem
             // 
             this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem,
-            this.experimentsToolStripMenuItem});
+            this.aboutToolStripMenuItem});
             this.anodeToolStripMenuItem.Name = "anodeToolStripMenuItem";
             this.anodeToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.anodeToolStripMenuItem.Text = "Anode";
@@ -159,12 +157,6 @@
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // experimentsToolStripMenuItem
-            // 
-            this.experimentsToolStripMenuItem.Name = "experimentsToolStripMenuItem";
-            this.experimentsToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
-            this.experimentsToolStripMenuItem.Text = "Experiments";
             // 
             // pictureBox1
             // 
@@ -213,7 +205,6 @@
         private System.Windows.Forms.ToolStripMenuItem advanceFrameToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem experimentsToolStripMenuItem;
     }
 }
 
