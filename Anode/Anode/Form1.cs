@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,6 +28,9 @@ namespace Anode
         bool waitingForFrame = false;
 
         bool ppu_version = false;
+
+        Stopwatch sw = new Stopwatch();
+        bool log_time = false;
 
         // Winforms stuff
         public Form1()
@@ -114,8 +118,16 @@ namespace Anode
             {
                 if ((!paused) || waitingForFrame)
                 {
+                    sw.Start();
                     // 1 cycle at a time
                     emulator.Advance_Frame();
+                    sw.Stop();
+                    if (log_time)
+                    {
+                        Console.WriteLine($"Core took {sw.ElapsedMilliseconds}ms");
+                    }
+                    sw.Reset();
+                    sw.Start();
                     // When the emulator has completed a frame, or crashed
                     lock (ScreenObject)
                     {
@@ -136,6 +148,11 @@ namespace Anode
                         }
                         emulator.frame_Ready = false;
                         waitingForFrame = false;
+                    }
+                    sw.Stop();
+                    if (log_time)
+                    {
+                        Console.WriteLine($"Update took {sw.ElapsedMilliseconds}ms");
                     }
                 }
             }
