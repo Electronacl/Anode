@@ -479,7 +479,8 @@ namespace Anode
                         ppuOAMAddress = Value;
                         break;
                     case 0x2004: // OAMDATA
-                        Console.WriteLine("OAMDATA not implemented");
+                        OAM[ppuOAMAddress] = Value;
+                        ppuOAMAddress += 1;
                         break;
                     case 0x2005: // PPUSCROLL
                         if (!ppu_w)
