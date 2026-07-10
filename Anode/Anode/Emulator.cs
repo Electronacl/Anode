@@ -77,15 +77,6 @@ namespace Anode
         byte ppu8Step_temp;
         byte ppu8Step_NextCharacter;
 
-        // Sprite registers which aren't implemented yet
-        /*byte[] ppu_SpriteShiftRegisterL = new byte[8];
-        byte[] ppu_SpriteShiftRegisterH = new byte[8];
-
-        byte[] ppu_SpriteAttribute = new byte[8];
-        byte[] ppu_SpritePattern = new byte[8];
-        byte[] ppu_SpriteXposition = new byte[8];
-        byte[] ppu_SpriteYposition = new byte[8];*/
-
         // Screen position and info
         int ppuDot;
         int ppuScanLine;
@@ -2367,14 +2358,14 @@ namespace Anode
             }
             else if (ppuDot > 64 && ppuDot <= 256)
             {
-                if (!ppuSpriteEvaluationOAMOverflowed)
+                if ((ppuDot & 1) == 1)
                 {
-                    if ((ppuDot & 1) == 1)
-                    {
-                        // Odd cycles load the value from OAM
-                        ppuSpriteEvalTemp = OAM[ppuOAMAddress];
-                    }
-                    else
+                    // Odd cycles load the value from OAM
+                    ppuSpriteEvalTemp = OAM[ppuOAMAddress];
+                }
+                else
+                {
+                    if (!ppuSpriteEvaluationOAMOverflowed)
                     {
                         // Even cycles load it into secondary OAM
                         if (!ppuSecondaryOAMFull)
@@ -2452,7 +2443,7 @@ namespace Anode
                         ppuSecondaryOAMAddress++;
                         break;
                     case 1:
-                        ppu_SpriteXposition[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppu_SpritePattern[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
                         ppuSecondaryOAMAddress++;
                         break;
                     case 2:
@@ -2505,6 +2496,7 @@ namespace Anode
                         ppuSecondaryOAMAddress++;
                         break;
                 }
+
                 ppuSpriteEvalTick++;
                 ppuSpriteEvalTick &= 7;
                 // The address bus should be checked outside this routine
