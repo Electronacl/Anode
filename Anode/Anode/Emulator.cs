@@ -2525,34 +2525,33 @@ namespace Anode
                 PPUDataBus = ReadPPU((ushort)((PPUAddressBus << 8) | PPUDataBus));
             }
 
-            
-            
-
             if (ppuScanLine < 240 || ppuScanLine == 261)
             {
+                if (ppuMask_RenderBG || ppuMask_RenderSprites)
+                {
+                    // Shift sprite shift registers
+                    if (ppuDot > 1 && ppuDot <= 256)
+                    {
+                        for (int i = 0; i < 8; i++)
+                        {
+                            if (ppu_SpriteXposition[i] > 0)
+                            {
+                                ppu_SpriteXposition[i]--;
+                            }
+                            else
+                            {
+                                ppu_SpriteShiftRegisterL[i] <<= 1;
+                                ppu_SpriteShiftRegisterH[i] <<= 1;
+                            }
+                        }
+                    }
+                }
+
                 SpriteEval();
                 // Visible scanline or pre-render line
                 if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
                 {
-                    if (ppuMask_RenderBG || ppuMask_RenderSprites)
-                    {
-                        // Shift sprite shift registers
-                        if (ppuDot > 1 && ppuDot <= 256)
-                        {
-                            for (int i = 0; i < 8; i++)
-                            {
-                                if (ppu_SpriteXposition[i] > 0)
-                                {
-                                    ppu_SpriteXposition[i]--;
-                                }
-                                else
-                                {
-                                    ppu_SpriteShiftRegisterL[i] <<= 1;
-                                    ppu_SpriteShiftRegisterH[i] <<= 1;
-                                }
-                            }
-                        }
-                    }
+                    
                     if (ppuMask_RenderBG)
                     {
                         // Shift BG shift registers
@@ -2561,7 +2560,6 @@ namespace Anode
                         ppuShiftRegister_attributeL <<= 1;
                         ppuShiftRegister_attributeH <<= 1;
                     }
-
                     // Visible pixel or preparing next scanline
                     if (ppuMask_RenderBG || ppuMask_RenderSprites)
                     {
@@ -2671,14 +2669,14 @@ namespace Anode
                         if (ppu_SpriteXposition[i] == 0 && i < (ppuSecondaryOAMSize / 4))
                         {
                             bool SpixelL = ((ppu_SpriteShiftRegisterL[i]) & 0x80) != 0; // Takes bit from shift register to get low bit plane
-                            bool SpixelH = ((ppu_SpriteShiftRegisterL[i]) & 0x80) != 0; // Takes bit from shift register to get high bit plane
+                            bool SpixelH = ((ppu_SpriteShiftRegisterH[i]) & 0x80) != 0; // Takes bit from shift register to get high bit plane
 
                             SpritePalLow = 0;
                             if (SpixelL) { SpritePalLow = 1; }
-                            if (SpixelL) { SpritePalLow |= 2; }
+                            if (SpixelH) { SpritePalLow |= 2; }
 
                             SpritePalHi = (byte)((ppu_SpriteAttribute[i] & 0x03) | 0x04);
-                            SpritePriority = ((ppu_SpriteAttribute[i] >> 5) & 1) != 0;
+                            SpritePriority = ((ppu_SpriteAttribute[i] >> 5) & 1) == 0;
                         }
                         else
                         {
