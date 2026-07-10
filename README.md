@@ -41,9 +41,9 @@ Example: `2.4b` would have had 2 major changes, 4 minor changes, and be in the b
 If you're looking for accuracy and optimisation, use the stable builds only (unless there isn't one available for the version you're looking to use).<br>
 If you want the latest features only, use the unstable builds.
 
-## Accuracy info (as of 2026.1-4.2b-xs)
+## Accuracy info (as of 2026.1-6.2b-xs)
 ### AccuracyCoin
-<img width="264" height="249" alt="image" src="https://github.com/user-attachments/assets/f86fb376-9647-40a8-a5be-e87d091ca2f4" /><br>
+<img width="263" height="245" alt="image" src="https://github.com/user-attachments/assets/caba8c4a-96b3-49f1-91fc-9786168ee503" /><br>
 ### nestest
 *Official opcodes*<br>
 <img width="262" height="247" alt="image" src="https://github.com/user-attachments/assets/a3da22f5-b6ef-4635-be0b-ebc3fb264313" /><br>
