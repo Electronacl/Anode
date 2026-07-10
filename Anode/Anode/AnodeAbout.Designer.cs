@@ -40,7 +40,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.versionText = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -68,9 +67,8 @@
             // 
             // label3
             // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(9, 426);
+            this.label3.Location = new System.Drawing.Point(9, 197);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(442, 26);
             this.label3.TabIndex = 2;
@@ -82,7 +80,7 @@
             // 
             this.panel1.Controls.Add(this.linkLabel2);
             this.panel1.Controls.Add(this.linkLabel1);
-            this.panel1.Location = new System.Drawing.Point(12, 394);
+            this.panel1.Location = new System.Drawing.Point(12, 165);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(440, 23);
             this.panel1.TabIndex = 3;
@@ -154,18 +152,10 @@
             this.label8.Size = new System.Drawing.Size(439, 2);
             this.label8.TabIndex = 8;
             // 
-            // label9
-            // 
-            this.label9.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label9.Location = new System.Drawing.Point(12, 389);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(439, 2);
-            this.label9.TabIndex = 9;
-            // 
             // label7
             // 
             this.label7.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            this.label7.Location = new System.Drawing.Point(12, 421);
+            this.label7.Location = new System.Drawing.Point(12, 192);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(439, 2);
             this.label7.TabIndex = 10;
@@ -174,9 +164,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(464, 461);
+            this.ClientSize = new System.Drawing.Size(464, 232);
             this.Controls.Add(this.label7);
-            this.Controls.Add(this.label9);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.versionText);
             this.Controls.Add(this.label6);
@@ -186,6 +175,9 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "AnodeAbout";
             this.Text = "About";
             this.panel1.ResumeLayout(false);
@@ -208,7 +200,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label versionText;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label7;
     }
 }
