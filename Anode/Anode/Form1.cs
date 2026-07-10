@@ -17,7 +17,7 @@ namespace Anode
         string rompath;
         string romname;
         Thread processThread;
-        bool testenabled = false;
+        // bool testenabled = false;
         bool tracelogging = false;
         PictureBox ScreenObject;
 
@@ -26,11 +26,6 @@ namespace Anode
 
         bool paused = false;
         bool waitingForFrame = false;
-
-        bool ppu_version = false;
-
-        Stopwatch sw = new Stopwatch();
-        bool log_time = true;
 
         // Winforms stuff
         public Form1()
@@ -148,11 +143,11 @@ namespace Anode
             enableMenuItem(advanceFrameToolStripMenuItem, false);
 
             // Use the tester if I've enabled that
-            if (testenabled)
+            /*if (testenabled)
             {
                 Tester tester = new Tester();
                 tester.Test_Ram(emulator);
-            }
+            }*/
         }
 
         private void haltToolStripMenuItem_Click(object sender, EventArgs e)
@@ -170,13 +165,13 @@ namespace Anode
             init_Emulator();
         }
 
-        private void debugTestToolStripMenuItem_Click(object sender, EventArgs e)
+        /*private void debugTestToolStripMenuItem_Click(object sender, EventArgs e)
         {
             // Unused code from an earlier version with the debug tests accessible
             // Still here as I might allow the user to use the tests
             testenabled = !testenabled;
             Console.WriteLine($"Testing: {testenabled}");
-        }
+        }*/
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
