@@ -38,11 +38,10 @@
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forceHaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.anodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.experimentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.useNewPPUToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -145,15 +144,6 @@
             this.forceHaltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, crashing it.";
             this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
-            this.pictureBox1.TabIndex = 1;
-            this.pictureBox1.TabStop = false;
-            // 
             // anodeToolStripMenuItem
             // 
             this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -172,18 +162,18 @@
             // 
             // experimentsToolStripMenuItem
             // 
-            this.experimentsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.useNewPPUToolStripMenuItem});
             this.experimentsToolStripMenuItem.Name = "experimentsToolStripMenuItem";
             this.experimentsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.experimentsToolStripMenuItem.Text = "Experiments";
             // 
-            // useNewPPUToolStripMenuItem
+            // pictureBox1
             // 
-            this.useNewPPUToolStripMenuItem.Name = "useNewPPUToolStripMenuItem";
-            this.useNewPPUToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.useNewPPUToolStripMenuItem.Text = "Use new PPU";
-            this.useNewPPUToolStripMenuItem.Click += new System.EventHandler(this.useNewPPUToolStripMenuItem_Click_1);
+            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
+            this.pictureBox1.TabIndex = 1;
+            this.pictureBox1.TabStop = false;
             // 
             // Form1
             // 
@@ -220,7 +210,6 @@
         private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem experimentsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem useNewPPUToolStripMenuItem;
     }
 }
 

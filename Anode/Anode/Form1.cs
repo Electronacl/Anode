@@ -103,8 +103,6 @@ namespace Anode
             emulator.logging = tracelogging;
             emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
 
-            emulator.use_new_ppu = ppu_version;
-
             // Get the emulator to prepare for running
             emulator.Reset();
 
@@ -269,23 +267,6 @@ namespace Anode
         {
             aboutForm = new AnodeAbout();
             aboutForm.Show();
-        }
-
-        private void useNewPPUToolStripMenuItem_Click_1(object sender, EventArgs e)
-        {
-            ppu_version = !ppu_version;
-            if (emulator != null)
-            {
-                emulator.use_new_ppu = ppu_version;
-            }
-            if (ppu_version)
-            {
-                useNewPPUToolStripMenuItem.Text = "Use old PPU";
-            }
-            else
-            {
-                useNewPPUToolStripMenuItem.Text = "Use new PPU";
-            }
         }
     }
 }
