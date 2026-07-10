@@ -121,6 +121,21 @@ namespace Anode
 
         bool PPUcycle = false;
 
+        byte ppuSpriteEvalTemp;
+        byte ppuOAMAddress;
+        byte ppuSpriteEvalTick;
+        bool ppuScanLineContainsSpriteZero;
+        bool ppuSpriteEvaluationOAMOverflowed;
+        byte ppuSecondaryOAMSize;
+
+        byte[] ppu_SpriteShiftRegisterL = new byte[8];
+        byte[] ppu_SpriteShiftRegisterH = new byte[8];
+
+        byte[] ppu_SpriteAttribute = new byte[8];
+        byte[] ppu_SpritePattern = new byte[8];
+        byte[] ppu_SpriteXposition = new byte[8];
+        byte[] ppu_SpriteYposition = new byte[8];
+
         // ----- NMI
         bool NMILevelDetector;
         bool DoNMI;
@@ -433,7 +448,6 @@ namespace Anode
                         ppu_w = false;
                         return ppustatus;
                     case 0x2004:
-                        // OAM stuff, not emulated yet
                         return OAM[ppuOAMAddress];
                     default:
                         // Stuff I haven't implemented
@@ -2257,23 +2271,6 @@ namespace Anode
             }
         }
 
-        // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
-        // Variables are here temporarily and will be moved up once this works
-        byte ppuSpriteEvalTemp;
-        byte ppuOAMAddress;
-        byte ppuSpriteEvalTick;
-        bool ppuScanLineContainsSpriteZero;
-        bool ppuSpriteEvaluationOAMOverflowed;
-        byte ppuSecondaryOAMSize;
-
-        byte[] ppu_SpriteShiftRegisterL = new byte[8];
-        byte[] ppu_SpriteShiftRegisterH = new byte[8];
-
-        byte[] ppu_SpriteAttribute = new byte[8];
-        byte[] ppu_SpritePattern = new byte[8];
-        byte[] ppu_SpriteXposition = new byte[8];
-        byte[] ppu_SpriteYposition = new byte[8];
-
         // As I just need to get things working, this is copied straight from my old emulator
         ushort FindSpritePatternAddress(byte SecondaryOAMSlot)
         {
@@ -2319,6 +2316,7 @@ namespace Anode
             }
         }
 
+        // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
         void SpriteEval()
         {
             if (ppuDot == 0)
