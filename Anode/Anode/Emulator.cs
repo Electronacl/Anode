@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Markup;
 
 namespace Anode
 {
@@ -175,6 +178,11 @@ namespace Anode
 
         // PPU output data
         public Bitmap output;
+        BitmapData outputData;
+        int stride;
+        // Thanks to https://stackoverflow.com/questions/7768711/setpixel-is-too-slow-is-there-a-faster-way-to-draw-to-bitmap
+        // for the code to speed up bitmap drawing
+
         bool NTSC = true; // PAL or NTSC?
         public bool frame_Ready = false;
 
@@ -271,11 +279,20 @@ namespace Anode
                 output = new Bitmap(32 * 8, 30 * 8);
             }
 
+            InitFrame();
+            
             // Init palette
             for (int j = 0; j < 64; j++)
             {
                 Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
             }
+        }
+
+        public void InitFrame()
+        {
+            // Optimisation as SetPixel is SO SLOW!
+            outputData = output.LockBits(new Rectangle(0, 0, output.Width, output.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            stride = outputData.Stride;
         }
 
         // Focus check
@@ -342,8 +359,7 @@ namespace Anode
                     Master_Clock = 1;
                 }
             }
-
-            if (CPU_Halted)
+            else
             {
                 Console.WriteLine($"CPU Halted at address {ProgramCounter:X}!");
                 //MessageBox.Show($"Encountered a halt instruction (opcode {opcode:X}) at {ProgramCounter:X}",
@@ -369,6 +385,7 @@ namespace Anode
 
         void Render()
         {
+            output.UnlockBits(outputData);
             frame_Ready = true;
             // Sometimes extra code is necessary
         }
@@ -2521,20 +2538,21 @@ namespace Anode
 
                 SpriteEval();
                 // Visible scanline or pre-render line
-                if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
+                if (ppuMask_RenderBG || ppuMask_RenderSprites)
                 {
-                    
-                    if (ppuMask_RenderBG)
+                    if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
                     {
-                        // Shift BG shift registers
-                        ppuShiftRegister_patternL <<= 1;
-                        ppuShiftRegister_patternH <<= 1;
-                        ppuShiftRegister_attributeL <<= 1;
-                        ppuShiftRegister_attributeH <<= 1;
-                    }
-                    // Visible pixel or preparing next scanline
-                    if (ppuMask_RenderBG || ppuMask_RenderSprites)
-                    {
+
+                        if (ppuMask_RenderBG)
+                        {
+                            // Shift BG shift registers
+                            ppuShiftRegister_patternL <<= 1;
+                            ppuShiftRegister_patternH <<= 1;
+                            ppuShiftRegister_attributeL <<= 1;
+                            ppuShiftRegister_attributeH <<= 1;
+                        }
+                        // Visible pixel or preparing next scanline
+
                         byte cycleTick;
                         cycleTick = (byte)((ppuDot - 1) & 7);
                         switch (cycleTick)
@@ -2558,13 +2576,13 @@ namespace Anode
                                 // Determine which tile attribute data is for
                                 if ((ppu_v & 3) >= 2) // Right tile
                                 {
-                                    ppu8Step_attribute = (byte)(ppu8Step_attribute >> 2);
+                                    ppu8Step_attribute >>= 2;
                                 }
                                 if ((((ppu_v & 0x03E0) >> 5) & 3) >= 2) // Bottom tile
                                 {
-                                    ppu8Step_attribute = (byte)(ppu8Step_attribute >> 4);
+                                    ppu8Step_attribute >>= 4;
                                 }
-                                ppu8Step_attribute = (byte)(ppu8Step_attribute & 3);
+                                ppu8Step_attribute &= 3;
                                 break;
                             case 4:
                                 PPUTargetAddress = (ushort)(((ppu_v & 0x7000) >> 12) | (ppu8Step_NextCharacter << 4) | (ppuBGPatternTable ? 0x1000 : 0));
@@ -2589,10 +2607,6 @@ namespace Anode
                                 break;
                         }
                     }
-                }
-
-                if (ppuMask_RenderBG || ppuMask_RenderSprites)
-                {
                     if (ppuScanLine < 240)
                     {
                         if (ppuDot == 256)
@@ -2617,18 +2631,13 @@ namespace Anode
                 byte PalLow = 0; // Index in palette
                 if (ppuMask_RenderBG && (ppuDot > 8 || ppuMask_8pxMaskBG))
                 {
-                    byte col0 = (byte)((ppuShiftRegister_patternL >> (15 - ppu_x)) & 1);
-                    byte col1 = (byte)((ppuShiftRegister_patternH >> (15 - ppu_x)) & 1);
+                    byte col0 = (byte)((ppuShiftRegister_patternL >> (0xF ^ ppu_x)) & 1);
+                    byte col1 = (byte)((ppuShiftRegister_patternH >> (0xF ^ ppu_x)) & 1);
                     PalLow = (byte)((col1 << 1) | col0);
 
-                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (15 - ppu_x)) & 1);
-                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (15 - ppu_x)) & 1);
+                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (0xF ^ ppu_x)) & 1);
+                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (0xF ^ ppu_x)) & 1);
                     PalHi = (byte)((pal1 << 1) | pal0);
-
-                    if (PalLow == 0 && PalHi != 0)
-                    {
-                        PalHi = 0;
-                    }
                 }
 
                 byte SpritePalHi = 0; // Colour palette
@@ -2643,9 +2652,8 @@ namespace Anode
                             bool SpixelL = ((ppu_SpriteShiftRegisterL[i]) & 0x80) != 0; // Takes bit from shift register to get low bit plane
                             bool SpixelH = ((ppu_SpriteShiftRegisterH[i]) & 0x80) != 0; // Takes bit from shift register to get high bit plane
 
-                            SpritePalLow = 0;
-                            if (SpixelL) { SpritePalLow = 1; }
-                            if (SpixelH) { SpritePalLow |= 2; }
+                            SpritePalLow = (byte)(SpixelL ? 1 : 0);
+                            SpritePalLow |= (byte)(SpixelH ? 2 : 0); 
 
                             SpritePalHi = (byte)((ppu_SpriteAttribute[i] & 0x03) | 0x04);
                             SpritePriority = ((ppu_SpriteAttribute[i] >> 5) & 1) == 0;
@@ -2670,18 +2678,24 @@ namespace Anode
                 {
                     PalLow = SpritePalLow;
                     PalHi = SpritePalHi;
-
-                    if (PalLow == 0)
-                    {
-                        PalHi = 0;
-                    }
                 }
-                
+
+                if (PalLow == 0) { PalHi = 0; }
 
                 // This *may* be a memory leak?
                 Color outColour = Palette[PaletteRAM[PalHi * 4 + PalLow]];
 
-                output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
+                Stopwatch sw = new Stopwatch();
+
+                unsafe
+                {
+                    byte* ptr = (byte*)outputData.Scan0;
+                    //output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride] = outColour.B;
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = outColour.G;
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = outColour.R;
+                }
+                
             }
 
             ppuDot++;
@@ -2698,8 +2712,6 @@ namespace Anode
             if (!PPUcycle)
             {
                 // Set the data and address buses
-                ALE = true;
-                RDL = false;
                 PPUDataBus = (byte)PPUTargetAddress;
                 PPUAddressBus = (byte)(PPUTargetAddress >> 8);
             }
