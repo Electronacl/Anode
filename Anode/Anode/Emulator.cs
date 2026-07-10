@@ -424,20 +424,35 @@ namespace Anode
                         ppu_v &= 0x3FFF;
                         return temp;
                     case 0x2002:
-                        // Returns PPU status flags
-                        byte ppustatus = 0;
-                        ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
-                        /*ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
-                        ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);*/
-                        ppustatus |= 0x40;
+                        if (use_new_ppu)
+                        {
+                            // Returns PPU status flags
+                            byte ppustatus = 0;
+                            ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
+                            ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
+                            ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);
 
-                        // Also clears VBlank and Write Latch
-                        ppuVBlank = false;
-                        ppu_w = false;
-                        return ppustatus;
+                            ppuVBlank = false;
+                            ppu_w = false;
+                            return ppustatus;
+                        }
+                        else
+                        {
+                            // Returns PPU status flags
+                            byte ppustatus = 0;
+                            ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
+                            /*ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
+                            ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);*/
+                            ppustatus |= 0x40;
+
+                            // Also clears VBlank and Write Latch
+                            ppuVBlank = false;
+                            ppu_w = false;
+                            return ppustatus;
+                        }
                     case 0x2004:
                         // OAM stuff, not emulated yet
-                        return 0;
+                        return OAM[ppuOAMAddress];
                     default:
                         // Stuff I haven't implemented
                         Console.WriteLine($"Unknown PPU read - {Address:X}");
@@ -495,8 +510,8 @@ namespace Anode
                         Console.WriteLine("PPUSTATUS not implemented");
                         break;
                     case 0x2003: // OAMADDR
-                        Console.WriteLine("OAMADDR not implemented");
-                        // ppuOAMAddress = Value;
+                        //Console.WriteLine("OAMADDR not implemented");
+                        ppuOAMAddress = Value;
                         break;
                     case 0x2004: // OAMDATA
                         Console.WriteLine("OAMDATA not implemented");
@@ -2259,9 +2274,241 @@ namespace Anode
             }
         }
 
+        // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
+        // Variables are here temporarily and will be moved up once this works
+        byte ppuSpriteEvalTemp;
+        byte ppuOAMAddress;
+        byte ppuSpriteEvalTick;
+        bool ppuScanLineContainsSpriteZero;
+        bool ppuSpriteEvaluationOAMOverflowed;
+        byte ppuSecondaryOAMSize;
+
+        byte[] ppu_SpriteShiftRegisterL = new byte[8];
+        byte[] ppu_SpriteShiftRegisterH = new byte[8];
+
+        byte[] ppu_SpriteAttribute = new byte[8];
+        byte[] ppu_SpritePattern = new byte[8];
+        byte[] ppu_SpriteXposition = new byte[8];
+        byte[] ppu_SpriteYposition = new byte[8];
+
+        // As I just need to get things working, this is copied straight from my old emulator
+        ushort FindSpritePatternAddress(byte SecondaryOAMSlot)
+        {
+            if (!ppuUse8x16Sprites) // 8x8
+            {
+                // Address is $0000 or $1000, depends on pattern table
+                // Then, add pattern value from OAM, shifted by 4 bits (x16)
+                // Then, add scanlines from top of object
+                if (((ppu_SpriteAttribute[SecondaryOAMSlot] >> 7) & 1) == 0) // Don't flip Y
+                {
+                    return (ushort)((ppuSpritePatternTable ? 0x1000 : 0) + (ppu_SpritePattern[SecondaryOAMSlot] << 4) + (ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot]));
+                }
+                else // Flip Y
+                {
+                    return (ushort)((ppuSpritePatternTable ? 0x1000 : 0) + (ppu_SpritePattern[SecondaryOAMSlot] << 4) + ((7 - (ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot])) & 7));
+                }
+            }
+            else // 8x16
+            {
+                // If bottom half is being drawn, add 16
+                if (((ppu_SpriteAttribute[SecondaryOAMSlot] >> 7) & 1) == 0) // Don't flip Y
+                {
+                    if (ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot] < 8)
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | ((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + (ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot]));
+                    }
+                    else
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | (((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + 16) + ((ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot]) & 7));
+                    }
+                }
+                else // Flip Y
+                {
+                    if (ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot] < 8)
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | (((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + 16) + ((ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot]) & 7) + 7);
+                    }
+                    else
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | (((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + 7) + ((ppuScanLine - ppu_SpriteYposition[SecondaryOAMSlot]) & 7));
+                    }
+                }
+            }
+        }
+
         void SpriteEval()
         {
+            if (ppuDot == 0)
+            {
+                ppuSecondaryOAMAddress = 0;
+                ppuOAMAddress = 0; // assumed
+                ppuSecondaryOAMFull = false;
+                ppuSpriteEvalTick = 0;
 
+                ppuScanLineContainsSpriteZero = false;
+                ppuSpriteEvaluationOAMOverflowed = false;
+            }
+            else if (ppuDot > 0 && ppuDot <= 64)
+            {
+                if ((ppuDot & 1) == 1)
+                {
+                    // Odd cycles load the value $FF
+                    ppuSpriteEvalTemp = 0xFF;
+                }
+                else
+                {
+                    // And even cycles transfer it into the secondary OAM
+                    // This is internal, so it doesn't need to use the DataBus and AddressBus lines?
+                    // I need to figure out the registers a bit more.
+                    SecondaryOAM[ppuSecondaryOAMAddress] = ppuSpriteEvalTemp;
+                    ppuSecondaryOAMAddress++;
+                    ppuSecondaryOAMAddress &= 0x1F;
+                }
+            }
+            else if (ppuDot > 64 && ppuDot <= 256)
+            {
+                if (!ppuSpriteEvaluationOAMOverflowed)
+                {
+                    if ((ppuDot & 1) == 1)
+                    {
+                        // Odd cycles load the value from OAM
+                        ppuSpriteEvalTemp = OAM[ppuOAMAddress];
+                    }
+                    else
+                    {
+                        // Even cycles load it into secondary OAM
+                        if (!ppuSecondaryOAMFull)
+                        {
+                            SecondaryOAM[ppuSecondaryOAMAddress] = ppuSpriteEvalTemp;
+                        }
+
+                        if (ppuSpriteEvalTick == 0)
+                        {
+                            // Index 0 of the object's 4 bytes
+                            if (ppuScanLine - ppuSpriteEvalTemp >= 0 && ppuScanLine - ppuSpriteEvalTemp < (ppuUse8x16Sprites ? 16 : 8))
+                            {
+                                // The object is on this scanline
+                                if (!ppuSecondaryOAMFull)
+                                {
+                                    ppuSecondaryOAMAddress++;
+                                    ppuOAMAddress++;
+                                    if (ppuDot == 66)
+                                    {
+                                        // Checks to see whether the sprite 0 is on this scanline
+                                        // dot 66 will always be evaluating index 0
+                                        ppuScanLineContainsSpriteZero = true;
+                                    }
+                                }
+                                else
+                                {
+                                    // Ran out of room in secondaryOAM
+                                    ppuStatusOverflow = true;
+                                }
+                                ppuSpriteEvalTick++;
+                            }
+                            else
+                            {
+                                ppuOAMAddress += 4;
+                            }
+                        }
+                        else
+                        {
+                            // For indexes 1, 2 and 3 of an object's OAM data
+                            ppuSecondaryOAMAddress++;
+                            ppuOAMAddress++;
+                            if (ppuSecondaryOAMAddress == 0x20)
+                            {
+                                ppuSecondaryOAMFull = true;
+                            }
+                            ppuSpriteEvalTick++;
+                            ppuSpriteEvalTick &= 3;
+                        }
+                        if (ppuOAMAddress == 0)
+                        {
+                            ppuSpriteEvaluationOAMOverflowed = true;
+                        }
+                    }
+                }
+            }
+            else if (ppuDot > 256 && ppuDot <= 320)
+            {
+                // As the PPU's BG routine has finished, we're now free to use
+                // the address bus and use external memory until it is used again after
+                // this routine.
+                ppuOAMAddress = 0;
+                if (ppuDot == 257)
+                {
+                    ppuSecondaryOAMSize = ppuSecondaryOAMAddress;
+                    ppuSecondaryOAMAddress = 0;
+                    ppuSpriteEvalTick = 0;
+                }
+
+                // Reading should occur outside of this routine
+
+                switch (ppuSpriteEvalTick)
+                {
+                    case 0:
+                        ppu_SpriteYposition[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppuSecondaryOAMAddress++;
+                        break;
+                    case 1:
+                        ppu_SpriteXposition[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppuSecondaryOAMAddress++;
+                        break;
+                    case 2:
+                        ppu_SpriteAttribute[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppuSecondaryOAMAddress++;
+                        break;
+                    case 3:
+                        ppu_SpriteXposition[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        break;
+                    case 4:
+                        // Double check sync is correct, I have dobuts about my ability to do that
+                        PPUcycle = false;
+                        // SecondaryOAMAddress /4 or no /4?
+                        PPUTargetAddress = FindSpritePatternAddress((byte)(ppuSecondaryOAMAddress / 4));
+                        break;
+                    case 5:
+                        ppuSpriteEvalTemp = PPUDataBus;
+                        if (ppuScanLine == 261)
+                        {
+                            ppuSpriteEvalTemp = 0;
+                            // Cleared on the pre-render line
+                        }
+                        if (((ppu_SpriteAttribute[ppuSecondaryOAMAddress / 4] >> 6) & 1) == 1)
+                        {
+                            // If the attributes are set to flip X, the order of bits is flipped
+                            ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xF0) >> 4) | ((ppuSpriteEvalTemp & 0xF) << 4));
+                            ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xCC) >> 2) | ((ppuSpriteEvalTemp & 0x33) << 2));
+                            ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xAA) >> 1) | ((ppuSpriteEvalTemp & 0x55) << 1));
+                        }
+                        ppu_SpriteShiftRegisterL[ppuSecondaryOAMAddress / 4] = ppuSpriteEvalTemp;
+                        break;
+                    case 6:
+                        PPUTargetAddress += 8;
+                        break;
+                    case 7:
+                        ppuSpriteEvalTemp = PPUDataBus;
+                        if (ppuScanLine == 261)
+                        {
+                            ppuSpriteEvalTemp = 0;
+                            // Cleared on the pre-render line
+                        }
+                        if (((ppu_SpriteAttribute[ppuSecondaryOAMAddress / 4] >> 6) & 1) == 1)
+                        {
+                            // If the attributes are set to flip X, the order of bits is flipped
+                            ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xF0) >> 4) | ((ppuSpriteEvalTemp & 0xF) << 4));
+                            ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xCC) >> 2) | ((ppuSpriteEvalTemp & 0x33) << 2));
+                            ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xAA) >> 1) | ((ppuSpriteEvalTemp & 0x55) << 1));
+                        }
+                        ppu_SpriteShiftRegisterH[ppuSecondaryOAMAddress / 4] = ppuSpriteEvalTemp;
+                        ppuSecondaryOAMAddress++;
+                        break;
+                }
+                ppuSpriteEvalTick++;
+                ppuSpriteEvalTick &= 7;
+                // The address bus should be checked outside this routine
+            }
         }
 
         void New_PPU()
@@ -2286,14 +2533,37 @@ namespace Anode
                 PPUDataBus = ReadPPU((ushort)((PPUAddressBus << 8) | PPUDataBus));
             }
 
+            
+            
+
             if (ppuScanLine < 240 || ppuScanLine == 261)
             {
                 SpriteEval();
                 // Visible scanline or pre-render line
                 if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
                 {
+                    if (ppuMask_RenderBG || ppuMask_RenderSprites)
+                    {
+                        // Shift sprite shift registers
+                        if (ppuDot > 1 && ppuDot <= 256)
+                        {
+                            for (int i = 0; i < 8; i++)
+                            {
+                                if (ppu_SpriteXposition[i] > 0)
+                                {
+                                    ppu_SpriteXposition[i]--;
+                                }
+                                else
+                                {
+                                    ppu_SpriteShiftRegisterL[i] <<= 1;
+                                    ppu_SpriteShiftRegisterH[i] <<= 1;
+                                }
+                            }
+                        }
+                    }
                     if (ppuMask_RenderBG)
                     {
+                        // Shift BG shift registers
                         ppuShiftRegister_patternL <<= 1;
                         ppuShiftRegister_patternH <<= 1;
                         ppuShiftRegister_attributeL <<= 1;
@@ -2399,6 +2669,54 @@ namespace Anode
                     }
                 }
 
+                byte SpritePalHi = 0; // Colour palette
+                byte SpritePalLow = 0; // Index in palette
+                bool SpritePriority = false; // In front or behind BG?
+                if (ppuMask_RenderSprites && (ppuDot > 8 || ppuMask_8pxMaskSprites))
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        if (ppu_SpriteXposition[i] == 0 && i < (ppuSecondaryOAMSize / 4))
+                        {
+                            bool SpixelL = ((ppu_SpriteShiftRegisterL[i]) & 0x80) != 0; // Takes bit from shift register to get low bit plane
+                            bool SpixelH = ((ppu_SpriteShiftRegisterL[i]) & 0x80) != 0; // Takes bit from shift register to get high bit plane
+
+                            SpritePalLow = 0;
+                            if (SpixelL) { SpritePalLow = 1; }
+                            if (SpixelL) { SpritePalLow |= 2; }
+
+                            SpritePalHi = (byte)((ppu_SpriteAttribute[i] & 0x03) | 0x04);
+                            SpritePriority = ((ppu_SpriteAttribute[i] >> 5) & 1) != 0;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+
+                        if (SpritePalLow != 0)
+                        {
+                            if (i == 0 && ppuScanLineContainsSpriteZero && SpritePalLow != 0 && PalLow != 0 && ppuMask_RenderBG && ppuDot < 256)
+                            {
+                                ppuStatusSprZeroHit = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if ((SpritePriority && SpritePalLow != 0) || PalLow == 0)
+                {
+                    PalLow = SpritePalLow;
+                    PalHi = SpritePalHi;
+
+                    if (PalLow == 0)
+                    {
+                        PalHi = 0;
+                    }
+                }
+                
+
+                // This *may* be a memory leak?
                 Color outColour = Palette[PaletteRAM[PalHi * 4 + PalLow]];
 
                 output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
@@ -2447,6 +2765,11 @@ namespace Anode
 
             if (ppuScanLine < 240 || ppuScanLine == 261)
             {
+                if (ppuMask_RenderSprites)
+                {
+                    SpriteEval();
+                }
+                
                 // Visible scanline or pre-render line
                 if ((ppuDot > 0 && ppuDot <= 256) || (ppuDot > 320 && ppuDot <= 336))
                 {

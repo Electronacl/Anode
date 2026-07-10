@@ -143,7 +143,7 @@
             this.versionText.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.versionText.Size = new System.Drawing.Size(118, 13);
             this.versionText.TabIndex = 7;
-            this.versionText.Text = "Version: 2026.1-5.3b-xs";
+            this.versionText.Text = "Version: 2026.1-6.2b-xs";
             this.versionText.Click += new System.EventHandler(this.versionText_Click);
             // 
             // label8
