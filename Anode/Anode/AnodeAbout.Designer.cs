@@ -139,9 +139,9 @@
             this.versionText.Location = new System.Drawing.Point(9, 139);
             this.versionText.Name = "versionText";
             this.versionText.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.versionText.Size = new System.Drawing.Size(81, 13);
+            this.versionText.Size = new System.Drawing.Size(89, 13);
             this.versionText.TabIndex = 7;
-            this.versionText.Text = "Version: 2026.1";
+            this.versionText.Text = "Version: 2026.1-s";
             this.versionText.Click += new System.EventHandler(this.versionText_Click);
             // 
             // label8
