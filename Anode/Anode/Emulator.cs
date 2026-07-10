@@ -2414,25 +2414,24 @@ namespace Anode
                 switch (ppuSpriteEvalTick)
                 {
                     case 0:
-                        ppu_SpriteYposition[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppu_SpriteYposition[ppuSecondaryOAMAddress >> 2] = SecondaryOAM[ppuSecondaryOAMAddress];
                         ppuSecondaryOAMAddress++;
                         break;
                     case 1:
-                        ppu_SpritePattern[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppu_SpritePattern[ppuSecondaryOAMAddress >> 2] = SecondaryOAM[ppuSecondaryOAMAddress];
                         ppuSecondaryOAMAddress++;
                         break;
                     case 2:
-                        ppu_SpriteAttribute[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppu_SpriteAttribute[ppuSecondaryOAMAddress >> 2] = SecondaryOAM[ppuSecondaryOAMAddress];
                         ppuSecondaryOAMAddress++;
                         break;
                     case 3:
-                        ppu_SpriteXposition[ppuSecondaryOAMAddress / 4] = SecondaryOAM[ppuSecondaryOAMAddress];
+                        ppu_SpriteXposition[ppuSecondaryOAMAddress >> 2] = SecondaryOAM[ppuSecondaryOAMAddress];
                         break;
                     case 4:
                         // Double check sync is correct, I have dobuts about my ability to do that
                         PPUcycle = false;
-                        // SecondaryOAMAddress /4 or no /4?
-                        PPUTargetAddress = FindSpritePatternAddress((byte)(ppuSecondaryOAMAddress / 4));
+                        PPUTargetAddress = FindSpritePatternAddress((byte)(ppuSecondaryOAMAddress >> 2));
                         break;
                     case 5:
                         ppuSpriteEvalTemp = PPUDataBus;
@@ -2441,14 +2440,14 @@ namespace Anode
                             ppuSpriteEvalTemp = 0;
                             // Cleared on the pre-render line
                         }
-                        if (((ppu_SpriteAttribute[ppuSecondaryOAMAddress / 4] >> 6) & 1) == 1)
+                        if (((ppu_SpriteAttribute[ppuSecondaryOAMAddress >> 2] >> 6) & 1) == 1)
                         {
                             // If the attributes are set to flip X, the order of bits is flipped
                             ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xF0) >> 4) | ((ppuSpriteEvalTemp & 0xF) << 4));
                             ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xCC) >> 2) | ((ppuSpriteEvalTemp & 0x33) << 2));
                             ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xAA) >> 1) | ((ppuSpriteEvalTemp & 0x55) << 1));
                         }
-                        ppu_SpriteShiftRegisterL[ppuSecondaryOAMAddress / 4] = ppuSpriteEvalTemp;
+                        ppu_SpriteShiftRegisterL[ppuSecondaryOAMAddress >> 2] = ppuSpriteEvalTemp;
                         break;
                     case 6:
                         PPUTargetAddress += 8;
@@ -2460,14 +2459,14 @@ namespace Anode
                             ppuSpriteEvalTemp = 0;
                             // Cleared on the pre-render line
                         }
-                        if (((ppu_SpriteAttribute[ppuSecondaryOAMAddress / 4] >> 6) & 1) == 1)
+                        if (((ppu_SpriteAttribute[ppuSecondaryOAMAddress >> 2] >> 6) & 1) == 1)
                         {
                             // If the attributes are set to flip X, the order of bits is flipped
                             ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xF0) >> 4) | ((ppuSpriteEvalTemp & 0xF) << 4));
                             ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xCC) >> 2) | ((ppuSpriteEvalTemp & 0x33) << 2));
                             ppuSpriteEvalTemp = (byte)(((ppuSpriteEvalTemp & 0xAA) >> 1) | ((ppuSpriteEvalTemp & 0x55) << 1));
                         }
-                        ppu_SpriteShiftRegisterH[ppuSecondaryOAMAddress / 4] = ppuSpriteEvalTemp;
+                        ppu_SpriteShiftRegisterH[ppuSecondaryOAMAddress >> 2] = ppuSpriteEvalTemp;
                         ppuSecondaryOAMAddress++;
                         break;
                 }
@@ -2495,8 +2494,6 @@ namespace Anode
             // Read
             if (PPUcycle)
             {
-                ALE = false;
-                RDL = true;
                 PPUDataBus = ReadPPU((ushort)((PPUAddressBus << 8) | PPUDataBus));
             }
 
@@ -2548,7 +2545,7 @@ namespace Anode
                                 ppuShiftRegister_patternH = (ushort)((ppuShiftRegister_patternH & 0xFF00) | ppu8Step_patternHighBitPlane);
                                 ppuShiftRegister_attributeL = (ushort)((ppuShiftRegister_attributeL & 0xFF00) | ((ppu8Step_attribute & 1) == 1 ? 0xFF : 0));
                                 ppuShiftRegister_attributeH = (ushort)((ppuShiftRegister_attributeH & 0xFF00) | ((ppu8Step_attribute & 2) == 2 ? 0xFF : 0));
-                                PPUTargetAddress = (ushort)(0x2000 + (ppu_v & 0x0FFF));
+                                PPUTargetAddress = (ushort)(0x2000 | (ppu_v & 0x0FFF));
                                 break;
                             case 1:
                                 ppu8Step_NextCharacter = PPUDataBus;
@@ -2563,14 +2560,14 @@ namespace Anode
                                 {
                                     ppu8Step_attribute = (byte)(ppu8Step_attribute >> 2);
                                 }
-                                if ((((ppu_v & 0b0000001111100000) >> 5) & 3) >= 2) // Bottom tile
+                                if ((((ppu_v & 0x03E0) >> 5) & 3) >= 2) // Bottom tile
                                 {
                                     ppu8Step_attribute = (byte)(ppu8Step_attribute >> 4);
                                 }
                                 ppu8Step_attribute = (byte)(ppu8Step_attribute & 3);
                                 break;
                             case 4:
-                                PPUTargetAddress = (ushort)(((ppu_v & 0b0111000000000000) >> 12) | ppu8Step_NextCharacter * 16 | (ppuBGPatternTable ? 0x1000 : 0));
+                                PPUTargetAddress = (ushort)(((ppu_v & 0x7000) >> 12) | (ppu8Step_NextCharacter << 4) | (ppuBGPatternTable ? 0x1000 : 0));
                                 break;
                             case 5:
                                 ppu8Step_patternLowBitPlane = PPUDataBus;
@@ -2580,7 +2577,7 @@ namespace Anode
                                 break;
                             case 7:
                                 ppu8Step_patternHighBitPlane = PPUDataBus;
-                                if ((ppu_v & 0x001F) == 31)
+                                if ((ppu_v & 0x001F) == 0x001F)
                                 {
                                     ppu_v &= 0xFFE0; // Reset scroll
                                     ppu_v ^= 0x0400; // Cross into next nametable
@@ -2737,12 +2734,12 @@ namespace Anode
 
         void PPU_ResetXScroll()
         {
-            ppu_v = (ushort)((ppu_v & 0b0111101111100000) | (ppu_t & 0b0000010000011111));
+            ppu_v = (ushort)((ppu_v & 0x7BE0) | (ppu_t & 0x041F));
         }
 
         void PPU_ResetYScroll()
         {
-            ppu_v = (ushort)((ppu_v & 0b0000010000011111) | (ppu_t & 0b0111101111100000));
+            ppu_v = (ushort)((ppu_v & 0x041F) | (ppu_t & 0x7BE0));
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Anode
         bool ppu_version = false;
 
         Stopwatch sw = new Stopwatch();
-        bool log_time = false;
+        bool log_time = true;
 
         // Winforms stuff
         public Form1()
@@ -120,10 +120,7 @@ namespace Anode
                     // 1 cycle at a time
                     emulator.Advance_Frame();
                     sw.Stop();
-                    if (log_time)
-                    {
-                        Console.WriteLine($"Core took {sw.ElapsedMilliseconds}ms");
-                    }
+                    Console.WriteLine($"Core took {sw.ElapsedMilliseconds}ms");
                     sw.Reset();
                     sw.Start();
                     // When the emulator has completed a frame, or crashed
@@ -148,10 +145,7 @@ namespace Anode
                         waitingForFrame = false;
                     }
                     sw.Stop();
-                    if (log_time)
-                    {
-                        Console.WriteLine($"Update took {sw.ElapsedMilliseconds}ms");
-                    }
+                    Console.WriteLine($"Update took {sw.ElapsedMilliseconds}ms");
                 }
             }
 
