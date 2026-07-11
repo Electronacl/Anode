@@ -123,13 +123,13 @@
             this.toggleTracelogToolStripMenuItem,
             this.forceHaltToolStripMenuItem});
             this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
-            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(78, 20);
-            this.debuggingToolStripMenuItem.Text = "Debugging";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
+            this.debuggingToolStripMenuItem.Text = "Debug";
             // 
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
-            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.toggleTracelogToolStripMenuItem.Text = "Enable Tracelog";
             this.toggleTracelogToolStripMenuItem.ToolTipText = "Provides a log of every instruction run by the CPU.";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
@@ -138,7 +138,7 @@
             // 
             this.forceHaltToolStripMenuItem.Enabled = false;
             this.forceHaltToolStripMenuItem.Name = "forceHaltToolStripMenuItem";
-            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.forceHaltToolStripMenuItem.Text = "Force Halt";
             this.forceHaltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, crashing it.";
             this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
@@ -154,7 +154,7 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 

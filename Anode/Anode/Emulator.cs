@@ -2517,6 +2517,9 @@ namespace Anode
                 if (ppuMask_RenderBG || ppuMask_RenderSprites)
                 {
                     // Shift sprite shift registers
+                    // This never occurs on the same cycle as they are updated
+                    // so it doesn't matter if they are before or after sprite
+                    // eval
                     if (ppuDot > 1 && ppuDot <= 256)
                     {
                         for (int i = 0; i < 8; i++)
@@ -2533,7 +2536,6 @@ namespace Anode
                         }
                     }
                 }
-
                 SpriteEval();
                 // Visible scanline or pre-render line
                 if (ppuMask_RenderBG || ppuMask_RenderSprites)
