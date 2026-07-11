@@ -542,7 +542,7 @@ namespace Anode
                     case 0x2007: // PPUDATA
                         if (ppu_v < 0x2000)
                         {
-                            // Write to pattern table if supported by the cartridge
+                            // Write to pattern table if supported by the cartridge (CHRROM vs CHRData)
                             if (Header[5] == 0)
                             {
                                 CHRData[ppu_v] = Value;
@@ -2567,7 +2567,7 @@ namespace Anode
                                 ppu8Step_NextCharacter = PPUDataBus;
                                 break;
                             case 2:
-                                PPUTargetAddress = (ushort)(0x23C0 | (ppu_v & 0xC00) | ((ppu_v >> 4) & 0x38) | ((ppu_v >> 2) & 0x07));
+                                PPUTargetAddress = (ushort)(0x23C0 | (ppu_v & 0x0C00) | ((ppu_v >> 4) & 0x38) | ((ppu_v >> 2) & 0x07));
                                 break;
                             case 3:
                                 ppu8Step_attribute = PPUDataBus;
