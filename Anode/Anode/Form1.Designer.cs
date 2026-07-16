@@ -41,6 +41,7 @@
             this.anodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.disableThrottlerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -82,7 +83,8 @@
             this.emulationToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.hardResetToolStripMenuItem,
             this.pauseToolStripMenuItem,
-            this.advanceFrameToolStripMenuItem});
+            this.advanceFrameToolStripMenuItem,
+            this.disableThrottlerToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
             this.emulationToolStripMenuItem.Text = "Emulation";
@@ -129,7 +131,7 @@
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
-            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
             this.toggleTracelogToolStripMenuItem.Text = "Enable Tracelog";
             this.toggleTracelogToolStripMenuItem.ToolTipText = "Provides a log of every instruction run by the CPU.";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
@@ -138,7 +140,7 @@
             // 
             this.forceHaltToolStripMenuItem.Enabled = false;
             this.forceHaltToolStripMenuItem.Name = "forceHaltToolStripMenuItem";
-            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
             this.forceHaltToolStripMenuItem.Text = "Force Halt";
             this.forceHaltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, crashing it.";
             this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
@@ -169,6 +171,13 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
+            // 
+            // disableThrottlerToolStripMenuItem
+            // 
+            this.disableThrottlerToolStripMenuItem.Name = "disableThrottlerToolStripMenuItem";
+            this.disableThrottlerToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.disableThrottlerToolStripMenuItem.Text = "Disable throttler";
+            this.disableThrottlerToolStripMenuItem.Click += new System.EventHandler(this.disableThrottlerToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -205,6 +214,7 @@
         private System.Windows.Forms.ToolStripMenuItem advanceFrameToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem disableThrottlerToolStripMenuItem;
     }
 }
 

@@ -272,5 +272,18 @@ namespace Anode
             aboutForm = new AnodeAbout();
             aboutForm.Show();
         }
+
+        private void disableThrottlerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            throttled = !throttled;
+            if (throttled)
+            {
+                disableThrottlerToolStripMenuItem.Text = "Disable throttler";
+            }
+            else
+            {
+                disableThrottlerToolStripMenuItem.Text = "Enable throttler";
+            }
+        }
     }
 }
