@@ -37,12 +37,6 @@ namespace Anode
         bool is_NTSC = true;
         bool NTSC_FPS_Forced = false;
 
-        Emulator rewind;
-        Emulator rewindbuffer;
-        bool rewindenabled = true;
-        byte rewindtime = 5;
-        long lastrewind;
-
         // Winforms stuff
         public Form1()
         {
@@ -130,13 +124,6 @@ namespace Anode
 
             // For locking
             ScreenObject = pictureBox1;
-
-            if (rewindenabled)
-            {
-                rewind = emulator;
-                rewindbuffer = rewind;
-                lastrewind = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            }
             throttler.Start();
             while (!emulator.CPU_Halted)
             {
