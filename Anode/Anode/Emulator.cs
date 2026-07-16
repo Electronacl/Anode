@@ -16,17 +16,8 @@ namespace Anode
 {
     internal class Emulator
     {
-        // Current issue: LSR A (4A - 2, 2, 2) is considered halt
-
-        // PPU code from 100th coin's tutorial, I will refine it for accuuracy later but I need to just get this working atm
-
         // Potential change to be made:
         // Set the R/W register and then read or write accordingly at the end of the cycle
-
-        // Requirements:
-        // Get video working
-        // Fix the CPU
-        // Improve memory usage (fix the small leak)
 
         // Swap the always new variables for permanent ones?? I'm not the most sure as to
         // C# optimisation.
