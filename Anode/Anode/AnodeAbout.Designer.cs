@@ -139,9 +139,9 @@
             this.versionText.Location = new System.Drawing.Point(9, 139);
             this.versionText.Name = "versionText";
             this.versionText.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.versionText.Size = new System.Drawing.Size(113, 13);
+            this.versionText.Size = new System.Drawing.Size(57, 13);
             this.versionText.TabIndex = 7;
-            this.versionText.Text = "Version: 2026.3-0.0b-s";
+            this.versionText.Text = "Version: ...";
             this.versionText.Click += new System.EventHandler(this.versionText_Click);
             // 
             // label8
@@ -176,6 +176,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AnodeAbout";

@@ -29,7 +29,7 @@ namespace Anode
         bool waitingForFrame = false;
 
         readonly double NTSC_time = 1d / 60d;
-        readonly double PAL_time = 1 / 50;
+        readonly double PAL_time = 1d / 50d;
         bool throttled = true;
         double timetaken;
         Stopwatch throttler = new Stopwatch();
@@ -47,6 +47,7 @@ namespace Anode
             this.AllowDrop = true;
             this.DragEnter += new DragEventHandler(dragDropEnter);
             this.DragDrop += new DragEventHandler(dragDropFile);
+            this.Text = $"Anode {Constants.version_name}";
         }
 
         private void dragDropEnter(object sender, DragEventArgs e)
@@ -228,7 +229,7 @@ namespace Anode
         {
             romname = Path.GetFileName(rompath);
 
-            this.Text = $"Anode - {romname}";
+            this.Text = $"{romname} (Anode {Constants.version_name})";
 
             pauseToolStripMenuItem.Text = "Pause";
             pauseToolStripMenuItem.Enabled = true;
