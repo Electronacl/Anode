@@ -181,7 +181,7 @@ namespace Anode
         // Thanks to https://stackoverflow.com/questions/7768711/setpixel-is-too-slow-is-there-a-faster-way-to-draw-to-bitmap
         // for the code to speed up bitmap drawing
 
-        bool NTSC = true; // PAL or NTSC?
+        public bool NTSC = true; // PAL or NTSC?
         public bool frame_Ready = false;
 
         byte RDY_history;
@@ -273,11 +273,7 @@ namespace Anode
                 tracelog = new StreamWriter(tracepath);
             }
 
-            // PAL support coming somewhen, but the display size is different IIRC - Unless the NES doesn't do that...
-            if (NTSC)
-            {
-                output = new Bitmap(32 * 8, 30 * 8);
-            }
+            output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
 
             InitFrame();
             
@@ -381,20 +377,20 @@ namespace Anode
             if (!CPU_Halted)
             {
                 // PPU runs 1:4
-                if ((Master_Clock - 1) % 4 == 0)
+                if ((Master_Clock - 1) % (NTSC ? 4 : 5) == 0)
                 {
                     Emulate_PPU();
                 }
 
                 // CPU runs 1:12
-                if (Master_Clock % 12 == 0)
+                if (Master_Clock % (NTSC ? 12 : 16) == 0)
                 {
                     Emulate_CPU();
                 }
 
                 // Reset to prevent weird overflows
                 Master_Clock++;
-                if (Master_Clock > 12)
+                if (Master_Clock > (NTSC ? 12 : 80))
                 {
                     Master_Clock = 1;
                 }

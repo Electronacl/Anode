@@ -34,6 +34,7 @@ namespace Anode
         bool throttled = true;
         double timetaken;
         Stopwatch throttler = new Stopwatch();
+        bool is_NTSC = false;
 
         Emulator rewind;
         Emulator rewindbuffer;
@@ -112,6 +113,8 @@ namespace Anode
             emulator.filepath = rompath;
             emulator.logging = tracelogging;
             emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
+
+            emulator.NTSC = is_NTSC;
 
             // Get the emulator to prepare for running
             emulator.Reset();
@@ -309,6 +312,28 @@ namespace Anode
             else
             {
                 disableThrottlerToolStripMenuItem.Text = "Enable throttler";
+            }
+        }
+
+        private void nTSCToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            nTSCToolStripMenuItem.Checked = true;
+            pALToolStripMenuItem.Checked = false;
+            is_NTSC = true;
+            if (emulator != null)
+            {
+                init_Emulator();
+            }
+        }
+
+        private void pALToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            pALToolStripMenuItem.Checked = true;
+            nTSCToolStripMenuItem.Checked = false;
+            is_NTSC = false;
+            if (emulator != null)
+            {
+                init_Emulator();
             }
         }
     }

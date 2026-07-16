@@ -43,6 +43,9 @@
             this.anodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.regionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nTSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -85,7 +88,8 @@
             this.hardResetToolStripMenuItem,
             this.pauseToolStripMenuItem,
             this.advanceFrameToolStripMenuItem,
-            this.disableThrottlerToolStripMenuItem});
+            this.disableThrottlerToolStripMenuItem,
+            this.regionToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
             this.emulationToolStripMenuItem.Text = "Emulation";
@@ -139,7 +143,7 @@
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
-            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.toggleTracelogToolStripMenuItem.Text = "Enable Tracelog";
             this.toggleTracelogToolStripMenuItem.ToolTipText = "Provides a log of every instruction run by the CPU.";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
@@ -148,7 +152,7 @@
             // 
             this.forceHaltToolStripMenuItem.Enabled = false;
             this.forceHaltToolStripMenuItem.Name = "forceHaltToolStripMenuItem";
-            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.forceHaltToolStripMenuItem.Text = "Force Halt";
             this.forceHaltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, crashing it.";
             this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
@@ -164,7 +168,7 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
@@ -179,6 +183,31 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
+            // 
+            // regionToolStripMenuItem
+            // 
+            this.regionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.nTSCToolStripMenuItem,
+            this.pALToolStripMenuItem});
+            this.regionToolStripMenuItem.Name = "regionToolStripMenuItem";
+            this.regionToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.regionToolStripMenuItem.Text = "Region";
+            // 
+            // nTSCToolStripMenuItem
+            // 
+            this.nTSCToolStripMenuItem.Checked = true;
+            this.nTSCToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.nTSCToolStripMenuItem.Name = "nTSCToolStripMenuItem";
+            this.nTSCToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.nTSCToolStripMenuItem.Text = "NTSC";
+            this.nTSCToolStripMenuItem.Click += new System.EventHandler(this.nTSCToolStripMenuItem_Click);
+            // 
+            // pALToolStripMenuItem
+            // 
+            this.pALToolStripMenuItem.Name = "pALToolStripMenuItem";
+            this.pALToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.pALToolStripMenuItem.Text = "PAL";
+            this.pALToolStripMenuItem.Click += new System.EventHandler(this.pALToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -217,6 +246,9 @@
         private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem disableThrottlerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem regionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem nTSCToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem pALToolStripMenuItem;
     }
 }
 
