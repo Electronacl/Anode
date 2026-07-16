@@ -49,6 +49,9 @@
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.videoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.force60hzForPALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -168,7 +171,8 @@
             // anodeToolStripMenuItem
             // 
             this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
+            this.aboutToolStripMenuItem,
+            this.optionsToolStripMenuItem});
             this.anodeToolStripMenuItem.Name = "anodeToolStripMenuItem";
             this.anodeToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.anodeToolStripMenuItem.Text = "Anode";
@@ -232,6 +236,30 @@
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             this.toolStripMenuItem3.Size = new System.Drawing.Size(193, 6);
             // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.videoToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // videoToolStripMenuItem
+            // 
+            this.videoToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.force60hzForPALToolStripMenuItem});
+            this.videoToolStripMenuItem.Name = "videoToolStripMenuItem";
+            this.videoToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.videoToolStripMenuItem.Text = "Video";
+            // 
+            // force60hzForPALToolStripMenuItem
+            // 
+            this.force60hzForPALToolStripMenuItem.Name = "force60hzForPALToolStripMenuItem";
+            this.force60hzForPALToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.force60hzForPALToolStripMenuItem.Text = "Force 60hz for PAL";
+            this.force60hzForPALToolStripMenuItem.ToolTipText = resources.GetString("force60hzForPALToolStripMenuItem.ToolTipText");
+            this.force60hzForPALToolStripMenuItem.Click += new System.EventHandler(this.force60hzForPALToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -275,6 +303,9 @@
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem videoToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem force60hzForPALToolStripMenuItem;
     }
 }
 

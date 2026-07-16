@@ -34,7 +34,8 @@ namespace Anode
         bool throttled = true;
         double timetaken;
         Stopwatch throttler = new Stopwatch();
-        bool is_NTSC = false;
+        bool is_NTSC = true;
+        bool NTSC_FPS_Forced = false;
 
         Emulator rewind;
         Emulator rewindbuffer;
@@ -167,7 +168,7 @@ namespace Anode
                     {
                         //throttler.Stop();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
-                        while (timetaken < (is_NTSC ? NTSC_time : PAL_time))
+                        while (timetaken < ((is_NTSC || NTSC_FPS_Forced) ? NTSC_time : PAL_time))
                         {
                             timetaken = ((double)throttler.ElapsedTicks) / (double)Stopwatch.Frequency;
                         }
@@ -329,6 +330,12 @@ namespace Anode
             {
                 init_Emulator();
             }
+        }
+
+        private void force60hzForPALToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NTSC_FPS_Forced = !NTSC_FPS_Forced;
+            force60hzForPALToolStripMenuItem.Checked = NTSC_FPS_Forced;
         }
     }
 }
