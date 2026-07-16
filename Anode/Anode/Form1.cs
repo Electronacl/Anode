@@ -230,8 +230,8 @@ namespace Anode
         {
             // Toggles the tracelog
             tracelogging = !tracelogging;
-            Console.WriteLine($"Tracelogging: {tracelogging}");
-            toggleTracelogToolStripMenuItem.Text = (tracelogging ? "Disable" : "Enable") + " tracelog";
+            toggleTracelogToolStripMenuItem.Text = "Tracelog " + (tracelogging ? "enabled" : "disabled");
+            toggleTracelogToolStripMenuItem.Checked = tracelogging;
         }
 
         private void init_Emulator()
@@ -305,14 +305,8 @@ namespace Anode
         private void disableThrottlerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             throttled = !throttled;
-            if (throttled)
-            {
-                disableThrottlerToolStripMenuItem.Text = "Disable throttler";
-            }
-            else
-            {
-                disableThrottlerToolStripMenuItem.Text = "Enable throttler";
-            }
+            disableThrottlerToolStripMenuItem.Text = "Throttler " + (throttled ? "enabled" : "disabled");
+            disableThrottlerToolStripMenuItem.Checked = throttled;
         }
 
         private void nTSCToolStripMenuItem_Click(object sender, EventArgs e)

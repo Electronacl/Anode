@@ -132,9 +132,11 @@
             // 
             // disableThrottlerToolStripMenuItem
             // 
+            this.disableThrottlerToolStripMenuItem.Checked = true;
+            this.disableThrottlerToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.disableThrottlerToolStripMenuItem.Name = "disableThrottlerToolStripMenuItem";
             this.disableThrottlerToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
-            this.disableThrottlerToolStripMenuItem.Text = "Disable throttler";
+            this.disableThrottlerToolStripMenuItem.Text = "Throttler enabled";
             this.disableThrottlerToolStripMenuItem.Click += new System.EventHandler(this.disableThrottlerToolStripMenuItem_Click);
             // 
             // debuggingToolStripMenuItem
@@ -150,7 +152,7 @@
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
             this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.toggleTracelogToolStripMenuItem.Text = "Enable Tracelog";
+            this.toggleTracelogToolStripMenuItem.Text = "Tracelog disabled";
             this.toggleTracelogToolStripMenuItem.ToolTipText = "Provides a log of every instruction run by the CPU.";
             this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
             // 
