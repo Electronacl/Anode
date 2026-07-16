@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Forms;
 
 namespace Anode
@@ -114,6 +115,11 @@ namespace Anode
 
             // Get the emulator to prepare for running
             emulator.Reset();
+
+            if (emulator.CheckHeader())
+            {
+                ChangeTitle($"{emulator.GetTitle()} (Anode {Constants.version_name})");
+            }
 
             // override for nestest only
             // emulator.ProgramCounter = 0xC000;
@@ -256,6 +262,14 @@ namespace Anode
             this.BeginInvoke(new MethodInvoker(delegate ()
             {
                 menuItem.Enabled = enabled;
+            }));
+        }
+
+        private void ChangeTitle(string newname)
+        {
+            this.BeginInvoke(new MethodInvoker(delegate ()
+            {
+                this.Text = newname;
             }));
         }
 

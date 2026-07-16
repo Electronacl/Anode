@@ -288,6 +288,46 @@ namespace Anode
             }
         }
 
+        public bool CheckHeader()
+        {
+            byte checksum = 0;
+            for (byte i = 2; i < 0xA; i++)
+            {
+                checksum += Read_Raw((ushort)(0xFFF0 | i));
+            }
+
+            if (checksum == 0)
+            {
+                return Read_Raw(0xFFF7) != 0;
+            }
+            return false;
+        }
+
+        public string GetTitle()
+        {
+            string title = "";
+            byte encoding = Read_Raw(0xFFF7);
+            for (byte i = 0; i < 0x10; i++)
+            {
+                byte this_char = Read_Raw((ushort)(0xFFE0 | i));
+                switch (encoding)
+                {
+                    case 1:
+                        // ASCII
+                        if ((this_char >= 0x20 && this_char <= 0x3F) || (this_char >= 0x41 && this_char <= 0x5A))
+                        {
+                            title += System.Text.Encoding.ASCII.GetString(new[] { this_char } );
+                        }
+                        break;
+                    case 2:
+                        return "JIS unavailable";
+                    default:
+                        return $"Unknown encoding {encoding:X}";
+                }
+            }
+            return title;
+        }
+
         public void InitFrame()
         {
             // Optimisation as SetPixel is SO SLOW!
@@ -434,7 +474,6 @@ namespace Anode
                         ppu_w = false;
 
                         PPUIOBus = (byte)((PPUIOBus & 0b00011111) | ppustatus);
-
                         break;
                     case 0x2004:
                         PPUIOBus = OAM[ppuOAMAddress];
@@ -2396,6 +2435,7 @@ namespace Anode
                                 else
                                 {
                                     // Ran out of room in secondaryOAM
+                                    // This ignores an accuracy edge case, so it's kinda stable here.
                                     ppuStatusOverflow = true;
                                 }
                                 ppuSpriteEvalTick++;
