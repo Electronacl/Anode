@@ -47,7 +47,6 @@ namespace Anode
             this.AllowDrop = true;
             this.DragEnter += new DragEventHandler(dragDropEnter);
             this.DragDrop += new DragEventHandler(dragDropFile);
-            secondsToolStripMenuItem1.Checked = true;
         }
 
         private void dragDropEnter(object sender, DragEventArgs e)
@@ -295,71 +294,6 @@ namespace Anode
             else
             {
                 disableThrottlerToolStripMenuItem.Text = "Enable throttler";
-            }
-        }
-
-        private void UncheckAllRewindTimes()
-        {
-            secondsToolStripMenuItem.Checked = false;
-            secondsToolStripMenuItem1.Checked = false;
-            secondsToolStripMenuItem2.Checked = false;
-            secondsToolStripMenuItem3.Checked = false;
-            secondsToolStripMenuItem4.Checked = false;
-        }
-
-        private void secondsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            UncheckAllRewindTimes();
-            secondsToolStripMenuItem.Checked = true;
-            rewindtime = 2;
-        }
-
-        private void secondsToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            UncheckAllRewindTimes();
-            secondsToolStripMenuItem1.Checked = true;
-            rewindtime = 5;
-        }
-
-        private void secondsToolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            UncheckAllRewindTimes();
-            secondsToolStripMenuItem2.Checked = true;
-            rewindtime = 10;
-        }
-
-        private void secondsToolStripMenuItem3_Click(object sender, EventArgs e)
-        {
-            UncheckAllRewindTimes();
-            secondsToolStripMenuItem3.Checked = true;
-            rewindtime = 15;
-        }
-
-        private void secondsToolStripMenuItem4_Click(object sender, EventArgs e)
-        {
-            UncheckAllRewindTimes();
-            secondsToolStripMenuItem4.Checked = true;
-            rewindtime = 30;
-        }
-
-        private void disableRewindToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            rewindenabled = !rewindenabled;
-            if (rewindenabled)
-            {
-                disableRewindToolStripMenuItem.Text = "Disable rewind";
-            }
-            else
-            {
-                disableRewindToolStripMenuItem.Text = "Enable rewind";
-            }
-        }
-
-        private void rewindToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (rewindenabled && (rewind != null))
-            {
-                emulator = rewind;
             }
         }
     }
