@@ -42,6 +42,16 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.disableThrottlerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.savestatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.disableRewindToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rewindTimeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.secondsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.secondsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.secondsToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.secondsToolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.secondsToolStripMenuItem4 = new System.Windows.Forms.ToolStripMenuItem();
+            this.rewindToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -84,6 +94,7 @@
             this.hardResetToolStripMenuItem,
             this.pauseToolStripMenuItem,
             this.advanceFrameToolStripMenuItem,
+            this.rewindToolStripMenuItem,
             this.disableThrottlerToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
@@ -148,7 +159,8 @@
             // anodeToolStripMenuItem
             // 
             this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
+            this.aboutToolStripMenuItem,
+            this.optionsToolStripMenuItem});
             this.anodeToolStripMenuItem.Name = "anodeToolStripMenuItem";
             this.anodeToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
             this.anodeToolStripMenuItem.Text = "Anode";
@@ -178,6 +190,85 @@
             this.disableThrottlerToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.disableThrottlerToolStripMenuItem.Text = "Disable throttler";
             this.disableThrottlerToolStripMenuItem.Click += new System.EventHandler(this.disableThrottlerToolStripMenuItem_Click);
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.savestatesToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // savestatesToolStripMenuItem
+            // 
+            this.savestatesToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.disableRewindToolStripMenuItem,
+            this.rewindTimeToolStripMenuItem});
+            this.savestatesToolStripMenuItem.Name = "savestatesToolStripMenuItem";
+            this.savestatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.savestatesToolStripMenuItem.Text = "Savestates";
+            // 
+            // disableRewindToolStripMenuItem
+            // 
+            this.disableRewindToolStripMenuItem.Name = "disableRewindToolStripMenuItem";
+            this.disableRewindToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.disableRewindToolStripMenuItem.Text = "Disable rewind";
+            this.disableRewindToolStripMenuItem.Click += new System.EventHandler(this.disableRewindToolStripMenuItem_Click);
+            // 
+            // rewindTimeToolStripMenuItem
+            // 
+            this.rewindTimeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.secondsToolStripMenuItem,
+            this.secondsToolStripMenuItem1,
+            this.secondsToolStripMenuItem2,
+            this.secondsToolStripMenuItem3,
+            this.secondsToolStripMenuItem4});
+            this.rewindTimeToolStripMenuItem.Name = "rewindTimeToolStripMenuItem";
+            this.rewindTimeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.rewindTimeToolStripMenuItem.Text = "Rewind frequency";
+            // 
+            // secondsToolStripMenuItem
+            // 
+            this.secondsToolStripMenuItem.Name = "secondsToolStripMenuItem";
+            this.secondsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.secondsToolStripMenuItem.Text = "2 seconds";
+            this.secondsToolStripMenuItem.Click += new System.EventHandler(this.secondsToolStripMenuItem_Click);
+            // 
+            // secondsToolStripMenuItem1
+            // 
+            this.secondsToolStripMenuItem1.Name = "secondsToolStripMenuItem1";
+            this.secondsToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.secondsToolStripMenuItem1.Text = "5 seconds";
+            this.secondsToolStripMenuItem1.Click += new System.EventHandler(this.secondsToolStripMenuItem1_Click);
+            // 
+            // secondsToolStripMenuItem2
+            // 
+            this.secondsToolStripMenuItem2.Name = "secondsToolStripMenuItem2";
+            this.secondsToolStripMenuItem2.Size = new System.Drawing.Size(180, 22);
+            this.secondsToolStripMenuItem2.Text = "10 seconds";
+            this.secondsToolStripMenuItem2.Click += new System.EventHandler(this.secondsToolStripMenuItem2_Click);
+            // 
+            // secondsToolStripMenuItem3
+            // 
+            this.secondsToolStripMenuItem3.Name = "secondsToolStripMenuItem3";
+            this.secondsToolStripMenuItem3.Size = new System.Drawing.Size(180, 22);
+            this.secondsToolStripMenuItem3.Text = "15 seconds";
+            this.secondsToolStripMenuItem3.Click += new System.EventHandler(this.secondsToolStripMenuItem3_Click);
+            // 
+            // secondsToolStripMenuItem4
+            // 
+            this.secondsToolStripMenuItem4.Name = "secondsToolStripMenuItem4";
+            this.secondsToolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
+            this.secondsToolStripMenuItem4.Text = "30 seconds";
+            this.secondsToolStripMenuItem4.Click += new System.EventHandler(this.secondsToolStripMenuItem4_Click);
+            // 
+            // rewindToolStripMenuItem
+            // 
+            this.rewindToolStripMenuItem.Name = "rewindToolStripMenuItem";
+            this.rewindToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
+            this.rewindToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.rewindToolStripMenuItem.Text = "Rewind";
+            this.rewindToolStripMenuItem.Click += new System.EventHandler(this.rewindToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -215,6 +306,16 @@
         private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem disableThrottlerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem savestatesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem disableRewindToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rewindTimeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem secondsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem secondsToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem secondsToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem secondsToolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem secondsToolStripMenuItem4;
+        private System.Windows.Forms.ToolStripMenuItem rewindToolStripMenuItem;
     }
 }
 
