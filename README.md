@@ -43,7 +43,7 @@ If you want the latest features only, use the unstable builds.
 
 ## Accuracy info (as of 2026.2-s)
 ### AccuracyCoin
-<img width="267" height="248" alt="image" src="https://github.com/user-attachments/assets/603a654d-3343-4a8c-8a23-26479e9cfaec" /><br>
+<img width="263" height="247" alt="image" src="https://github.com/user-attachments/assets/b43e2e74-39d2-4c2a-81a3-ddfa4850d00d" /><br>
 ### nestest
 *Official opcodes*<br>
 <img width="262" height="247" alt="image" src="https://github.com/user-attachments/assets/a3da22f5-b6ef-4635-be0b-ebc3fb264313" /><br>
