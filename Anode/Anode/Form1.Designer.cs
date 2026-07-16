@@ -34,24 +34,24 @@
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.emulationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.hardResetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.pauseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.advanceFrameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.disableThrottlerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.regionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nTSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forceHaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.anodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.regionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.nTSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
-            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.force60hzForPALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -85,7 +85,8 @@
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
-            this.openToolStripMenuItem.ToolTipText = "Brings up dialogue for which ROM to use";
+            this.openToolStripMenuItem.ToolTipText = "Brings up a dialogue where you can select which ROM the emulator will use.\r\nAutom" +
+    "atically starts the emulator when a ROM is loaded.";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // emulationToolStripMenuItem
@@ -110,8 +111,14 @@
             this.hardResetToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.R)));
             this.hardResetToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.hardResetToolStripMenuItem.Text = "Hard reset";
-            this.hardResetToolStripMenuItem.ToolTipText = "Completely resets RAM and registers, equivalent to a power cycle";
+            this.hardResetToolStripMenuItem.ToolTipText = "Completely resets RAM and registers.\r\nThis is equivalent to switching real hardwa" +
+    "re off, leaving it, and turning it on again.";
             this.hardResetToolStripMenuItem.Click += new System.EventHandler(this.hardResetToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(193, 6);
             // 
             // pauseToolStripMenuItem
             // 
@@ -120,7 +127,8 @@
             this.pauseToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
             this.pauseToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.pauseToolStripMenuItem.Text = "Pause";
-            this.pauseToolStripMenuItem.ToolTipText = "Stops the current action and allows it to be resumed later.";
+            this.pauseToolStripMenuItem.ToolTipText = "Pause: Stops the current action and allows it to be resumed later.\r\nPlay: Resumes" +
+    " from the point that the gameplay was paused at";
             this.pauseToolStripMenuItem.Click += new System.EventHandler(this.pauseToolStripMenuItem_Click);
             // 
             // advanceFrameToolStripMenuItem
@@ -130,8 +138,13 @@
             this.advanceFrameToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
             this.advanceFrameToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.advanceFrameToolStripMenuItem.Text = "Advance frame";
-            this.advanceFrameToolStripMenuItem.ToolTipText = "Moves onto the next frame when paused";
+            this.advanceFrameToolStripMenuItem.ToolTipText = "When paused, this allows for a single frame to be processed  and rendered.";
             this.advanceFrameToolStripMenuItem.Click += new System.EventHandler(this.advanceFrameToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(193, 6);
             // 
             // disableThrottlerToolStripMenuItem
             // 
@@ -140,61 +153,13 @@
             this.disableThrottlerToolStripMenuItem.Name = "disableThrottlerToolStripMenuItem";
             this.disableThrottlerToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
             this.disableThrottlerToolStripMenuItem.Text = "Throttler enabled";
+            this.disableThrottlerToolStripMenuItem.ToolTipText = resources.GetString("disableThrottlerToolStripMenuItem.ToolTipText");
             this.disableThrottlerToolStripMenuItem.Click += new System.EventHandler(this.disableThrottlerToolStripMenuItem_Click);
             // 
-            // debuggingToolStripMenuItem
+            // toolStripMenuItem3
             // 
-            this.debuggingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toggleTracelogToolStripMenuItem,
-            this.forceHaltToolStripMenuItem});
-            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
-            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
-            this.debuggingToolStripMenuItem.Text = "Debug";
-            // 
-            // toggleTracelogToolStripMenuItem
-            // 
-            this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
-            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.toggleTracelogToolStripMenuItem.Text = "Tracelog disabled";
-            this.toggleTracelogToolStripMenuItem.ToolTipText = "Provides a log of every instruction run by the CPU.";
-            this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
-            // 
-            // forceHaltToolStripMenuItem
-            // 
-            this.forceHaltToolStripMenuItem.Enabled = false;
-            this.forceHaltToolStripMenuItem.Name = "forceHaltToolStripMenuItem";
-            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.forceHaltToolStripMenuItem.Text = "Force Halt";
-            this.forceHaltToolStripMenuItem.ToolTipText = "Sets the CPU\'s state to halted, crashing it.";
-            this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
-            // 
-            // anodeToolStripMenuItem
-            // 
-            this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem,
-            this.optionsToolStripMenuItem});
-            this.anodeToolStripMenuItem.Name = "anodeToolStripMenuItem";
-            this.anodeToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
-            this.anodeToolStripMenuItem.Text = "Anode";
-            // 
-            // aboutToolStripMenuItem
-            // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.aboutToolStripMenuItem.Text = "About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pictureBox1.TabIndex = 1;
-            this.pictureBox1.TabStop = false;
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(193, 6);
             // 
             // regionToolStripMenuItem
             // 
@@ -212,6 +177,8 @@
             this.nTSCToolStripMenuItem.Name = "nTSCToolStripMenuItem";
             this.nTSCToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.nTSCToolStripMenuItem.Text = "NTSC";
+            this.nTSCToolStripMenuItem.ToolTipText = "Standard mainly used in North America, some parts of South America, and Japan.\r\nR" +
+    "uns at 60Hz, and tends to be the most common region for NES games.";
             this.nTSCToolStripMenuItem.Click += new System.EventHandler(this.nTSCToolStripMenuItem_Click);
             // 
             // pALToolStripMenuItem
@@ -219,22 +186,53 @@
             this.pALToolStripMenuItem.Name = "pALToolStripMenuItem";
             this.pALToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.pALToolStripMenuItem.Text = "PAL";
+            this.pALToolStripMenuItem.ToolTipText = "Standard mainly used in Europe, Asia, Australia, and some parts of South America " +
+    "and Africa\r\nRuns at 50Hz, and is used on the NES\'s NES version and Mattel versio" +
+    "n";
             this.pALToolStripMenuItem.Click += new System.EventHandler(this.pALToolStripMenuItem_Click);
             // 
-            // toolStripMenuItem1
+            // debuggingToolStripMenuItem
             // 
-            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(193, 6);
+            this.debuggingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toggleTracelogToolStripMenuItem,
+            this.forceHaltToolStripMenuItem});
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
+            this.debuggingToolStripMenuItem.Text = "Debug";
             // 
-            // toolStripMenuItem2
+            // toggleTracelogToolStripMenuItem
             // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(193, 6);
+            this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
+            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.toggleTracelogToolStripMenuItem.Text = "Tracelog disabled";
+            this.toggleTracelogToolStripMenuItem.ToolTipText = "Writes a log of every instruction ran by the CPU onto a file.\r\nUsing this will qu" +
+    "ickly consume storage and will slow down the emulator.";
+            this.toggleTracelogToolStripMenuItem.Click += new System.EventHandler(this.toggleTracelogToolStripMenuItem_Click);
             // 
-            // toolStripMenuItem3
+            // forceHaltToolStripMenuItem
             // 
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(193, 6);
+            this.forceHaltToolStripMenuItem.Enabled = false;
+            this.forceHaltToolStripMenuItem.Name = "forceHaltToolStripMenuItem";
+            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.forceHaltToolStripMenuItem.Text = "Force Halt";
+            this.forceHaltToolStripMenuItem.ToolTipText = resources.GetString("forceHaltToolStripMenuItem.ToolTipText");
+            this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
+            // 
+            // anodeToolStripMenuItem
+            // 
+            this.anodeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem,
+            this.optionsToolStripMenuItem});
+            this.anodeToolStripMenuItem.Name = "anodeToolStripMenuItem";
+            this.anodeToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
+            this.anodeToolStripMenuItem.Text = "Anode";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // optionsToolStripMenuItem
             // 
@@ -259,6 +257,18 @@
             this.force60hzForPALToolStripMenuItem.Text = "Force 60hz for PAL";
             this.force60hzForPALToolStripMenuItem.ToolTipText = resources.GetString("force60hzForPALToolStripMenuItem.ToolTipText");
             this.force60hzForPALToolStripMenuItem.Click += new System.EventHandler(this.force60hzForPALToolStripMenuItem_Click);
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.pictureBox1.Location = new System.Drawing.Point(9, 22);
+            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(279, 281);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.pictureBox1.TabIndex = 1;
+            this.pictureBox1.TabStop = false;
             // 
             // Form1
             // 
