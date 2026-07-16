@@ -2,13 +2,20 @@
 An emulator for the Nintendo Entertainment System
 
 ## Project goals
-My aim with this emulator is for an accurate NES system compatible with both PAL and NTSC. Just to make it a little easier at first, the emulator will only support NTSC, but PAL support is going to be added later.
+My aim with this emulator is for an accurate NES system compatible with both PAL and NTSC.
 
 ## Known issues
-Check the "issues" tab - as it's unstable at the moment, there might be too many to list here.
+- There is no APU
+- Inaccuracies with some specifics (check the AccuracyCoin results below)
 
 ## Localisation support
 This program is only built with British English as a language, however the addition of other languages is planned for the future.
+
+## Platform support
+This program is built and tested on a Windows x64 system. Whilst the program should be compatible with x32 and ARM64, I can't guaruntee that this is the case.<br>
+Builds are only created as .EXE, and the program is built in the .NET framework, so support for Linux and MacOS may not be available.<br>
+
+The emulator is built for the .NET framework 4.7.2. It may not work or function correctly with older versions or without the framework entirely.
 
 ## Emulation and legality
 Whilst it is legal to use - and for me to create - this emulator, that only applies if the ROMs are legal. I am not responsible for the ROMs used by any users on this emulator. For legal reasons, these ROMs should be from your own NES game library and obtained via a cartridge dumper, or alternatively from open-source ROMs. This emulator is only intended to work with legal ROMs.<br>
@@ -54,3 +61,6 @@ If you want the latest features only, use the unstable builds.
 This project is licensed under my own license, _Electronacl Content License V2.0_. 
 As per the requirements, here are the things I must state
 - No AI was used in the creation of the project.
+
+<br>
+Whilst there shouldn't be anything that *could* damage your PC with this program, I can't guaruntee that things like ROMs, TASes (when I add them), or modifications may cause damage. Even if it is from the core program, I don't assume responsibility for any damage that may be caused by this program. (This is for legal reasons)
