@@ -156,6 +156,7 @@ namespace Anode
         bool odd_cycle = false;
         byte OAM_cycle_init_t = 0;
         byte OAM_Temp_Value; // Unsure where this is actually stored, I can swap this later
+        bool OAM_Active;
 
         // Opcode splits
         byte op_a;
@@ -578,6 +579,7 @@ namespace Anode
                 OAM_POS = Value;
                 OAM_DMA_Address = 0;
                 OAM_cycle_init_t = 0;
+                OAM_Active = true;
             }
             else if (Address == 0x4016)
             {
@@ -2147,21 +2149,24 @@ namespace Anode
             {
                 if (!OAM_cycle)
                 {
-                    OAM_Temp_Value = Read_Raw((ushort)((OAM_POS << 8) + OAM_DMA_Address));
+                    OAM_Temp_Value = Read_Raw((ushort)((OAM_POS << 8) | OAM_DMA_Address));
                 }
                 else
                 {
                     OAM[OAM_DMA_Address] = OAM_Temp_Value;
                     OAM_DMA_Address++;
+                    if (OAM_DMA_Address == 0x00)
+                    {
+                        OAM_Active = false;
+                    }
                 }
-
                 OAM_cycle = !OAM_cycle;
             }
         }
 
         void Emulate_CPU()
         {
-            if (OAM_DMA_Address != 0xFF)
+            if (OAM_Active)
             {
                 Perform_OAM_DMA();
                 return; // CPU is suspended during this time.
