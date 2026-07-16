@@ -2155,31 +2155,36 @@ namespace Anode
             }
         }
 
+        void Perform_OAM_DMA()
+        {
+            if (OAM_cycle_init_t < (odd_cycle ? 2 : 1))
+            {
+                // Blank cycles - I just use these to init.
+                OAM_cycle = false;
+                OAM_cycle_init_t++;
+            }
+            else
+            {
+                if (!OAM_cycle)
+                {
+                    OAM_Temp_Value = Read_Raw((ushort)((OAM_POS << 8) + OAM_DMA_Address));
+                }
+                else
+                {
+                    OAM[OAM_DMA_Address] = OAM_Temp_Value;
+                    OAM_DMA_Address++;
+                }
+
+                OAM_cycle = !OAM_cycle;
+            }
+        }
+
         void Emulate_CPU()
         {
             if (OAM_DMA_Address != 0xFF)
             {
-                if (OAM_cycle_init_t < (odd_cycle ? 2 : 1))
-                {
-                    // Blank cycles - I just use these to init.
-                    OAM_cycle = false;
-                    OAM_cycle_init_t++;
-                }
-                else
-                {
-                    if (!OAM_cycle)
-                    {
-                        OAM_Temp_Value = Read_Raw((ushort)((OAM_POS << 8) + OAM_DMA_Address));
-                    }
-                    else
-                    {
-                        OAM[OAM_DMA_Address] = OAM_Temp_Value;
-                        OAM_DMA_Address++;
-                    }
-
-                    OAM_cycle = !OAM_cycle;
-                }
-                return;
+                Perform_OAM_DMA();
+                return; // CPU is suspended during this time.
             }
             else
             {
