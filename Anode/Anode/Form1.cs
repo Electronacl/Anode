@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Anode
@@ -25,6 +27,12 @@ namespace Anode
 
         bool paused = false;
         bool waitingForFrame = false;
+
+        readonly long NTSC_time = 1 / 60;
+        readonly long PAL_time = 1 / 50;
+        bool throttled = true;
+        long timetaken;
+        Stopwatch throttler = new Stopwatch();
 
         // Winforms stuff
         public Form1()
@@ -86,7 +94,7 @@ namespace Anode
         }
 
         void Run_Emulator()
-        { 
+        {
             // Setup emulator
 
             // Personal debug only
@@ -110,6 +118,10 @@ namespace Anode
             {
                 if ((!paused) || waitingForFrame)
                 {
+                    if (throttled && !waitingForFrame)
+                    {
+                        throttler.Start();
+                    }
                     // 1 cycle at a time
                     emulator.Advance_Frame();
                     // When the emulator has completed a frame, or crashed
@@ -130,9 +142,19 @@ namespace Anode
                             pictureBox1.Image = emulator.output;
                             pictureBox1.Update();
                         }
-                        emulator.frame_Ready = false;
-                        waitingForFrame = false;
-                        emulator.InitFrame();
+                    }
+                    emulator.frame_Ready = false;
+                    waitingForFrame = false;
+                    emulator.InitFrame();
+                    if (throttled && !waitingForFrame)
+                    {
+                        throttler.Stop();
+                        timetaken = (throttler.ElapsedTicks + 2) / Stopwatch.Frequency;
+                        throttler.Reset();
+                        if (timetaken < NTSC_time)
+                        {
+                            Thread.Sleep((int)((NTSC_time-timetaken) * 1000));
+                        }
                     }
                 }
             }
