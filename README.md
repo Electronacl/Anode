@@ -21,10 +21,10 @@ Info on CPU instructions: https://www.masswerk.at/6502/6502_instruction_set.html
 CPU Details: https://www.princeton.edu/~mae412/HANDOUTS/Datasheets/6502.pdf<br>
 Window Focus check: https://stackoverflow.com/questions/7162834/determine-if-current-application-is-activated-has-focus<br>
 
-## Understanging the version system for releases
+## Understanding the version system for releases (2026.2.1+)
 The version is split into 3 sections, with different parts within each section. Here, a different letter represents each part. The sections are separated by dashes:<br>
 `yyyy.x.z-M.mb-s`<br>
-There is no 2nd section in full releases, only in beta and alpha builds.<br>
+There is no 2nd or 3rd section in full releases, only in beta and alpha builds.<br>
 ### First section (`yyyy.x`)
 `yyyy` is the year of release, or intended release year.<br>
 `x` is the release number in the year.<br>
