@@ -218,6 +218,13 @@ namespace Anode
         Color[] Palette = new Color[64];
         int pal_i = 0;
 
+        public Emulator DeepCopy()
+        {
+            Emulator other = (Emulator)MemberwiseClone();
+            other.ResetBitmap();
+            return other;
+        }
+
         void Tracelogger(byte opcode)
         {
             if (logging)
@@ -240,6 +247,16 @@ namespace Anode
                 //+ "\tCycle: " + cycle.ToString();
                 tracelog.WriteLine(line);
             }
+        }
+
+        void ResetBitmap()
+        {
+            if (NTSC)
+            {
+                output = new Bitmap(32 * 8, 30 * 8);
+            }
+
+            InitFrame();
         }
 
         public void Reset()
@@ -272,13 +289,8 @@ namespace Anode
             }
 
             // PAL support coming somewhen, but the display size is different IIRC - Unless the NES doesn't do that...
-            if (NTSC)
-            {
-                output = new Bitmap(32 * 8, 30 * 8);
-            }
+            ResetBitmap();
 
-            InitFrame();
-            
             // Init palette
             for (int j = 0; j < 64; j++)
             {
@@ -357,7 +369,7 @@ namespace Anode
                     Master_Clock = 1;
                 }
             }
-            
+
             if (CPU_Halted)
             {
                 Console.WriteLine($"CPU Halted at address {ProgramCounter:X}!");
@@ -482,17 +494,17 @@ namespace Anode
                     case 0x2000: // PPUCTRL
                         // ppuNametableSelect =    Value & 3;
                         ppu_t = (ushort)((ppu_t & 0b1111001111111111) | ((Value & 3) << 10));
-                        ppuVRAMInc32Mode =      (Value & 4)    != 0;
-                        ppuSpritePatternTable = (Value & 8)    != 0;
-                        ppuBGPatternTable =     (Value & 0x10) != 0;
-                        ppuUse8x16Sprites =     (Value & 0x20) != 0;
-                        ppuEnableNMI =          (Value & 0x80) != 0;
+                        ppuVRAMInc32Mode = (Value & 4) != 0;
+                        ppuSpritePatternTable = (Value & 8) != 0;
+                        ppuBGPatternTable = (Value & 0x10) != 0;
+                        ppuUse8x16Sprites = (Value & 0x20) != 0;
+                        ppuEnableNMI = (Value & 0x80) != 0;
                         break;
                     case 0x2001: // PPUMASK
-                        ppuMask_8pxMaskBG =      (Value & 2)    != 0;
-                        ppuMask_8pxMaskSprites = (Value & 4)    != 0;
-                        ppuMask_RenderBG =       (Value & 8)    != 0;
-                        ppuMask_RenderSprites =  (Value & 0x10) != 0;
+                        ppuMask_8pxMaskBG = (Value & 2) != 0;
+                        ppuMask_8pxMaskSprites = (Value & 4) != 0;
+                        ppuMask_RenderBG = (Value & 8) != 0;
+                        ppuMask_RenderSprites = (Value & 0x10) != 0;
                         break;
                     case 0x2002: // PPUSTATUS
                         Console.WriteLine("PPUSTATUS not implemented");
@@ -854,7 +866,7 @@ namespace Anode
                         inc_op_t = true;
                         break;
                 }
-                
+
             }
             else if (op_b == 6 || op_b == 7) // Stop it, get some help
             {
@@ -1417,14 +1429,14 @@ namespace Anode
                             case 4:
                                 // Push processor flags to the stack
                                 DataBus = 0;
-                                DataBus |= (byte)(flag_Carry            ? 1 : 0);
-                                DataBus |= (byte)(flag_Zero             ? 2 : 0);
+                                DataBus |= (byte)(flag_Carry ? 1 : 0);
+                                DataBus |= (byte)(flag_Zero ? 2 : 0);
                                 DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
-                                DataBus |= (byte)(flag_Decimal          ? 8 : 0);
-                                DataBus += (byte)(DoNMI                 ? 0 : 0x10); // NMI has no B flag
+                                DataBus |= (byte)(flag_Decimal ? 8 : 0);
+                                DataBus += (byte)(DoNMI ? 0 : 0x10); // NMI has no B flag
                                 DataBus |= 0x20; // Always set
-                                DataBus |= (byte)(flag_Overflow         ? 0x40 : 0);
-                                DataBus |= (byte)(flag_Negative         ? 0x80 : 0);
+                                DataBus |= (byte)(flag_Overflow ? 0x40 : 0);
+                                DataBus |= (byte)(flag_Negative ? 0x80 : 0);
                                 Push();
                                 break;
                             case 5:
@@ -1481,7 +1493,7 @@ namespace Anode
                                 t = 255;
                                 break;
                         }
-                        
+
                         break;
                     case 2:
                         // RTI
@@ -1497,12 +1509,12 @@ namespace Anode
                             case 3:
                                 // Processor flags pulled from the stack and transferred
                                 Pull();
-                                flag_Carry =            (DataBus & 1)    != 0;
-                                flag_Zero =             (DataBus & 2)    != 0;
-                                flag_InterruptDisable = (DataBus & 4)    != 0;
-                                flag_Decimal =          (DataBus & 8)    != 0;
-                                flag_Overflow =         (DataBus & 0x40) != 0;
-                                flag_Negative =         (DataBus & 0x80) != 0;
+                                flag_Carry = (DataBus & 1) != 0;
+                                flag_Zero = (DataBus & 2) != 0;
+                                flag_InterruptDisable = (DataBus & 4) != 0;
+                                flag_Decimal = (DataBus & 8) != 0;
+                                flag_Overflow = (DataBus & 0x40) != 0;
+                                flag_Negative = (DataBus & 0x80) != 0;
                                 break;
                             case 4:
                                 // Get low byte of PC
@@ -1627,14 +1639,14 @@ namespace Anode
                         {
                             // PHP
                             DataBus = 0;
-                            DataBus |= (byte)(flag_Carry            ? 1 : 0);
-                            DataBus |= (byte)(flag_Zero             ? 2 : 0);
+                            DataBus |= (byte)(flag_Carry ? 1 : 0);
+                            DataBus |= (byte)(flag_Zero ? 2 : 0);
                             DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
-                            DataBus |= (byte)(flag_Decimal          ? 8 : 0);
-                            DataBus |=                              0x10; // Always set
-                            DataBus |=                              0x20; // Always set
-                            DataBus |= (byte)(flag_Overflow         ? 0x40 : 0);
-                            DataBus |= (byte)(flag_Negative         ? 0x80 : 0);
+                            DataBus |= (byte)(flag_Decimal ? 8 : 0);
+                            DataBus |= 0x10; // Always set
+                            DataBus |= 0x20; // Always set
+                            DataBus |= (byte)(flag_Overflow ? 0x40 : 0);
+                            DataBus |= (byte)(flag_Negative ? 0x80 : 0);
                         }
                         else
                         {
@@ -1645,7 +1657,7 @@ namespace Anode
                         Push();
                         break;
                 }
-                
+
             }
             else
             {
@@ -1666,12 +1678,12 @@ namespace Anode
                         if ((op_a & 2) == 0)
                         {
                             // PLP
-                            flag_Carry =            (DataBus & 1) != 0;
-                            flag_Zero =             (DataBus & 2) != 0;
+                            flag_Carry = (DataBus & 1) != 0;
+                            flag_Zero = (DataBus & 2) != 0;
                             flag_InterruptDisable = (DataBus & 4) != 0;
-                            flag_Decimal =          (DataBus & 8) != 0;
-                            flag_Overflow =         (DataBus & 0x40) != 0;
-                            flag_Negative =         (DataBus & 0x80) != 0;
+                            flag_Decimal = (DataBus & 8) != 0;
+                            flag_Overflow = (DataBus & 0x40) != 0;
+                            flag_Negative = (DataBus & 0x80) != 0;
                         }
                         else
                         {
@@ -1724,7 +1736,7 @@ namespace Anode
                             flag_Negative = X >= 0x80;
                             break;
                     }
-                    
+
                 }
                 else
                 {
@@ -1802,7 +1814,7 @@ namespace Anode
                             flag_Zero = X == 0;
                             flag_Negative = X >= 0x80;
                             break;
-                        // 7 is NOP
+                            // 7 is NOP
                     }
                 }
                 else
@@ -1822,7 +1834,7 @@ namespace Anode
                             flag_Zero = X == 0;
                             flag_Negative = X >= 0x80;
                             break;
-                        // Others are unofficial NOPs
+                            // Others are unofficial NOPs
                     }
                 }
             }
@@ -1837,7 +1849,7 @@ namespace Anode
                 Read_Operand();
             }
 
-            if(inc_op_t)
+            if (inc_op_t)
             {
                 switch (op_a)
                 {
@@ -1967,7 +1979,7 @@ namespace Anode
                                 flag_Zero = DataBus == A;
                                 flag_Negative = (byte)(A - DataBus) >= 0x80;
                                 break;
-                            // Case 2 is NOP
+                                // Case 2 is NOP
                         }
                         break;
                     case 7:
@@ -1999,7 +2011,7 @@ namespace Anode
                                 flag_Negative = A >= 0x80;
                                 flag_Zero = A == 0;
                                 break;
-                            // Case 2 is NOP
+                                // Case 2 is NOP
                         }
                         break;
                 }
@@ -2275,7 +2287,7 @@ namespace Anode
             {
                 CPU_Halted = true;
                 Console.WriteLine($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.");
-                MessageBox.Show($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.\nThis error should not occur, and should be reported to the developer.", 
+                MessageBox.Show($"Opcode ${opcode:X}({op_a:X}, {op_b:X}, {op_c:X}) did not finish; t register exceeded 20.\nThis error should not occur, and should be reported to the developer.",
                     "CPU Emulation Error: Instruction Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -2663,7 +2675,7 @@ namespace Anode
                             bool SpixelH = ((ppu_SpriteShiftRegisterH[i]) & 0x80) != 0; // Takes bit from shift register to get high bit plane
 
                             SpritePalLow = (byte)(SpixelL ? 1 : 0);
-                            SpritePalLow |= (byte)(SpixelH ? 2 : 0); 
+                            SpritePalLow |= (byte)(SpixelH ? 2 : 0);
 
                             SpritePalHi = (byte)((ppu_SpriteAttribute[i] & 0x03) | 0x04);
                             SpritePriority = ((ppu_SpriteAttribute[i] >> 5) & 1) == 0;
@@ -2705,7 +2717,7 @@ namespace Anode
                     ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = outColour.G;
                     ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = outColour.R;
                 }
-                
+
             }
 
             ppuDot++;

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Anode
@@ -29,7 +28,7 @@ namespace Anode
         bool waitingForFrame = false;
 
         readonly double NTSC_time = 1d / 60d;
-        readonly double PAL_time = 1 / 50;
+        readonly double PAL_time = 1d / 50d;
         bool throttled = true;
         double timetaken;
         Stopwatch throttler = new Stopwatch();
@@ -39,6 +38,7 @@ namespace Anode
         bool rewindenabled = true;
         byte rewindtime = 5;
         long lastrewind;
+        bool waitingforrewind = false;
 
         // Winforms stuff
         public Form1()
@@ -123,13 +123,19 @@ namespace Anode
 
             if (rewindenabled)
             {
-                rewind = emulator;
-                rewindbuffer = rewind;
+                rewind = emulator.DeepCopy();
+                rewindbuffer = rewind.DeepCopy();
                 lastrewind = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             }
             throttler.Start();
             while (!emulator.CPU_Halted)
             {
+                if (waitingforrewind)
+                {
+                    emulator = rewind.DeepCopy();
+                    rewindbuffer = rewind.DeepCopy();
+                    waitingforrewind = false;
+                }
                 if ((!paused) || waitingForFrame)
                 {
                     // 1 cycle at a time
@@ -154,6 +160,15 @@ namespace Anode
                         }
                     }
                     emulator.frame_Ready = false;
+                    if (!waitingForFrame)
+                    {
+                        if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - lastrewind > rewindtime)
+                        {
+                            rewind = rewindbuffer.DeepCopy();
+                            rewindbuffer = emulator.DeepCopy();
+                            lastrewind = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                        }
+                    }
                     if (throttled && !waitingForFrame)
                     {
                         //throttler.Stop();
@@ -359,7 +374,7 @@ namespace Anode
         {
             if (rewindenabled && (rewind != null))
             {
-                emulator = rewind;
+                waitingforrewind = true;
             }
         }
     }
