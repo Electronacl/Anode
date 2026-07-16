@@ -93,6 +93,8 @@ namespace Anode
 
         bool ppuSecondaryOAMFull;
 
+        byte PPUIOBus;
+
         // ----- PPU Flags
         int ppuNametableSelect;
 
@@ -374,7 +376,8 @@ namespace Anode
                     Master_Clock = 1;
                 }
             }
-            else
+            
+            if (CPU_Halted)
             {
                 Console.WriteLine($"CPU Halted at address {ProgramCounter:X}!");
                 //MessageBox.Show($"Encountered a halt instruction (opcode {opcode:X}) at {ProgramCounter:X}",
@@ -419,12 +422,12 @@ namespace Anode
                 switch (Address)
                 {
                     case 0x2007:
-                        byte temp = PPUReadBuffer;
+                        PPUIOBus = PPUReadBuffer;
 
                         if (ppu_v > 0x3F00)
                         {
                             // Palette RAM has no buffer
-                            temp = ReadPPU(ppu_v);
+                            PPUIOBus = ReadPPU(ppu_v);
 
                             // Other than this quirk. This doesn't seem to work atm, as I think ppu_v is wrong.
                             PPUReadBuffer = ReadPPU((ushort)(ppu_v & 0x27FF));
@@ -437,7 +440,7 @@ namespace Anode
 
                         ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
                         ppu_v &= 0x3FFF;
-                        return temp;
+                        break;
                     case 0x2002:
                         byte ppustatus = 0;
                         ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
@@ -446,19 +449,25 @@ namespace Anode
 
                         ppuVBlank = false;
                         ppu_w = false;
-                        return ppustatus;
+
+                        PPUIOBus = (byte)((PPUIOBus & 0b00011111) | ppustatus);
+
+                        break;
                     case 0x2004:
-                        return OAM[ppuOAMAddress];
+                        PPUIOBus = OAM[ppuOAMAddress];
+                        break;
                     default:
                         // Stuff I haven't implemented
-                        Console.WriteLine($"Unknown PPU read - {Address:X}");
-                        return 0;
+                        // Console.WriteLine($"Unknown PPU read - {Address:X}");
+                        break;
                 }
+                return PPUIOBus;
             }
             else if (Address == 0x4016)
             {
                 byte controllerBit = (byte)((Controller1ShiftRegister & 0x80) >> 7);
                 Controller1ShiftRegister <<= 1;
+                controllerBit |= (byte)(DataBus & 0b11100000);
                 return controllerBit;
             }
             else if (Address >= 0x8000)
@@ -486,10 +495,12 @@ namespace Anode
             {
                 // Write to PPU
                 Address &= 0x2007; // Mirroring
+                PPUIOBus = Value;
                 switch (Address)
                 {
                     case 0x2000: // PPUCTRL
-                        ppuNametableSelect =    Value & 3;
+                        // ppuNametableSelect =    Value & 3;
+                        ppu_t = (ushort)((ppu_t & 0b1111001111111111) | ((Value & 3) << 10));
                         ppuVRAMInc32Mode =      (Value & 4)    != 0;
                         ppuSpritePatternTable = (Value & 8)    != 0;
                         ppuBGPatternTable =     (Value & 0x10) != 0;
@@ -517,11 +528,11 @@ namespace Anode
                         if (!ppu_w)
                         {
                             ppu_x = (byte)(Value & 7);
-                            TempVRAMAddress = (ushort)((TempVRAMAddress & 0b0111111111100000) | (Value >> 3));
+                            TempVRAMAddress = (ushort)((TempVRAMAddress & 0x7FE0) | (Value >> 3));
                         }
                         else
                         {
-                            ppu_t = (ushort)((TempVRAMAddress & 0b0000110000011111) | ((Value & 0xF8) << 2) | ((Value & 7) << 12));
+                            ppu_t = (ushort)((TempVRAMAddress & 0x0C1F) | ((Value & 0xF8) << 2) | ((Value & 7) << 12));
                         }
                         ppu_w = !ppu_w;
                         break;
@@ -555,7 +566,7 @@ namespace Anode
                             if ((Header[6] & 1) == 0)
                             {
                                 // Horizontal mirror
-                                VRAM[(ppu_v & 0x3FF) | (ppu_v & 0x800) >> 1] = Value;
+                                VRAM[(ppu_v & 0x3FF) | ((ppu_v & 0x800) >> 1)] = Value;
                             }
                             else
                             {
@@ -614,16 +625,24 @@ namespace Anode
             }
             else if (Address < 0x3F00)
             {
-                // Read from nametables
-                if ((Header[6] & 1) == 0)
+                if (Address <= 0x37FF)
                 {
-                    // Horizontal mirror
-                    return VRAM[(Address & 0x3FF) | (Address & 0x800) >> 1];
+                    // Read from nametables
+                    if ((Header[6] & 1) == 0)
+                    {
+                        // Horizontal mirror
+                        return VRAM[(Address & 0x3FF) | ((Address & 0x800) >> 1)];
+                    }
+                    else
+                    {
+                        // Vertical mirror
+                        return VRAM[Address & 0x7FF];
+                    }
                 }
                 else
                 {
-                    // Vertical mirror
-                    return VRAM[Address & 0x7FF];
+                    // PPU Open Bus
+                    return PPUDataBus;
                 }
             }
             else
@@ -2631,12 +2650,13 @@ namespace Anode
                 byte PalLow = 0; // Index in palette
                 if (ppuMask_RenderBG && (ppuDot > 8 || ppuMask_8pxMaskBG))
                 {
-                    byte col0 = (byte)((ppuShiftRegister_patternL >> (0xF ^ ppu_x)) & 1);
-                    byte col1 = (byte)((ppuShiftRegister_patternH >> (0xF ^ ppu_x)) & 1);
+                    byte ppu_x_index = (byte)(0xF - ppu_x);
+                    byte col0 = (byte)((ppuShiftRegister_patternL >> (0xF - ppu_x)) & 1);
+                    byte col1 = (byte)((ppuShiftRegister_patternH >> (0xF - ppu_x)) & 1);
                     PalLow = (byte)((col1 << 1) | col0);
 
-                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (0xF ^ ppu_x)) & 1);
-                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (0xF ^ ppu_x)) & 1);
+                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (0xF - ppu_x)) & 1);
+                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (0xF - ppu_x)) & 1);
                     PalHi = (byte)((pal1 << 1) | pal0);
                 }
 
