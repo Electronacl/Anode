@@ -184,6 +184,8 @@ namespace Anode
         bool NTSC = true; // PAL or NTSC?
         public bool frame_Ready = false;
 
+        byte RDY_history;
+
 
         // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
         static String[] OpCodeNames =
@@ -2162,10 +2164,12 @@ namespace Anode
                 }
                 OAM_cycle = !OAM_cycle;
             }
+            RDY_history |= 1;
         }
 
         void Emulate_CPU()
         {
+            RDY_history <<= 1;
             if (OAM_Active)
             {
                 Perform_OAM_DMA();
