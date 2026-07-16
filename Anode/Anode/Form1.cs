@@ -167,7 +167,7 @@ namespace Anode
                     {
                         //throttler.Stop();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
-                        while (timetaken < NTSC_time)
+                        while (timetaken < (is_NTSC ? NTSC_time : PAL_time))
                         {
                             timetaken = ((double)throttler.ElapsedTicks) / (double)Stopwatch.Frequency;
                         }
