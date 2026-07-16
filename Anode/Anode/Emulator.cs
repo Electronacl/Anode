@@ -18,7 +18,7 @@ namespace Anode
         // C# optimisation.
 
         // ----- Interchangeable values dependiung on console, temp, etc
-        byte unstable_magic = 0xCC;
+        readonly byte unstable_magic = 0xCC;
 
         // ----- Unstable data
         bool changedBoundary = false;
@@ -52,9 +52,6 @@ namespace Anode
         ushort ppu_v; // VRAM Address
         byte ppu_x; // PPU X scroll
 
-        byte ppuDataBus;
-        ushort ppuAddressBus;
-
         ushort ppuShiftRegister_patternL;
         ushort ppuShiftRegister_patternH;
         ushort ppuShiftRegister_attributeL;
@@ -63,7 +60,6 @@ namespace Anode
         byte ppu8Step_patternLowBitPlane;
         byte ppu8Step_patternHighBitPlane;
         byte ppu8Step_attribute;
-        byte ppu8Step_temp;
         byte ppu8Step_NextCharacter;
 
         // Screen position and info
@@ -82,8 +78,6 @@ namespace Anode
         byte PPUIOBus;
 
         // ----- PPU Flags
-        int ppuNametableSelect;
-
         bool ppuVRAMInc32Mode;
         bool ppuSpritePatternTable;
         bool ppuBGPatternTable;
@@ -103,9 +97,9 @@ namespace Anode
         byte PPUDataBus;
         ushort PPUTargetAddress;
 
-        bool ALE; // Address latch enable
+        // bool ALE; // Address latch enable
 
-        bool RDL; // Whether to write or read data
+        // bool RDL; // Whether to write or read data
 
         bool PPUcycle = false;
 
@@ -176,7 +170,7 @@ namespace Anode
         public string tracepath;
         public bool logging;
 
-        string this_trace = "";
+        string this_trace;
         StreamWriter tracelog;
 
         // PPU output data
