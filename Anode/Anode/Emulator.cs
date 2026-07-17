@@ -121,29 +121,56 @@ namespace Anode
         byte[] ppu_SpriteYposition = new byte[8];
 
         // ----- APU Registers
+        byte sq1_duty;
+        bool sq1_loop;
+        bool sq1_constant;
         byte sq1_vol;
-        byte sq1_sweep;
-        byte sq1_lo;
-        byte sq1_hi;
+        bool sq1_sweepEnabled;
+        byte sq1_sweepPeriod;
+        bool sq1_sweepNegate;
+        byte sq1_sweepShift;
+        byte sq1_timer_lo;
+        byte sq1_timer_hi;
+        byte sq1_lengthCounter;
 
+        byte sq2_duty;
+        bool sq2_loop;
+        bool sq2_constant;
         byte sq2_vol;
-        byte sq2_sweep;
-        byte sq2_lo;
-        byte sq2_hi;
+        bool sq2_sweepEnabled;
+        byte sq2_sweepPeriod;
+        bool sq2_sweepNegate;
+        byte sq2_sweepShift;
+        byte sq2_timer_lo;
+        byte sq2_timer_hi;
+        byte sq2_lengthCounter;
 
+        bool tri_count;
         byte tri_linear;
-        byte tri_lo;
-        byte tri_hi;
+        byte tri_timer_lo;
+        byte tri_timer_hi;
+        byte tri_lengthCounter;
 
+        bool noise_loop;
+        bool noise_constant;
         byte noise_vol;
-        byte noise_lo;
-        byte noise_hi;
+        bool noise_mode;
+        byte noise_period;
+        byte noise_lengthCounter;
+
+        byte apuDMCFrequency;
+        bool apuDMCLoops;
+        byte apuDMCLoadCounter;
+        byte apuDMCSampleAddress;
+        byte apuDMCSamleLength;
 
         byte apu_status;
 
         bool apuFlag_DMCInterrupt;
         bool apuFlag_frameInterrupt;
         bool apuFlag_DMCActive;
+
+        bool apuFlag_IRQEnable;
 
         // ----- NMI
         bool NMILevelDetector;
@@ -519,7 +546,10 @@ namespace Anode
             {
                 // Sound channel and IRQ status
                 byte apuFlags = 0;
-                apuFlags |= (byte)(ExternalDataBus & 0b00100000);
+                apuFlags |= (byte)(apuFlag_DMCInterrupt ? 0x80 : 0);
+                apuFlags |= (byte)(apuFlag_frameInterrupt ? 0x40 : 0);
+                apuFlags |= (byte)(ExternalDataBus & 0x20);
+                apuFlags |= (byte)(apuFlag_DMCActive ? 0x10 : 0);
 
                 apuFlag_frameInterrupt = false;
 
@@ -591,6 +621,7 @@ namespace Anode
                         break;
                     case 0x2002: // PPUSTATUS
                         //Console.WriteLine("PPUSTATUS not implemented");
+                        // I don't think writing here does anything
                         break;
                     case 0x2003: // OAMADDR
                         //Console.WriteLine("OAMADDR not implemented");
@@ -673,85 +704,116 @@ namespace Anode
                 // APU channel registers
                 switch (Address)
                 {
+                    // Pulse channel 1
                     case 0x4000:
                         // SQ1_VOL
-                        sq1_vol = Value;
+                        sq1_duty = (byte)(Value >> 6);
+                        sq1_loop = (Value & 0x20) != 0;
+                        sq1_constant = (Value & 0x10) != 0;
+                        sq1_vol = (byte)(Value & 0xF);
                         break;
                     case 0x4001:
                         // SQ1_SWEEP
-                        sq1_sweep = Value;
+                        sq1_sweepEnabled = (Value & 0x80) != 0;
+                        sq1_sweepPeriod = (byte)((Value & 0xB0) >> 4);
+                        sq1_sweepNegate = (Value & 0x8) != 0;
+                        sq1_sweepShift = (byte)(Value & 0xB);
                         break;
                     case 0x4002:
                         // SQ1_LO
-                        sq1_lo = Value;
+                        sq1_timer_lo = Value;
                         break;
                     case 0x4003:
                         // SQ1_HI
-                        sq1_hi = Value;
+                        sq1_lengthCounter = (byte)(Value >> 3);
+                        sq1_timer_hi = (byte)(Value & 0xB);
                         break;
-
+                    
+                    // Pulse channel 2
                     case 0x4004:
                         // SQ2_VOL
-                        sq2_vol = Value;
+                        sq2_duty = (byte)(Value >> 6);
+                        sq2_loop = (Value & 0x20) != 0;
+                        sq2_constant = (Value & 0x10) != 0;
+                        sq2_vol = (byte)(Value & 0xF);
                         break;
                     case 0x4005:
                         // SQ2_SWEEP
-                        sq2_sweep = Value;
+                        sq2_sweepEnabled = (Value & 0x80) != 0;
+                        sq2_sweepPeriod = (byte)((Value & 0xB0) >> 4);
+                        sq2_sweepNegate = (Value & 0x8) != 0;
+                        sq2_sweepShift = (byte)(Value & 0xB);
                         break;
                     case 0x4006:
                         // SQ2_LO
-                        sq2_lo = Value;
+                        sq2_timer_lo = Value;
                         break;
                     case 0x4007:
                         // SQ2_HI
-                        sq2_hi = Value;
+                        sq2_lengthCounter = (byte)(Value >> 3);
+                        sq2_timer_hi = (byte)(Value & 0xB);
                         break;
 
+                    // Triangle channel
                     // TRI has no sweep function
                     case 0x4008:
                         // TRI_LINEAR
-                        tri_linear = Value;
+                        tri_count = (Value & 0x80) != 0;
+                        tri_linear = (byte)(Value & 0xBF);
                         break;
                     case 0x400A:
                         // TRI_LO
-                        tri_lo = Value;
+                        tri_timer_lo = Value;
                         break;
                     case 0x400B:
                         // TRI_HI
-                        tri_hi = Value;
+                        tri_lengthCounter = (byte)(Value >> 3);
+                        tri_timer_hi = (byte)(Value & 0xB);
                         break;
 
+                    // Noise channel
                     // Nor does NOISE
                     case 0x400C:
                         // NOISE_VOL
-                        noise_vol = Value;
+                        noise_loop = (Value & 0x20) != 0;
+                        noise_constant = (Value & 0x10) != 0;
+                        noise_vol = (byte)(Value & 0xF);
                         break;
                     case 0x400E:
                         // NOISE_LO
-                        noise_lo = Value;
+                        noise_mode = (Value & 0x80) != 0;
+                        noise_period = (byte)(Value & 0xF);
                         break;
                     case 0x400F:
                         // NOISE_HI
-                        noise_hi = Value;
+                        noise_lengthCounter = (byte)(Value >> 3);
                         break;
                 }
             }
             else if (Address <= 0x400F && Address >= 0x400C)
             {
-                // DMA registers
+                // DMC registers
                 switch (Address)
                 {
                     case 0x4010:
                         // DMC_FREQ
+                        // IL-- RRRR
+                        apuFlag_IRQEnable = (Value & 0x80) != 0;
+                        apuDMCLoops = (Value & 0x40) != 0;
+                        apuDMCFrequency = (byte)(Value & 0xF); // Lower nybble is copied only
                         break;
                     case 0x4011:
                         // DMC_RAW
+                        apuDMCLoadCounter = (byte)(Value & 0xCF); // 7 bits
                         break;
                     case 0x4012:
                         // DMC_START
+                        // The real sample address start is found by 0b11AAAAAA AA000000
+                        apuDMCSampleAddress = Value;
                         break;
                     case 0x4013:
                         // DMC_LEN
+                        apuDMCSamleLength = Value;
                         break;
                 }
             }
