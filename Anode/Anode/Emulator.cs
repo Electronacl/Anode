@@ -164,7 +164,11 @@ namespace Anode
         byte apuDMCSampleAddress;
         byte apuDMCSamleLength;
 
-        byte apu_status;
+        bool apuEnable_DMC;
+        bool apuEnable_Noise;
+        bool apuEnable_Tri;
+        bool apuEnable_sq2;
+        bool apuEnable_sq1;
 
         bool apuFlag_DMCInterrupt;
         bool apuFlag_frameInterrupt;
@@ -828,7 +832,11 @@ namespace Anode
             else if (Address == 0x4015)
             {
                 // Sound channels enable
-                apu_status = Value;
+                apuEnable_DMC = (Value & 0x10) != 0;
+                apuEnable_Noise = (Value & 8) != 0;
+                apuEnable_Tri = (Value & 4) != 0;
+                apuEnable_sq2 = (Value & 2) != 0;
+                apuEnable_sq1 = (Value & 1) != 0;
             }
             else if (Address == 0x4016)
             {
