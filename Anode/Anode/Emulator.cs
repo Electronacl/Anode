@@ -466,6 +466,9 @@ namespace Anode
                         ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
                         ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);
 
+                        // Reset flags
+                        ppuStatusSprZeroHit = false;
+                        ppuStatusOverflow = false;
                         ppuVBlank = false;
                         ppu_w = false;
 
@@ -2365,6 +2368,7 @@ namespace Anode
         }
 
         // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
+        byte PPU_m;
         void SpriteEval()
         {
             if (ppuDot == 0)
@@ -2376,6 +2380,7 @@ namespace Anode
 
                 ppuScanLineContainsSpriteZero = false;
                 ppuSpriteEvaluationOAMOverflowed = false;
+                ppuStatusOverflow = false;
             }
             else if (ppuDot > 0 && ppuDot <= 64)
             {
@@ -2396,6 +2401,8 @@ namespace Anode
             }
             else if (ppuDot > 64 && ppuDot <= 256)
             {
+                // Understanding the registers:
+                // ppuOAMAddress is known on hardware as "n"
                 if ((ppuDot & 1) == 1)
                 {
                     // Odd cycles load the value from OAM
@@ -2411,51 +2418,59 @@ namespace Anode
                             SecondaryOAM[ppuSecondaryOAMAddress] = ppuSpriteEvalTemp;
                         }
 
-                        if (ppuSpriteEvalTick == 0)
+                        if (!ppuSecondaryOAMFull)
                         {
-                            // Index 0 of the object's 4 bytes
-                            if (ppuScanLine - ppuSpriteEvalTemp >= 0 && ppuScanLine - ppuSpriteEvalTemp < (ppuUse8x16Sprites ? 16 : 8))
+                            if (ppuSpriteEvalTick == 0)
                             {
-                                // The object is on this scanline
-                                if (!ppuSecondaryOAMFull)
+                                // Index 0 of the object's 4 bytes (Y pos)
+                                if (ppuScanLine - ppuSpriteEvalTemp >= 0 && ppuScanLine - ppuSpriteEvalTemp < (ppuUse8x16Sprites ? 16 : 8))
                                 {
-                                    ppuSecondaryOAMAddress++;
+                                    // The object is on this scanline
                                     ppuOAMAddress++;
+                                    ppuSecondaryOAMAddress++;
                                     if (ppuDot == 66)
                                     {
                                         // Checks to see whether the sprite 0 is on this scanline
                                         // dot 66 will always be evaluating index 0
                                         ppuScanLineContainsSpriteZero = true;
                                     }
+                                    ppuSpriteEvalTick++;
+                                    /*else
+                                    {
+                                        // Ran out of room in secondaryOAM
+                                        // This ignores an accuracy edge case, so it's kinda stable here.
+                                        ppuStatusOverflow = true;
+                                    }*/
                                 }
                                 else
                                 {
-                                    // Ran out of room in secondaryOAM
-                                    // This ignores an accuracy edge case, so it's kinda stable here.
-                                    ppuStatusOverflow = true;
+                                    ppuOAMAddress += 4;
                                 }
-                                ppuSpriteEvalTick++;
                             }
                             else
                             {
-                                ppuOAMAddress += 4;
+                                // For indexes 1, 2 and 3 of an object's OAM data
+                                ppuSecondaryOAMAddress++;
+                                ppuOAMAddress++;
+                                if (ppuSecondaryOAMAddress == 0x20)
+                                {
+                                    ppuSecondaryOAMFull = true;
+                                }
+                                ppuSpriteEvalTick++;
+                                ppuSpriteEvalTick &= 3;
+                            }
+                            if (ppuOAMAddress == 0)
+                            {
+                                ppuSpriteEvaluationOAMOverflowed = true;
                             }
                         }
                         else
                         {
-                            // For indexes 1, 2 and 3 of an object's OAM data
-                            ppuSecondaryOAMAddress++;
                             ppuOAMAddress++;
-                            if (ppuSecondaryOAMAddress == 0x20)
+                            if (ppuScanLine - ppuSpriteEvalTemp >= 0 && ppuScanLine - ppuSpriteEvalTemp < (ppuUse8x16Sprites ? 16 : 8))
                             {
-                                ppuSecondaryOAMFull = true;
+                                ppuStatusOverflow = true;
                             }
-                            ppuSpriteEvalTick++;
-                            ppuSpriteEvalTick &= 3;
-                        }
-                        if (ppuOAMAddress == 0)
-                        {
-                            ppuSpriteEvaluationOAMOverflowed = true;
                         }
                     }
                 }
