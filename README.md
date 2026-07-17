@@ -46,15 +46,6 @@ Example: `2026.3` would be the 3rd full release in 2026, and the first patch.
 Beta builds come first, and have the most bugs and issues. Alpha builds are closer to the release window, when there's only a few issues to work out, and the code is more stable.<br><br>
 Example: `2.4b` would have had 2 major changes, 4 minor changes, and be in the beta status.
 
-## Accuracy info (as of 2026.2-s)
-### AccuracyCoin
-<img width="263" height="247" alt="image" src="https://github.com/user-attachments/assets/b43e2e74-39d2-4c2a-81a3-ddfa4850d00d" /><br>
-### nestest
-*Official opcodes*<br>
-<img width="262" height="247" alt="image" src="https://github.com/user-attachments/assets/a3da22f5-b6ef-4635-be0b-ebc3fb264313" /><br>
-*Unofficial opcodes*<br>
-<img width="265" height="251" alt="image" src="https://github.com/user-attachments/assets/ffaa854f-c85d-441c-a295-8773a5398c06" /><br>
-
 ## Licenses
 This project is licensed under my own license, _Electronacl Content License V2.0_. 
 As per the requirements, here are the things I must state
@@ -62,3 +53,17 @@ As per the requirements, here are the things I must state
 
 <br>
 Whilst there shouldn't be anything that *could* damage your PC with this program, I can't guaruntee that things like ROMs, TASes (when I add them), or modifications may cause damage. Even if it is from the core program, I don't assume responsibility for any damage that may be caused by this program. (This is for legal reasons)
+
+## Accuracy info (as of 2026.2.3)
+### AccuracyCoin
+<img width="261" height="244" alt="image" src="https://github.com/user-attachments/assets/e07aa26c-8f10-4892-accf-44e707f0e65d" /><br>
+### nestest
+*Official opcodes*<br>
+<img width="262" height="247" alt="image" src="https://github.com/user-attachments/assets/a3da22f5-b6ef-4635-be0b-ebc3fb264313" /><br>
+*Unofficial opcodes*<br>
+<img width="265" height="251" alt="image" src="https://github.com/user-attachments/assets/ffaa854f-c85d-441c-a295-8773a5398c06" /><br>
+
+### Wondering why a test no longer passes?
+Sometimes, when fixing some bugs, it gets rid of false positives. This can actually cause the score to stay the same, or even go down for a new release. This doesn't necessarily mean it's less accurate on the newer release, in fact it may be _more_ accurate, so take existing test results with a little pinch of salt whilst the emulator is still in a slightly unstable early phase.<br>
+
+Another cause for this is the ROMs that I use. Some of them update regularly to implement new features and bugfixes based on discoveries with hardware specifics. As I aim to use new versions of the test ROMs, the results above may have the ROM changed from what is shown on Anode's previous updates, which can cause the score to decrease.
