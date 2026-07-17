@@ -46,6 +46,7 @@ namespace Anode
         // Bus registers/lines
         ushort AddressBus; // Stores current accessing address
         byte DataBus; // Stores the data in use
+        byte ExternalDataBus;
 
         // ----- PPU Registers and render info
         bool ppu_w; // Write Latch
@@ -118,6 +119,31 @@ namespace Anode
         byte[] ppu_SpritePattern = new byte[8];
         byte[] ppu_SpriteXposition = new byte[8];
         byte[] ppu_SpriteYposition = new byte[8];
+
+        // ----- APU Registers
+        byte sq1_vol;
+        byte sq1_sweep;
+        byte sq1_lo;
+        byte sq1_hi;
+
+        byte sq2_vol;
+        byte sq2_sweep;
+        byte sq2_lo;
+        byte sq2_hi;
+
+        byte tri_linear;
+        byte tri_lo;
+        byte tri_hi;
+
+        byte noise_vol;
+        byte noise_lo;
+        byte noise_hi;
+
+        byte apu_status;
+
+        bool apuFlag_DMCInterrupt;
+        bool apuFlag_frameInterrupt;
+        bool apuFlag_DMCActive;
 
         // ----- NMI
         bool NMILevelDetector;
@@ -492,32 +518,45 @@ namespace Anode
             else if (Address == 0x4015)
             {
                 // Sound channel and IRQ status
-                return DataBus;
+                byte apuFlags = 0;
+                apuFlags |= (byte)(ExternalDataBus & 0b00100000);
+
+                apuFlag_frameInterrupt = false;
+
+                return apuFlags;
             }
             else if (Address == 0x4016)
             {
                 byte controllerBit = (byte)((Controller1ShiftRegister & 0x80) >> 7);
                 Controller1ShiftRegister <<= 1;
-                controllerBit |= (byte)(DataBus & 0b11100000);
+                controllerBit |= (byte)(ExternalDataBus & 0b11100000);
                 return controllerBit;
             }
             else if (Address == 0x4017)
             {
                 // P2 controller isn't implemented, so it's just open bus here
-                return (byte)(DataBus & 0b11100000);
+                return (byte)(ExternalDataBus & 0b11100000);
             }
             else if (Address >= 0x8000)
             {
                 // Read from ROM (this line also mirrors for smaller ROMs)
                 return ROM[(Address - 0x8000) & ((Header[4] * 0x4000) - 1)];
             }
-            return DataBus;
+            return ExternalDataBus;
         }
 
         void Read()
         {
             // Avoids a repeated line in case this needs to be used in the future
-            DataBus = Read_Raw(AddressBus);
+            if (AddressBus != 0x4015)
+            {
+                DataBus = Read_Raw(AddressBus);
+                ExternalDataBus = DataBus;
+            }
+            else
+            {
+                DataBus = Read_Raw(AddressBus);
+            }
         }
 
         void Write_Raw(ushort Address, byte Value)
@@ -551,7 +590,7 @@ namespace Anode
                         ppuMask_RenderSprites =  (Value & 0x10) != 0;
                         break;
                     case 0x2002: // PPUSTATUS
-                        Console.WriteLine("PPUSTATUS not implemented");
+                        //Console.WriteLine("PPUSTATUS not implemented");
                         break;
                     case 0x2003: // OAMADDR
                         //Console.WriteLine("OAMADDR not implemented");
@@ -636,56 +675,85 @@ namespace Anode
                 {
                     case 0x4000:
                         // SQ1_VOL
+                        sq1_vol = Value;
                         break;
                     case 0x4001:
                         // SQ1_SWEEP
+                        sq1_sweep = Value;
                         break;
                     case 0x4002:
                         // SQ1_LO
+                        sq1_lo = Value;
                         break;
                     case 0x4003:
                         // SQ1_HI
+                        sq1_hi = Value;
                         break;
 
                     case 0x4004:
                         // SQ2_VOL
+                        sq2_vol = Value;
                         break;
                     case 0x4005:
                         // SQ2_SWEEP
+                        sq2_sweep = Value;
                         break;
                     case 0x4006:
                         // SQ2_LO
+                        sq2_lo = Value;
                         break;
                     case 0x4007:
                         // SQ2_HI
+                        sq2_hi = Value;
                         break;
 
                     // TRI has no sweep function
                     case 0x4008:
-                        // TRI_VOL
+                        // TRI_LINEAR
+                        tri_linear = Value;
                         break;
                     case 0x400A:
                         // TRI_LO
+                        tri_lo = Value;
                         break;
                     case 0x400B:
                         // TRI_HI
+                        tri_hi = Value;
                         break;
 
                     // Nor does NOISE
                     case 0x400C:
                         // NOISE_VOL
+                        noise_vol = Value;
                         break;
                     case 0x400E:
                         // NOISE_LO
+                        noise_lo = Value;
                         break;
                     case 0x400F:
                         // NOISE_HI
+                        noise_hi = Value;
                         break;
                 }
             }
             else if (Address <= 0x400F && Address >= 0x400C)
             {
                 // DMA registers
+                switch (Address)
+                {
+                    case 0x4010:
+                        // DMC_FREQ
+                        break;
+                    case 0x4011:
+                        // DMC_RAW
+                        break;
+                    case 0x4012:
+                        // DMC_START
+                        break;
+                    case 0x4013:
+                        // DMC_LEN
+                        break;
+                }
             }
             else if (Address == 0x4014)
             {
@@ -698,6 +766,7 @@ namespace Anode
             else if (Address == 0x4015)
             {
                 // Sound channels enable
+                apu_status = Value;
             }
             else if (Address == 0x4016)
             {
@@ -719,6 +788,7 @@ namespace Anode
         {
             // Again, repeated line
             Write_Raw(AddressBus, DataBus);
+            ExternalDataBus = DataBus;
         }
 
         byte ReadPPU(ushort Address)
