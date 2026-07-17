@@ -19,6 +19,7 @@ namespace Anode
 
         // ----- Interchangeable values dependiung on console, temp, etc
         readonly byte unstable_magic = 0xCC;
+        readonly ushort ppuDecayTime = 0x02FF; // Measured in cycles
 
         // ----- Unstable data
         bool changedBoundary = false;
@@ -220,6 +221,8 @@ namespace Anode
         Color[] Palette = new Color[64];
         int pal_i = 0;
 
+        ushort lastPPUIOUpdate;
+
         void Tracelogger(byte opcode)
         {
             if (logging)
@@ -246,6 +249,7 @@ namespace Anode
 
         public void Reset()
         {
+            lastPPUIOUpdate = 0;
             // Read the ROM and deposit it into the variables
             byte[] HeaderedROM = File.ReadAllBytes(filepath);
             Array.Copy(HeaderedROM, Header, 0x10);
@@ -482,6 +486,7 @@ namespace Anode
                         // Console.WriteLine($"Unknown PPU read - {Address:X}");
                         break;
                 }
+                lastPPUIOUpdate = 0;
                 return PPUIOBus;
             }
             else if (Address == 0x4016)
@@ -516,6 +521,7 @@ namespace Anode
             {
                 // Write to PPU
                 Address &= 0x2007; // Mirroring
+                lastPPUIOUpdate = 0;
                 PPUIOBus = Value;
                 switch (Address)
                 {
@@ -2558,6 +2564,15 @@ namespace Anode
 
         void Emulate_PPU()
         {
+            // Decay the PPU IO Bus
+            if(lastPPUIOUpdate > ppuDecayTime)
+            {
+                PPUIOBus = 0;
+            }
+            else
+            {
+                lastPPUIOUpdate++;
+            }
             if (ppuDot == 1 && ppuScanLine == 241)
             {
                 Render();
