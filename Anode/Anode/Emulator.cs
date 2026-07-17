@@ -173,8 +173,10 @@ namespace Anode
         bool apuFlag_DMCInterrupt;
         bool apuFlag_frameInterrupt;
         bool apuFlag_DMCActive;
-
+        bool apuFlag_IRQInhibit; // The question is, are these the same?
         bool apuFlag_IRQEnable;
+
+        bool apuFrameCounterMode;
 
         // ----- NMI
         bool NMILevelDetector;
@@ -850,6 +852,8 @@ namespace Anode
             else if (Address == 0x4017)
             {
                 // Frame counter control
+                apuFrameCounterMode = (Value & 0x80) != 0;
+                apuFlag_IRQInhibit = (Value & 0x40) != 0;
             }
             // 4018-401A is APU test, 401C-401F is always disabled
         }
@@ -2591,7 +2595,6 @@ namespace Anode
         }
 
         // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
-        byte PPU_m;
         void SpriteEval()
         {
             if (ppuDot == 0)
