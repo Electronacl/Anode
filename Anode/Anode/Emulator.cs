@@ -489,12 +489,22 @@ namespace Anode
                 lastPPUIOUpdate = 0;
                 return PPUIOBus;
             }
+            else if (Address == 0x4015)
+            {
+                // Sound channel and IRQ status
+                return 0;
+            }
             else if (Address == 0x4016)
             {
                 byte controllerBit = (byte)((Controller1ShiftRegister & 0x80) >> 7);
                 Controller1ShiftRegister <<= 1;
                 controllerBit |= (byte)(DataBus & 0b11100000);
                 return controllerBit;
+            }
+            else if (Address == 0x4017)
+            {
+                // P2 controller isn't implemented, so it's just open bus here
+                return (byte)(DataBus & 0b11100000);
             }
             else if (Address >= 0x8000)
             {
@@ -619,6 +629,64 @@ namespace Anode
                         break;
                 }
             }
+            else if ((Address & 0xFFF0) == 0x4000)
+            {
+                // APU channel registers
+                switch (Address)
+                {
+                    case 0x4000:
+                        // SQ1_VOL
+                        break;
+                    case 0x4001:
+                        // SQ1_SWEEP
+                        break;
+                    case 0x4002:
+                        // SQ1_LO
+                        break;
+                    case 0x4003:
+                        // SQ1_HI
+                        break;
+
+                    case 0x4004:
+                        // SQ2_VOL
+                        break;
+                    case 0x4005:
+                        // SQ2_SWEEP
+                        break;
+                    case 0x4006:
+                        // SQ2_LO
+                        break;
+                    case 0x4007:
+                        // SQ2_HI
+                        break;
+
+                    // TRI has no sweep function
+                    case 0x4008:
+                        // TRI_VOL
+                        break;
+                    case 0x400A:
+                        // TRI_LO
+                        break;
+                    case 0x400B:
+                        // TRI_HI
+                        break;
+
+                    // Nor does NOISE
+                    case 0x400C:
+                        // NOISE_VOL
+                        break;
+                    case 0x400E:
+                        // NOISE_LO
+                        break;
+                    case 0x400F:
+                        // NOISE_HI
+                        break;
+                }
+            }
+            else if (Address <= 0x400F && Address >= 0x400C)
+            {
+                // DMA registers
+            }
             else if (Address == 0x4014)
             {
                 // Perform an OAM DMA.
@@ -627,15 +695,24 @@ namespace Anode
                 OAM_cycle_init_t = 0;
                 OAM_Active = true;
             }
+            else if (Address == 0x4015)
+            {
+                // Sound channels enable
+            }
             else if (Address == 0x4016)
             {
-                // Controller write
+                // Controller write ("Joystick strobe")
                 if ((Value & 1) != 0)
                 {
                     Update_Controller();
                     Controller1ShiftRegister = controller1;
                 }
             }
+            else if (Address == 0x4017)
+            {
+                // Frame counter control
+            }
+            // 4018-401A is APU test, 401C-401F is always disabled
         }
 
         void Write()
