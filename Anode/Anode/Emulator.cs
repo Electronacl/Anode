@@ -492,7 +492,7 @@ namespace Anode
             else if (Address == 0x4015)
             {
                 // Sound channel and IRQ status
-                return 0;
+                return DataBus;
             }
             else if (Address == 0x4016)
             {
