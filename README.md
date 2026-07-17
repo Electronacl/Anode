@@ -15,7 +15,9 @@ This program is only built with British English as a language, however the addit
 This program is built and tested on a Windows x64 system. Whilst the program should be compatible with x32 and ARM64, I can't guaruntee that this is the case.<br>
 Builds are only created as .EXE, and the program is built in the .NET framework, so support for Linux and MacOS may not be available.<br>
 
-The emulator is built for the .NET framework 4.7.2. It may not work or function correctly with older versions or without the framework entirely.
+The emulator is built for the .NET framework 4.7.2. It may not work or function correctly with older versions or without the framework entirely.<br>
+
+Furthermore, running this wit the JIT compiler or debugging mode can cause framerate drops. It is recommended to use a pre-compiled build rather than the source if you want to run the emulator at full speed.
 
 ## Emulation and legality
 Whilst it is legal to use - and for me to create - this emulator, that only applies if the ROMs are legal. I am not responsible for the ROMs used by any users on this emulator. For legal reasons, these ROMs should be from your own NES game library and obtained via a cartridge dumper, or alternatively from open-source ROMs. This emulator is only intended to work with legal ROMs.<br>
@@ -29,9 +31,9 @@ CPU Details: https://www.princeton.edu/~mae412/HANDOUTS/Datasheets/6502.pdf<br>
 Window Focus check: https://stackoverflow.com/questions/7162834/determine-if-current-application-is-activated-has-focus<br>
 
 ## Understanding the version system for releases (2026.2.1+)
-The version is split into 3 sections, with different parts within each section. Here, a different letter represents each part. The sections are separated by dashes:<br>
-`yyyy.x.z-M.mb-s`<br>
-There is no 2nd or 3rd section in full releases, only in beta and alpha builds.<br>
+The version is split into 2 sections, with different parts within each section. Here, a different letter represents each part. The sections are separated by dashes:<br>
+`yyyy.x.z-M.mb`<br>
+There is no 2nd section in full releases, only in beta and alpha builds.<br>
 ### First section (`yyyy.x`)
 `yyyy` is the year of release, or intended release year.<br>
 `x` is the release number in the year.<br>
@@ -41,12 +43,8 @@ Example: `2026.3` would be the 3rd full release in 2026, and the first patch.
 `M` is the Major portion. This is incremented when large features and changes are added.<br>
 `m` is the minor portion. This is incremented when small features are added and bugs are fixed.<br>
 `b` is the status of the version. This can be `b` for beta or `a` for alpha.<br><br>
-Beta builds come first, and have the most bugs and issues. Alpha builds are closer to the release window, when there's only a few issues to work out.<br><br>
+Beta builds come first, and have the most bugs and issues. Alpha builds are closer to the release window, when there's only a few issues to work out, and the code is more stable.<br><br>
 Example: `2.4b` would have had 2 major changes, 4 minor changes, and be in the beta status.
-### Last section (`s`)
-`s` denotes the stability of the build. This can be `s` for stable or `xs` for unstable.<br><br>
-If you're looking for accuracy and optimisation, use the stable builds only (unless there isn't one available for the version you're looking to use).<br>
-If you want the latest features only, use the unstable builds.
 
 ## Accuracy info (as of 2026.2-s)
 ### AccuracyCoin
