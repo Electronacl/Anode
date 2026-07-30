@@ -25,6 +25,7 @@ namespace Anode
         uint CPUClockPAL;
         uint CPUCyclesFrameNTSC;
         uint CPUCyclesFramePAL;
+        uint APUNTSCLength = 29869; // This may be caused by inaccuracies.
 
         uint sample_rate = 44100;
         uint frame_sample_rate = 0;
@@ -332,8 +333,8 @@ namespace Anode
             byte size = Header[4];
             Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
 
-            CPUCyclesFrameNTSC = ((261*341)/4)*3;
-            CPUClockNTSC = ((261 * 341) / 4) * 3 * 60;
+            CPUCyclesFrameNTSC = (261*341) / 3;
+            CPUClockNTSC = ((261 * 341) / 3) * 60;
 
 
             // Does the ROM support graphics?
@@ -370,7 +371,7 @@ namespace Anode
                 FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
             }
 
-            rawAPUBuffer = new byte[thisCyclesFrame+1];
+            rawAPUBuffer = new byte[APUNTSCLength];
             processedAPUBuffer = new byte[frame_sample_rate];
 
             InitFrame();
@@ -602,6 +603,10 @@ namespace Anode
                 apuFlags |= (byte)(apuFlag_frameInterrupt ? 0x40 : 0);
                 apuFlags |= (byte)(ExternalDataBus & 0x20);
                 apuFlags |= (byte)(apuFlag_DMCActive ? 0x10 : 0);
+                apuFlags |= (byte)(noise_lengthCounter > 0 ? 8 : 0);
+                apuFlags |= (byte)(tri_lengthCounter > 0 ? 4 : 0);
+                apuFlags |= (byte)(sq2_lengthCounter > 0 ? 2 : 0);
+                apuFlags |= (byte)(sq1_lengthCounter > 0 ? 1 : 0);
 
                 apuFlag_frameInterrupt = false;
 
@@ -2480,7 +2485,7 @@ namespace Anode
 
         void Emulate_CPU()
         {
-            // RunAPUFrame();
+            if (NTSC) { RunAPUFrame(); }
             RDY_history <<= 1;
             if (OAM_Active)
             {
@@ -3108,7 +3113,46 @@ namespace Anode
 
         void UpdateFrameCounter()
         {
+            if (apuFrameIndex == 1 || apuFrameIndex == (apuFrameCounterMode ? 4 : 3))
+            {
+                // Update length counter and sweep
+                if (sq1_lengthCounter > 0)
+                {
+                    sq1_lengthCounter--;
+                }
 
+                if (sq2_lengthCounter > 0)
+                {
+                    sq1_lengthCounter--;
+                }
+
+                if (tri_lengthCounter > 0)
+                {
+                    sq1_lengthCounter--;
+                }
+
+                if (noise_lengthCounter > 0)
+                {
+                    sq1_lengthCounter--;
+                }
+            }
+
+            if (apuFrameIndex <= 2 || apuFrameIndex == (apuFrameCounterMode ? 4 : 3))
+            {
+                // Update envelope and linear counter
+            }
+
+            if (apuFrameCounterMode && apuFrameIndex == 3 && !apuFlag_IRQInhibit)
+            {
+                // IRQ
+            }
+
+
+            apuFrameIndex++;
+            if (apuFrameIndex > (apuFrameCounterMode ? 5 : 4))
+            {
+                apuFrameIndex = 0;
+            }
         }
 
         void RunAPUFrame()
@@ -3117,7 +3161,7 @@ namespace Anode
 
             if (FrameCounterUpdatePos.Contains(apuFrameIndex))
             {
-                Console.WriteLine(apuFrameIndex);
+                UpdateFrameCounter();
             }
 
             // Pulse channel 1
