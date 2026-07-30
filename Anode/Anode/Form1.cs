@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,10 @@ namespace Anode
         // bool testenabled = false;
         bool tracelogging = false;
         PictureBox ScreenObject;
+        int samplerate = 44100;
+        MemoryStream ms;
+        RawSourceWaveStream rs;
+        WaveOutEvent wo;
 
 
         bool fileUpdated = false;
@@ -108,6 +113,7 @@ namespace Anode
             emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
 
             emulator.NTSC = is_NTSC;
+            emulator.sample_rate = (uint)samplerate;
 
             // Get the emulator to prepare for running
             emulator.Reset();
@@ -122,7 +128,7 @@ namespace Anode
 
             // For locking
             ScreenObject = pictureBox1;
-            throttler.Start();
+            //throttler.Start();
             while (!emulator.CPU_Halted)
             {
                 if ((!paused) || waitingForFrame)
@@ -151,15 +157,28 @@ namespace Anode
                     emulator.frame_Ready = false;
                     if (throttled && !waitingForFrame)
                     {
+                        if (wo != null)
+                        {
+                            while (wo.PlaybackState == PlaybackState.Playing)
+                            {
+
+                            }
+                            wo.Dispose();
+                        }
+                        ms = new MemoryStream(emulator.processedAPUBuffer);
+                        rs = new RawSourceWaveStream(ms, new WaveFormat(samplerate, 8, 1));
+                        wo = new WaveOutEvent();
                         //throttler.Stop();
-                        timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
+                        /*timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
                         while (timetaken < ((is_NTSC || NTSC_FPS_Forced) ? NTSC_time : PAL_time))
                         {
                             timetaken = ((double)throttler.ElapsedTicks) / (double)Stopwatch.Frequency;
                         }
                         throttler.Stop();
                         throttler.Reset();
-                        throttler.Start();
+                        throttler.Start();*/
+                        wo.Init(rs);
+                        wo.Play();
                     }
                     waitingForFrame = false;
                     emulator.InitFrame();

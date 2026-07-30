@@ -27,7 +27,7 @@ namespace Anode
         uint CPUCyclesFramePAL;
         uint APUNTSCLength = 29869; // This may be caused by inaccuracies.
 
-        uint sample_rate = 44100;
+        public uint sample_rate = 44100;
         uint frame_sample_rate = 0;
 
         uint thisClock;
@@ -192,7 +192,7 @@ namespace Anode
         bool apuFrameCounterMode;
 
         byte[] rawAPUBuffer;
-        byte[] processedAPUBuffer;
+        public byte[] processedAPUBuffer;
 
         uint apuFrameIndex;
         uint[] FrameCounterUpdatePos = new uint[4];
