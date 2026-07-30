@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -20,6 +21,16 @@ namespace Anode
         // ----- Interchangeable values dependiung on console, temp, etc
         readonly byte unstable_magic = 0xCC;
         readonly ushort ppuDecayTime = 0x02FF; // Measured in cycles
+        uint CPUClockNTSC;
+        uint CPUClockPAL;
+        uint CPUCyclesFrameNTSC;
+        uint CPUCyclesFramePAL;
+
+        uint sample_rate = 44100;
+        uint frame_sample_rate = 0;
+
+        uint thisClock;
+        uint thisCyclesFrame;
 
         // ----- Unstable data
         bool changedBoundary = false;
@@ -129,9 +140,10 @@ namespace Anode
         byte sq1_sweepPeriod;
         bool sq1_sweepNegate;
         byte sq1_sweepShift;
-        byte sq1_timer_lo;
+        ushort sq1_timer_lo;
         byte sq1_timer_hi;
         byte sq1_lengthCounter;
+        uint sq1_ftime;
 
         byte sq2_duty;
         bool sq2_loop;
@@ -177,6 +189,12 @@ namespace Anode
         bool apuFlag_IRQEnable;
 
         bool apuFrameCounterMode;
+
+        byte[] rawAPUBuffer;
+        byte[] processedAPUBuffer;
+
+        uint apuFrameIndex;
+        uint[] FrameCounterUpdatePos = new uint[4];
 
         // ----- NMI
         bool NMILevelDetector;
@@ -246,7 +264,6 @@ namespace Anode
 
         byte RDY_history;
 
-
         // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
         static String[] OpCodeNames =
         {
@@ -315,6 +332,10 @@ namespace Anode
             byte size = Header[4];
             Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
 
+            CPUCyclesFrameNTSC = ((261*341)/4)*3;
+            CPUClockNTSC = ((261 * 341) / 4) * 3 * 60;
+
+
             // Does the ROM support graphics?
             if (Header[5] != 0)
             {
@@ -337,6 +358,20 @@ namespace Anode
             }
 
             output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
+
+            frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
+
+            thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
+            thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
+
+            float updatePositions = thisCyclesFrame / 4f;
+            for (int i = 0; i < 4; i++)
+            {
+                FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
+            }
+
+            rawAPUBuffer = new byte[thisCyclesFrame+1];
+            processedAPUBuffer = new byte[frame_sample_rate];
 
             InitFrame();
             
@@ -392,6 +427,7 @@ namespace Anode
             // Optimisation as SetPixel is SO SLOW!
             outputData = output.LockBits(new Rectangle(0, 0, output.Width, output.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
             stride = outputData.Stride;
+            apuFrameIndex = 0;
         }
 
         // Focus check
@@ -480,6 +516,16 @@ namespace Anode
             while (!frame_Ready)
             {
                 Advance_Cycle();
+            }
+            ProcessAudioBuffer();
+        }
+
+        public void ProcessAudioBuffer()
+        {
+            float index_increment = thisCyclesFrame / (float)frame_sample_rate;
+            for (uint a = 0; a < frame_sample_rate; a++)
+            {
+                processedAPUBuffer[a] = rawAPUBuffer[(int)(a * index_increment)];
             }
         }
 
@@ -2434,6 +2480,7 @@ namespace Anode
 
         void Emulate_CPU()
         {
+            // RunAPUFrame();
             RDY_history <<= 1;
             if (OAM_Active)
             {
@@ -3052,6 +3099,42 @@ namespace Anode
         void PPU_ResetYScroll()
         {
             ppu_v = (ushort)((ppu_v & 0x041F) | (ppu_t & 0x7BE0));
+        }
+
+        byte GetPulseChannel(byte duty, uint frequency, uint ftime)
+        {
+            return (byte)((ftime < (1f / duty * frequency)) ? 0xFF : 0);
+        }
+
+        void UpdateFrameCounter()
+        {
+
+        }
+
+        void RunAPUFrame()
+        {
+            float this_APU_frame = 0;
+
+            if (FrameCounterUpdatePos.Contains(apuFrameIndex))
+            {
+                Console.WriteLine(apuFrameIndex);
+            }
+
+            // Pulse channel 1
+            if (sq1_lengthCounter > 0 && sq1_vol > 0)
+            {
+                uint sq1_freq = (uint)(sq1_timer_lo | (sq1_timer_hi << 8));
+                if (sq1_ftime > sq1_freq)
+                {
+                    sq1_ftime = 0;
+                }
+                this_APU_frame += GetPulseChannel(sq1_duty, sq1_freq, sq1_ftime) * (sq1_vol / 15f) * 0.25f;
+                sq1_ftime++;
+            }
+
+            rawAPUBuffer[apuFrameIndex] = (byte)(this_APU_frame);
+            apuFrameIndex++;
+            
         }
     }
 }
