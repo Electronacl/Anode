@@ -3123,17 +3123,17 @@ namespace Anode
 
                 if (sq2_lengthCounter > 0)
                 {
-                    sq1_lengthCounter--;
+                    sq2_lengthCounter--;
                 }
 
                 if (tri_lengthCounter > 0)
                 {
-                    sq1_lengthCounter--;
+                    tri_lengthCounter--;
                 }
 
                 if (noise_lengthCounter > 0)
                 {
-                    sq1_lengthCounter--;
+                    noise_lengthCounter--;
                 }
             }
 
