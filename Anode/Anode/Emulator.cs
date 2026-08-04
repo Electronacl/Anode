@@ -3176,6 +3176,11 @@ namespace Anode
                 sq1_ftime++;
             }
 
+            if (this_APU_frame != 0)
+            {
+                Console.WriteLine(this_APU_frame);
+            }
+
             rawAPUBuffer[apuFrameIndex] = (byte)(this_APU_frame);
             apuFrameIndex++;
             
