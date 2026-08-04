@@ -506,13 +506,13 @@ namespace Anode
                     case 0x2007:
                         PPUIOBus = PPUReadBuffer;
 
-                        if (ppu_v > 0x3F00)
+                        if (ppu_v >= 0x3F00)
                         {
                             // Palette RAM has no buffer
                             PPUIOBus = ReadPPU(ppu_v);
 
                             // Other than this quirk. This doesn't seem to work atm, as I think ppu_v is wrong.
-                            PPUReadBuffer = ReadPPU((ushort)(ppu_v & 0x27FF));
+                            PPUReadBuffer = ReadPPU((ushort)(ppu_v & 0x2FFF));
                         }
                         else
                         {
@@ -650,6 +650,10 @@ namespace Anode
                         ppu_w = !ppu_w;
                         break;
                     case 0x2006: // PPUADDR
+                        if (Value == 0x3f)
+                        {
+
+                        }
                         if (!ppu_w)
                         {
                             // First write sets high byte
