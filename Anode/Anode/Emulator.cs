@@ -513,7 +513,7 @@ namespace Anode
                             TempPPURead |= (byte)(PPUIOBus & 0xC0);
                             PPUIOBus = TempPPURead;
 
-                            // Other than this quirk. This doesn't seem to work atm, as I think ppu_v is wrong.
+                            // Other than this quirk.
                             PPUReadBuffer = ReadPPU((ushort)(ppu_v & 0x2FFF));
                         }
                         else
