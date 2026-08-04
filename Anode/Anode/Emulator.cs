@@ -86,6 +86,7 @@ namespace Anode
         bool ppuUse8x16Sprites;
         bool ppuEnableNMI;
 
+        bool ppuMask_GreyscaleMode;
         bool ppuMask_8pxMaskBG;
         bool ppuMask_8pxMaskSprites;
         bool ppuMask_RenderBG;
@@ -504,12 +505,13 @@ namespace Anode
                 switch (Address)
                 {
                     case 0x2007:
-                        PPUIOBus = PPUReadBuffer;
-
                         if (ppu_v >= 0x3F00)
                         {
                             // Palette RAM has no buffer
-                            PPUIOBus = ReadPPU(ppu_v);
+                            byte TempPPURead = ReadPPU(ppu_v);
+                            TempPPURead &= 0x3F;
+                            TempPPURead |= (byte)(PPUIOBus & 0xC0);
+                            PPUIOBus = TempPPURead;
 
                             // Other than this quirk. This doesn't seem to work atm, as I think ppu_v is wrong.
                             PPUReadBuffer = ReadPPU((ushort)(ppu_v & 0x2FFF));
@@ -517,6 +519,7 @@ namespace Anode
                         else
                         {
                             // Buffer data (VRAM)
+                            PPUIOBus = PPUReadBuffer;
                             PPUReadBuffer = ReadPPU(ppu_v);
                         }
 
@@ -620,6 +623,7 @@ namespace Anode
                         ppuEnableNMI =          (Value & 0x80) != 0;
                         break;
                     case 0x2001: // PPUMASK
+                        ppuMask_GreyscaleMode = (Value & 1) != 0;
                         ppuMask_8pxMaskBG =      (Value & 2)    != 0;
                         ppuMask_8pxMaskSprites = (Value & 4)    != 0;
                         ppuMask_RenderBG =       (Value & 8)    != 0;
