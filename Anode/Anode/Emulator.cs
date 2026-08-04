@@ -247,6 +247,18 @@ namespace Anode
 
         byte RDY_history;
 
+        // ----- iNES data
+        ushort mapper;
+        byte mapper_sub;
+        bool usestandardNES;
+        byte nesversion;
+        byte ext_nesversion;
+        byte expansion;
+
+        public byte inesversion = 1;
+        public bool detectines;
+
+        public bool incompatible;
 
         // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
         static String[] OpCodeNames =
@@ -307,6 +319,533 @@ namespace Anode
             }
         }
 
+        public void GetCompatibility()
+        {
+            // Check compatibility with the emulator
+            // Compatibility errors
+            if ((Header[6] & 2) != 0 && inesversion == 1)
+            {
+                MessageBox.Show("This emulator is incompatible with PRG RAM cartridges.", "Compatibility error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                incompatible = true;
+            }
+            if (((Header[12] & 0x3) == 3) && inesversion == 2)
+            {
+                MessageBox.Show("This emulator is incompatible with the \"Dendy\" console.", "Compatibility error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                incompatible = true;
+            }
+            // Compatibility warnings
+
+            // Console type compat
+            // If you're wondering why these don't just return incompatible, I leave them like this just in case the extended functionality isn't used or isn't important.
+            // Although, that can cause unexpected behaviour in certain cases.
+            // I have made some incompatible if I think they might not have a chance of working.
+            switch (nesversion)
+            {
+                case 0:
+                    // Standard NES is compatible
+                    break;
+                case 1:
+                    MessageBox.Show(
+                        "The cartridge loaded is a Vs. System game. These are coin op, so may not be able to start games",
+                        "Compatibility warning: console", MessageBoxButtons.OK, MessageBoxIcon.Warning
+                    );
+                    break;
+                case 2:
+                    MessageBox.Show(
+                        "The cartridge loaded is a PlayChoice-10 game. Compatibility cannot be guarunteed.",
+                        "Compatibility warning: console", MessageBoxButtons.OK, MessageBoxIcon.Warning
+                    );
+                    break;
+                case 3:
+                    MessageBox.Show(
+                        "The cartridge used is for a NES with decimal mode. This emulator does not support decimal mode, so calculations may be incorrect.",
+                        "Compatibility warning: console", MessageBoxButtons.OK, MessageBoxIcon.Warning
+                    );
+                    break;
+                case 4:
+                    MessageBox.Show(
+                        "The cartridge used is a cartridge with EPSM or plug-through device, which are not supported by the emulator.",
+                        "Compatibility error: console", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 5:
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 0xA:
+                    MessageBox.Show(
+                        "The cartridge used is for a VTxx NES-on-a-chip. This emulator is not compatible with the extended function of these devices.",
+                        "Compatibility warning: console", MessageBoxButtons.OK, MessageBoxIcon.Warning
+                    );
+                    break;
+                case 0xB:
+                    MessageBox.Show(
+                        "The cartridge used is for a UMC UM6578 famiclone. This emulator is not compatible with the extended function of the device.",
+                        "Compatibility warning: console", MessageBoxButtons.OK, MessageBoxIcon.Warning
+                    );
+                    break;
+                case 0xC:
+                    MessageBox.Show(
+                        "The cartridge used is for the Famicom Network System. This emulator is not compatible with this device.",
+                        "Compatibility error: console", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                default:
+                    MessageBox.Show(
+                        $"Unknown device compatibility: {nesversion:X}",
+                        "Invalid console error", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+            }
+
+            // Expansion compat
+            switch (expansion)
+            {
+                case 0:
+                case 1:
+                    // standard controllers
+                    break;
+                case 2:
+                    MessageBox.Show(
+                        "Incompatible with the Four Score/Satellite",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 3:
+                    MessageBox.Show(
+                        "Incompatible with the 4 player addapter",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 4:
+                case 5:
+                    MessageBox.Show(
+                        "Incompatible with the Vs. System input",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 6:
+                    MessageBox.Show(
+                        "Input 6 is reserved, and unknown.",
+                        "Invalid expansion error", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 7:
+                    MessageBox.Show(
+                        "Incompatible with the Vs. Zapper",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 8:
+                    MessageBox.Show(
+                        "Incompatible with the Zapper",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 9:
+                    MessageBox.Show(
+                        "Incompatible with 2 Zappers",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0xA:
+                    MessageBox.Show(
+                        "Incompatible with the Hyper Shot Lightgun",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0xB:
+                case 0xC:
+                    MessageBox.Show(
+                        "Incompatible with the Power Pad",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0xD:
+                case 0xE:
+                    MessageBox.Show(
+                        "Incompatible with the Family Trainer",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0xF:
+                case 0x10:
+                    MessageBox.Show(
+                        "Incompatible with the Arkanoid Vaus Controller",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x11:
+                    MessageBox.Show(
+                        "Incompatible with 2 Arkanoid Vaus Controllers and a Famicom Data Recorder",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x12:
+                    MessageBox.Show(
+                        "Incompatible with the Konami Hyper Shot",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x13:
+                    MessageBox.Show(
+                        "Incompatible with the Coconuts Pachinko",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x14:
+                    MessageBox.Show(
+                        "Incompatible with the Exciting Boxing Punching Bag",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x15:
+                    MessageBox.Show(
+                        "Incompatible with the Jissen Mahjong Controller",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x16:
+                    MessageBox.Show(
+                        "Incompatible with the Yonezawa Party Tap",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x17:
+                    MessageBox.Show(
+                        "Incompatible with the Oeka Kids Tablet",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x18:
+                    MessageBox.Show(
+                        "Incompatible with the Sunsoft Barcode Battler",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x19:
+                    MessageBox.Show(
+                        "Incompatible with the Miracle Piano Keyboard",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x1A:
+                    MessageBox.Show(
+                        "Incompatible with the Pokkun Maguraa Tap-tap Mat",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x1B:
+                    MessageBox.Show(
+                        "Incompatible with the Top Rider",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x1C:
+                    MessageBox.Show(
+                        "Incompatible with the Double Fisted",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x1D:
+                    MessageBox.Show(
+                        "Incompatible with the Famicom 3D System",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x1E:
+                    MessageBox.Show(
+                        "Incompatible with the Doremikko Keyboard",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x1F:
+                    MessageBox.Show(
+                        "Incompatible with the R.O.B Gyromite",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x20:
+                    MessageBox.Show(
+                        "Incompatible with the Famicom Data Recorder",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x21:
+                    MessageBox.Show(
+                        "Incompatible with the ASCII Turbo File",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x22:
+                    MessageBox.Show(
+                        "Incompatible with the IGS Storage Battle Box",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x23:
+                    MessageBox.Show(
+                        "Incompatible with the Family BASIC Keyboard plus Famicom Data Recorder",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x24:
+                    MessageBox.Show(
+                        "Incompatible with the Dongda PEC Keyboard",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x25:
+                    MessageBox.Show(
+                        "Incompatible with the Puze Bit-79 Keyboard",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x26:
+                case 0x27:
+                case 0x28:
+                case 0x36:
+                case 0x44:
+                case 0x4D:
+                case 0x4F:
+                    MessageBox.Show(
+                        "Incompatible with the Xiaobawang Keyboard (+ any mouse requirements)",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x29:
+                case 0x48:
+                    MessageBox.Show(
+                        "Incompatible with the SNES Mouse",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x2A:
+                    MessageBox.Show(
+                        "Incompatible with Multicarts",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x2B:
+                    MessageBox.Show(
+                        "Incompatible with 2 SNES Controllers",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x2C:
+                    MessageBox.Show(
+                        "Incompatible with the RacerMate Bicycle",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x2D:
+                    MessageBox.Show(
+                        "Incompatible with the U-Force",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x2E:
+                    MessageBox.Show(
+                        "Incompatible with the ROB Stack-up",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x2F:
+                    MessageBox.Show(
+                        "Incompatible with the City Patrolman Lightgun",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x30:
+                    MessageBox.Show(
+                        "Incompatible with the Sharp C1 Cassette Interface",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x31:
+                    MessageBox.Show(
+                        "Incompatible with swapped input standard contollers",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x32:
+                    MessageBox.Show(
+                        "Incompatible with the Excalibur Sudoku Pad",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x33:
+                    // I'm sorry, but:
+                    // PINBALLLLLLLLL!!!!!!!
+
+                    // i dobut many got that reference.
+                    MessageBox.Show(
+                        "Incompatible with ABL Pinball",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x34:
+                    MessageBox.Show(
+                        "Incompatible with the Golden Nugget Casino extra buttons",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x35:
+                    MessageBox.Show(
+                        "Incompatible with the Keda Keyboard",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x37:
+                    MessageBox.Show(
+                        "Incompatible with the Port test controller",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x38:
+                    MessageBox.Show(
+                        "Incompatible with the Bandai Multi Game Player Gamepad buttons",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x39:
+                    MessageBox.Show(
+                        "Incompatible with the Venom TV Dance Mat",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x40:
+                    MessageBox.Show(
+                        "Incompatible with the LG TV Remote Control",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x41:
+                    MessageBox.Show(
+                        "Incompatible with the Famicom Network Controller",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x42:
+                    MessageBox.Show(
+                        "Incompatible with the King Fishing Controller",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x43:
+                    MessageBox.Show(
+                        "Incompatible with the Yuxing mouse",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x45:
+                    MessageBox.Show(
+                        "Incompatible with the Giggle TV Pump",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x46:
+                    MessageBox.Show(
+                        "Incompatible with the Bubugao keyboard and PS/2 mouse",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x47:
+                    MessageBox.Show(
+                        "Incompatible with Magical Cooking",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                case 0x4E:
+                    MessageBox.Show(
+                        "Incompatible with the IBM PC/XT Keyboard",
+                        "Compatibility error: expansion", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+                default:
+                    MessageBox.Show(
+                        $"Unknown expansion: {expansion:X}",
+                        "Invalid expansion error", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+            }
+            switch (mapper)
+            {
+                case 0:
+                    // NROM
+                    break;
+                default:
+                    MessageBox.Show(
+                        $"Incompatible with mapper: {mapper}",
+                        "Compatibility error: mapper", MessageBoxButtons.OK, MessageBoxIcon.Error
+                    );
+                    incompatible = true;
+                    break;
+            }
+        }
+
         public void Reset()
         {
             lastPPUIOUpdate = 0;
@@ -322,29 +861,87 @@ namespace Anode
                 Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
             }
 
-            // Find where the program counter should start
-            byte PC_Lo = Read_Raw(0xFFFC);
-            byte PC_Hi = Read_Raw(0xFFFD);
-            ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
-
-            // Setup some initial variables (more stuff will be needed when I add the soft reset)
-            SP = 0xFD;
-            flag_InterruptDisable = true;
-
-            // Check if logging and start writing if so
-            if (logging)
+            // Check iNES format version
+            if (detectines)
             {
-                tracelog = new StreamWriter(tracepath);
+                if ((Header[7] & 0x0C) == 0x0C)
+                {
+                    inesversion = 2;
+                }
+                else
+                {
+                    inesversion = 1;
+                }
             }
 
-            output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
-
-            InitFrame();
-            
-            // Init palette
-            for (int j = 0; j < 64; j++)
+            // Get the mapper used
+            mapper = (byte)(Header[6] >> 4);
+            mapper |= (byte)(Header[7] & 0xF0);
+            if (inesversion == 2)
             {
-                Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
+                mapper |= (ushort)((Header[8] & 0xF) << 8);
+                mapper_sub = (byte)(Header[8] >> 4);
+            }
+
+            // Check console used
+            if (inesversion >= 1)
+            {
+                nesversion = (byte)(Header[7] & 0x3);
+                // 0 = famicom/NES
+                // 1 = Vs. System
+                // 2 = PlayChoice 10
+                // 3 = Extended console type
+                if (nesversion == 3)
+                {
+                    ext_nesversion = (byte)(Header[13] & 0xF);
+                    nesversion = ext_nesversion;
+                }
+            }
+            
+            // Get the default expansion device used
+            if (inesversion == 2)
+            {
+                expansion = (byte)(Header[15] & 0x7F);
+            }
+
+            GetCompatibility();
+
+            if (!incompatible)
+            {
+                if (inesversion == 1)
+                {
+                    NTSC = (Header[10] & 0x2) == 0;
+                }
+                else if (inesversion == 2)
+                {
+                    // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now.
+                    // Maybe add a user option for this though?
+                    NTSC = (Header[12] & 0x3) != 1;
+                }
+                // Find where the program counter should start
+                byte PC_Lo = Read_Raw(0xFFFC);
+                byte PC_Hi = Read_Raw(0xFFFD);
+                ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
+
+                // Setup some initial variables (more stuff will be needed when I add the soft reset)
+                SP = 0xFD;
+                flag_InterruptDisable = true;
+
+                // Check if logging and start writing if so
+                if (logging)
+                {
+                    tracelog = new StreamWriter(tracepath);
+                }
+
+                output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
+
+                InitFrame();
+
+                // Init palette
+                for (int j = 0; j < 64; j++)
+                {
+                    Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
+                }
             }
         }
 

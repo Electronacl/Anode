@@ -39,10 +39,6 @@
             this.advanceFrameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.disableThrottlerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
-            this.regionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.nTSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forceHaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -51,7 +47,12 @@
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.force60hzForPALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cartridgeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iNESToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.archaicINESToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.iNESToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.nES20ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -83,7 +84,7 @@
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.ToolTipText = "Brings up a dialogue where you can select which ROM the emulator will use.\r\nAutom" +
     "atically starts the emulator when a ROM is loaded.";
@@ -97,9 +98,7 @@
             this.pauseToolStripMenuItem,
             this.advanceFrameToolStripMenuItem,
             this.toolStripMenuItem2,
-            this.disableThrottlerToolStripMenuItem,
-            this.toolStripMenuItem3,
-            this.regionToolStripMenuItem});
+            this.disableThrottlerToolStripMenuItem});
             this.emulationToolStripMenuItem.Name = "emulationToolStripMenuItem";
             this.emulationToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
             this.emulationToolStripMenuItem.Text = "Emulation";
@@ -156,41 +155,6 @@
             this.disableThrottlerToolStripMenuItem.ToolTipText = resources.GetString("disableThrottlerToolStripMenuItem.ToolTipText");
             this.disableThrottlerToolStripMenuItem.Click += new System.EventHandler(this.disableThrottlerToolStripMenuItem_Click);
             // 
-            // toolStripMenuItem3
-            // 
-            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(193, 6);
-            // 
-            // regionToolStripMenuItem
-            // 
-            this.regionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.nTSCToolStripMenuItem,
-            this.pALToolStripMenuItem});
-            this.regionToolStripMenuItem.Name = "regionToolStripMenuItem";
-            this.regionToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
-            this.regionToolStripMenuItem.Text = "Region";
-            // 
-            // nTSCToolStripMenuItem
-            // 
-            this.nTSCToolStripMenuItem.Checked = true;
-            this.nTSCToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.nTSCToolStripMenuItem.Name = "nTSCToolStripMenuItem";
-            this.nTSCToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.nTSCToolStripMenuItem.Text = "NTSC";
-            this.nTSCToolStripMenuItem.ToolTipText = "Standard mainly used in North America, some parts of South America, and Japan.\r\nR" +
-    "uns at 60Hz, and tends to be the most common region for NES games.";
-            this.nTSCToolStripMenuItem.Click += new System.EventHandler(this.nTSCToolStripMenuItem_Click);
-            // 
-            // pALToolStripMenuItem
-            // 
-            this.pALToolStripMenuItem.Name = "pALToolStripMenuItem";
-            this.pALToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.pALToolStripMenuItem.Text = "PAL";
-            this.pALToolStripMenuItem.ToolTipText = "Standard mainly used in Europe, Asia, Australia, and some parts of South America " +
-    "and Africa\r\nRuns at 50Hz, and is used on the NES\'s NES version and Mattel versio" +
-    "n";
-            this.pALToolStripMenuItem.Click += new System.EventHandler(this.pALToolStripMenuItem_Click);
-            // 
             // debuggingToolStripMenuItem
             // 
             this.debuggingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -203,7 +167,7 @@
             // toggleTracelogToolStripMenuItem
             // 
             this.toggleTracelogToolStripMenuItem.Name = "toggleTracelogToolStripMenuItem";
-            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.toggleTracelogToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.toggleTracelogToolStripMenuItem.Text = "Tracelog disabled";
             this.toggleTracelogToolStripMenuItem.ToolTipText = "Writes a log of every instruction ran by the CPU onto a file.\r\nUsing this will qu" +
     "ickly consume storage and will slow down the emulator.";
@@ -213,7 +177,7 @@
             // 
             this.forceHaltToolStripMenuItem.Enabled = false;
             this.forceHaltToolStripMenuItem.Name = "forceHaltToolStripMenuItem";
-            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.forceHaltToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.forceHaltToolStripMenuItem.Text = "Force Halt";
             this.forceHaltToolStripMenuItem.ToolTipText = resources.GetString("forceHaltToolStripMenuItem.ToolTipText");
             this.forceHaltToolStripMenuItem.Click += new System.EventHandler(this.forceHaltToolStripMenuItem_Click);
@@ -237,7 +201,8 @@
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.videoToolStripMenuItem});
+            this.videoToolStripMenuItem,
+            this.cartridgeToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.optionsToolStripMenuItem.Text = "Options";
@@ -258,6 +223,26 @@
             this.force60hzForPALToolStripMenuItem.ToolTipText = resources.GetString("force60hzForPALToolStripMenuItem.ToolTipText");
             this.force60hzForPALToolStripMenuItem.Click += new System.EventHandler(this.force60hzForPALToolStripMenuItem_Click);
             // 
+            // cartridgeToolStripMenuItem
+            // 
+            this.cartridgeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.iNESToolStripMenuItem,
+            this.archaicINESToolStripMenuItem,
+            this.iNESToolStripMenuItem1,
+            this.nES20ToolStripMenuItem});
+            this.cartridgeToolStripMenuItem.Name = "cartridgeToolStripMenuItem";
+            this.cartridgeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.cartridgeToolStripMenuItem.Text = "iNES";
+            // 
+            // iNESToolStripMenuItem
+            // 
+            this.iNESToolStripMenuItem.Checked = true;
+            this.iNESToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.iNESToolStripMenuItem.Name = "iNESToolStripMenuItem";
+            this.iNESToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.iNESToolStripMenuItem.Text = "Auto-detect";
+            this.iNESToolStripMenuItem.Click += new System.EventHandler(this.iNESToolStripMenuItem_Click);
+            // 
             // pictureBox1
             // 
             this.pictureBox1.Anchor = System.Windows.Forms.AnchorStyles.Top;
@@ -269,6 +254,27 @@
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
+            // 
+            // archaicINESToolStripMenuItem
+            // 
+            this.archaicINESToolStripMenuItem.Name = "archaicINESToolStripMenuItem";
+            this.archaicINESToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.archaicINESToolStripMenuItem.Text = "Archaic iNES";
+            this.archaicINESToolStripMenuItem.Click += new System.EventHandler(this.archaicINESToolStripMenuItem_Click);
+            // 
+            // iNESToolStripMenuItem1
+            // 
+            this.iNESToolStripMenuItem1.Name = "iNESToolStripMenuItem1";
+            this.iNESToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.iNESToolStripMenuItem1.Text = "iNES";
+            this.iNESToolStripMenuItem1.Click += new System.EventHandler(this.iNESToolStripMenuItem1_Click);
+            // 
+            // nES20ToolStripMenuItem
+            // 
+            this.nES20ToolStripMenuItem.Name = "nES20ToolStripMenuItem";
+            this.nES20ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.nES20ToolStripMenuItem.Text = "NES 2.0";
+            this.nES20ToolStripMenuItem.Click += new System.EventHandler(this.nES20ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -307,15 +313,16 @@
         private System.Windows.Forms.ToolStripMenuItem anodeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem disableThrottlerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem regionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem nTSCToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem pALToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
-        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem videoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem force60hzForPALToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cartridgeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem iNESToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem archaicINESToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem iNESToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem nES20ToolStripMenuItem;
     }
 }
 
