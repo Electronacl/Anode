@@ -1586,6 +1586,7 @@ namespace Anode
                     Read();
                     // Determine the branch condition
                     ProgramCounter++;
+                    AddressBus++;
                     bool branch_condition = false;
                     switch (op_a)
                     {
