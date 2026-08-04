@@ -905,14 +905,20 @@ namespace Anode
             else
             {
                 // Read palette RAM
+                byte PalResult;
                 if ((Address & 3) == 0)
                 {
-                    return PaletteRAM[Address & 0x0F];
+                    PalResult = PaletteRAM[Address & 0x0F];
                 }
                 else
                 {
-                    return PaletteRAM[Address & 0x1F];
+                    PalResult = PaletteRAM[Address & 0x1F];
                 }
+                if (ppuMask_GreyscaleMode)
+                {
+                    PalResult &= 0x30;
+                }
+                return PalResult;
             }
         }
 
