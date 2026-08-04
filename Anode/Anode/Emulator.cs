@@ -195,6 +195,7 @@ namespace Anode
         public byte[] processedAPUBuffer;
 
         uint apuFrameIndex;
+        byte apuFrameCounterIndex;
         uint[] FrameCounterUpdatePos = new uint[4];
 
         // ----- NMI
@@ -428,7 +429,6 @@ namespace Anode
             // Optimisation as SetPixel is SO SLOW!
             outputData = output.LockBits(new Rectangle(0, 0, output.Width, output.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
             stride = outputData.Stride;
-            apuFrameIndex = 0;
         }
 
         // Focus check
@@ -518,6 +518,7 @@ namespace Anode
             {
                 Advance_Cycle();
             }
+            apuFrameIndex = 0;
             ProcessAudioBuffer();
         }
 
@@ -904,6 +905,11 @@ namespace Anode
             {
                 // Frame counter control
                 apuFrameCounterMode = (Value & 0x80) != 0;
+                if (apuFrameCounterMode)
+                {
+                    apuFrameCounterIndex = 0;
+                    UpdateFrameCounter();
+                }
                 apuFlag_IRQInhibit = (Value & 0x40) != 0;
             }
             // 4018-401A is APU test, 401C-401F is always disabled
@@ -3113,7 +3119,7 @@ namespace Anode
 
         void UpdateFrameCounter()
         {
-            if (apuFrameIndex == 1 || apuFrameIndex == (apuFrameCounterMode ? 4 : 3))
+            if (apuFrameCounterIndex == 1 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
             {
                 // Update length counter and sweep
                 if (sq1_lengthCounter > 0)
@@ -3137,21 +3143,21 @@ namespace Anode
                 }
             }
 
-            if (apuFrameIndex <= 2 || apuFrameIndex == (apuFrameCounterMode ? 4 : 3))
+            if (apuFrameCounterIndex <= 2 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
             {
                 // Update envelope and linear counter
             }
 
-            if (apuFrameCounterMode && apuFrameIndex == 3 && !apuFlag_IRQInhibit)
+            if (apuFrameCounterMode && apuFrameCounterIndex == 3 && !apuFlag_IRQInhibit)
             {
                 // IRQ
             }
 
 
-            apuFrameIndex++;
-            if (apuFrameIndex > (apuFrameCounterMode ? 5 : 4))
+            apuFrameCounterIndex++;
+            if (apuFrameCounterIndex > (apuFrameCounterMode ? 5 : 4))
             {
-                apuFrameIndex = 0;
+                apuFrameCounterIndex = 0;
             }
         }
 
@@ -3183,7 +3189,6 @@ namespace Anode
 
             rawAPUBuffer[apuFrameIndex] = (byte)(this_APU_frame);
             apuFrameIndex++;
-            
         }
     }
 }
