@@ -533,8 +533,8 @@ namespace Anode
                         ppustatus |= (byte)(ppuStatusOverflow ? 0x20 : 0);
 
                         // Reset flags
-                        ppuStatusSprZeroHit = false;
-                        ppuStatusOverflow = false;
+                        //ppuStatusSprZeroHit = false;
+                        //ppuStatusOverflow = false;
                         ppuVBlank = false;
                         ppu_w = false;
 
