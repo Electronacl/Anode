@@ -38,7 +38,11 @@ namespace Anode
         double timetaken;
         Stopwatch throttler = new Stopwatch();
         bool is_NTSC = true;
+        bool detect_region = true;
         bool NTSC_FPS_Forced = false;
+
+        bool auto_detect_ines = true;
+        byte ines_version = 0;
 
         // Winforms stuff
         public Form1()
@@ -107,17 +111,24 @@ namespace Anode
             // Personal debug only
             // testenabled = true;
 
+            // Init the emulator
             emulator = new Emulator();
             emulator.filepath = rompath;
             emulator.logging = tracelogging;
             emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
 
+            // Update the emulator's user settings
+            emulator.inesversion = ines_version;
+            emulator.detectines = auto_detect_ines;
+
             emulator.NTSC = is_NTSC;
             emulator.sample_rate = (uint)samplerate;
+            emulator.detect_region = detect_region;
 
             // Get the emulator to prepare for running
             emulator.Reset();
 
+            // The header value is used if it's both supported by the ROM, and it's enabled.
             if (emulator.CheckHeader())
             {
                 ChangeTitle($"{emulator.GetTitle()} (Anode {Constants.version_name})");
@@ -128,10 +139,11 @@ namespace Anode
 
             // For locking
             ScreenObject = pictureBox1;
+            // Start the throttler
             throttler.Start();
             // ms = new MemoryStream();
             // rs = new RawSourceWaveStream(ms, new WaveFormat(samplerate, 8, 1));
-            while (!emulator.CPU_Halted)
+            while (!emulator.CPU_Halted && !emulator.incompatible)
             {
                 if ((!paused) || waitingForFrame)
                 {
@@ -146,12 +158,14 @@ namespace Anode
                             pictureBox1.Invoke(new MethodInvoker(
                                 delegate ()
                                 {
+                                    // This method runs if something is using the object
                                     pictureBox1.Image = emulator.output;
                                     pictureBox1.Update();
                                 }));
                         }
                         else
                         {
+                            // Otherwise, just update
                             pictureBox1.Image = emulator.output;
                             pictureBox1.Update();
                         }
@@ -171,21 +185,28 @@ namespace Anode
                         wo = new WaveOutEvent();*/
                         //throttler.Stop();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
-                        while (timetaken < ((is_NTSC || NTSC_FPS_Forced) ? NTSC_time : PAL_time))
+                        while (timetaken < ((emulator.NTSC || NTSC_FPS_Forced) ? NTSC_time : PAL_time))
                         {
+                            // Spin loop
                             timetaken = ((double)throttler.ElapsedTicks) / (double)Stopwatch.Frequency;
                         }
+                        // Reset the throttler
                         throttler.Stop();
                         throttler.Reset();
                         throttler.Start();
                         //wo.Init(rs);
                         //wo.Play();
                     }
+                    // Setup the next frame
                     waitingForFrame = false;
                     emulator.InitFrame();
                 }
             }
 
+            // Prevent the throttler from constantly running
+            throttler.Stop();
+
+            // Disable the menu items that only work when running
             enableMenuItem(forceHaltToolStripMenuItem, false);
             enableMenuItem(pauseToolStripMenuItem, false);
             enableMenuItem(advanceFrameToolStripMenuItem, false);
@@ -315,11 +336,68 @@ namespace Anode
             disableThrottlerToolStripMenuItem.Checked = throttled;
         }
 
+        private void force60hzForPALToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NTSC_FPS_Forced = !NTSC_FPS_Forced;
+            force60hzForPALToolStripMenuItem.Checked = NTSC_FPS_Forced;
+        }
+
+        private void DisableAlliNESOptions()
+        {
+            iNESToolStripMenuItem.Checked = false;
+            iNESToolStripMenuItem1.Checked = false;
+            archaicINESToolStripMenuItem.Checked = false;
+            nES20ToolStripMenuItem.Checked = false;
+        }
+
+        private void iNESToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // Auto-detect
+            auto_detect_ines = true;
+            DisableAlliNESOptions();
+            iNESToolStripMenuItem.Checked = true;
+        }
+
+        private void archaicINESToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ines_version = 0;
+            DisableAlliNESOptions();
+            archaicINESToolStripMenuItem.Checked = true;
+        }
+
+        private void iNESToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            ines_version = 1;
+            DisableAlliNESOptions();
+            iNESToolStripMenuItem1.Checked = true;
+        }
+
+        private void nES20ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ines_version = 2;
+            DisableAlliNESOptions();
+            nES20ToolStripMenuItem.Checked = true;
+        }
+
+        private void autodetectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            autodetectToolStripMenuItem.Checked = true;
+            nTSCToolStripMenuItem.Checked = false;
+            pALToolStripMenuItem.Checked = false;
+            detect_region = true;
+            if (emulator != null)
+            {
+                init_Emulator();
+            }
+        }
+
         private void nTSCToolStripMenuItem_Click(object sender, EventArgs e)
         {
             nTSCToolStripMenuItem.Checked = true;
             pALToolStripMenuItem.Checked = false;
+            autodetectToolStripMenuItem.Checked = false;
             is_NTSC = true;
+            detect_region = false;
             if (emulator != null)
             {
                 init_Emulator();
@@ -330,17 +408,13 @@ namespace Anode
         {
             pALToolStripMenuItem.Checked = true;
             nTSCToolStripMenuItem.Checked = false;
+            autodetectToolStripMenuItem.Checked = false;
             is_NTSC = false;
+            detect_region = false;
             if (emulator != null)
             {
                 init_Emulator();
             }
-        }
-
-        private void force60hzForPALToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            NTSC_FPS_Forced = !NTSC_FPS_Forced;
-            force60hzForPALToolStripMenuItem.Checked = NTSC_FPS_Forced;
         }
     }
 }
