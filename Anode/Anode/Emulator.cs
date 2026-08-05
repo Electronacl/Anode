@@ -178,7 +178,16 @@ namespace Anode
         bool apuDMCLoops;
         byte apuDMCLoadCounter;
         byte apuDMCSampleAddress;
-        byte apuDMCSamleLength;
+        byte apuDMCSampleLength;
+        byte apuDMCBytesRemaining;
+        byte apuDMCBuffer;
+        byte apuDMCBufferStep;
+        //byte apuDMCOutput;
+
+        bool apuDMCRequired;
+        byte apuDMCDMAStep;
+        bool DMCDMACycle;
+        byte DMCDMATempVal;
 
         bool apuEnable_DMC;
         bool apuEnable_Noise;
@@ -188,9 +197,8 @@ namespace Anode
 
         bool apuFlag_DMCInterrupt;
         bool apuFlag_frameInterrupt;
-        bool apuFlag_DMCActive;
-        bool apuFlag_IRQInhibit; // The question is, are these the same?
-        bool apuFlag_IRQEnable;
+        bool apuFlag_IRQInhibit; // Frame Counter IRQ
+        bool apuFlag_IRQEnable; // DMC DMA IRQ
 
         bool apuFrameCounterMode;
 
@@ -1254,7 +1262,7 @@ namespace Anode
                 apuFlags |= (byte)(apuFlag_DMCInterrupt ? 0x80 : 0);
                 apuFlags |= (byte)(apuFlag_frameInterrupt ? 0x40 : 0);
                 apuFlags |= (byte)(ExternalDataBus & 0x20);
-                apuFlags |= (byte)(apuFlag_DMCActive ? 0x10 : 0);
+                apuFlags |= (byte)(apuDMCBytesRemaining > 0 ? 0x10 : 0);
                 apuFlags |= (byte)(noise_lengthCounter > 0 ? 8 : 0);
                 apuFlags |= (byte)(tri_lengthCounter > 0 ? 4 : 0);
                 apuFlags |= (byte)(sq2_lengthCounter > 0 ? 2 : 0);
@@ -1527,7 +1535,7 @@ namespace Anode
                         break;
                     case 0x4013:
                         // DMC_LEN
-                        apuDMCSamleLength = Value;
+                        apuDMCSampleLength = Value;
                         break;
                 }
             }
@@ -3152,13 +3160,42 @@ namespace Anode
             RDY_history |= 1;
         }
 
+        void Perform_DMC_DMA()
+        {
+            if (apuDMCDMAStep < (odd_cycle ? 2 : 1))
+            {
+                apuDMCDMAStep++;
+                DMCDMACycle = false;
+            }
+            else
+            {
+                if (DMCDMACycle)
+                {
+                    DMCDMATempVal = Read_Raw((ushort)(apuDMCSampleAddress+(apuDMCSampleLength-apuDMCBytesRemaining))); // Replace!
+                }
+                else
+                {
+                    apuDMCBuffer = DMCDMATempVal;
+                    apuDMCRequired = false;
+                }
+                DMCDMACycle = !DMCDMACycle;
+            }
+        }
+
         void Emulate_CPU()
         {
             if (NTSC) { RunAPUFrame(); }
             RDY_history <<= 1;
-            if (OAM_Active)
+            if (OAM_Active || apuDMCRequired)
             {
-                Perform_OAM_DMA();
+                if (apuDMCRequired)
+                {
+                    Perform_DMC_DMA();
+                }
+                else
+                {
+                    Perform_OAM_DMA();
+                }
                 return; // CPU is suspended during this time.
             }
             else
@@ -3840,7 +3877,7 @@ namespace Anode
             }
 
             // Pulse channel 1
-            if (sq1_lengthCounter > 0 && sq1_vol > 0)
+            if (sq1_lengthCounter > 0 && sq1_vol > 0 && apuEnable_sq1)
             {
                 uint sq1_freq = (uint)(sq1_timer_lo | (sq1_timer_hi << 8));
                 if (sq1_ftime > sq1_freq)
@@ -3849,6 +3886,29 @@ namespace Anode
                 }
                 this_APU_frame += GetPulseChannel(sq1_duty, sq1_freq, sq1_ftime) * (sq1_vol / 15f) * 0.25f;
                 sq1_ftime++;
+            }
+
+            // DMC
+            if (apuEnable_DMC && (apuDMCBytesRemaining > 0 || apuDMCLoops))
+            {
+                if (DMCCountdown == 0)
+                {
+                    // A change occurs
+                    apuDMCBuffer >>= 1;
+                    apuDMCBufferStep++;
+                    if (apuDMCBufferStep == 7)
+                    {
+                        apuDMCBytesRemaining--;
+                        if (apuDMCBytesRemaining != 0)
+                        {
+                            apuDMCRequired = true;
+                            apuDMCDMAStep = 0;
+                        }
+                        apuDMCBufferStep = 0;
+                    }
+                    DMCCountdown = DMCRate[apuDMCFrequency];
+                }
+                DMCCountdown--;
             }
 
             if (this_APU_frame != 0)
