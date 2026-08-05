@@ -1555,6 +1555,8 @@ namespace Anode
                 apuEnable_Tri = (Value & 4) != 0;
                 apuEnable_sq2 = (Value & 2) != 0;
                 apuEnable_sq1 = (Value & 1) != 0;
+
+                apuDMCBytesRemaining = apuDMCSampleLength;
             }
             else if (Address == 0x4016)
             {
@@ -3900,6 +3902,10 @@ namespace Anode
                     if (apuDMCBufferStep == 7)
                     {
                         apuDMCBytesRemaining--;
+                        if (apuDMCBytesRemaining == 0 && apuDMCLoops)
+                        {
+                            apuDMCBytesRemaining = apuDMCSampleLength;
+                        }
                         if (apuDMCBytesRemaining != 0)
                         {
                             apuDMCRequired = true;
