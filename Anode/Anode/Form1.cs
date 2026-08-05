@@ -22,9 +22,9 @@ namespace Anode
         bool tracelogging = false;
         PictureBox ScreenObject;
         int samplerate = 16000;
-        MemoryStream ms;
-        RawSourceWaveStream rs;
-        WaveOutEvent wo;
+        //MemoryStream ms;
+        //RawSourceWaveStream rs;
+        //WaveOutEvent wo;
 
 
         bool fileUpdated = false;
@@ -129,8 +129,8 @@ namespace Anode
             // For locking
             ScreenObject = pictureBox1;
             throttler.Start();
-            ms = new MemoryStream();
-            rs = new RawSourceWaveStream(ms, new WaveFormat(samplerate, 8, 1));
+            // ms = new MemoryStream();
+            // rs = new RawSourceWaveStream(ms, new WaveFormat(samplerate, 8, 1));
             while (!emulator.CPU_Halted)
             {
                 if ((!paused) || waitingForFrame)

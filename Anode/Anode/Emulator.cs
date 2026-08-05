@@ -519,7 +519,7 @@ namespace Anode
                 Advance_Cycle();
             }
             apuFrameIndex = 0;
-            ProcessAudioBuffer();
+            // ProcessAudioBuffer();
         }
 
         public void ProcessAudioBuffer()
