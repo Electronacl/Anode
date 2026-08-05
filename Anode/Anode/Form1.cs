@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NAudio.Wave;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,6 +21,10 @@ namespace Anode
         // bool testenabled = false;
         bool tracelogging = false;
         PictureBox ScreenObject;
+        int samplerate = 16000;
+        //MemoryStream ms;
+        //RawSourceWaveStream rs;
+        //WaveOutEvent wo;
 
 
         bool fileUpdated = false;
@@ -117,6 +122,7 @@ namespace Anode
             emulator.detectines = auto_detect_ines;
 
             emulator.NTSC = is_NTSC;
+            emulator.sample_rate = (uint)samplerate;
             emulator.detect_region = detect_region;
 
             // Get the emulator to prepare for running
@@ -135,6 +141,8 @@ namespace Anode
             ScreenObject = pictureBox1;
             // Start the throttler
             throttler.Start();
+            // ms = new MemoryStream();
+            // rs = new RawSourceWaveStream(ms, new WaveFormat(samplerate, 8, 1));
             while (!emulator.CPU_Halted && !emulator.incompatible)
             {
                 if ((!paused) || waitingForFrame)
@@ -165,6 +173,16 @@ namespace Anode
                     emulator.frame_Ready = false;
                     if (throttled && !waitingForFrame)
                     {
+                        /*if (wo != null)
+                        {
+                            while (wo.PlaybackState == PlaybackState.Playing)
+                            {
+
+                            }
+                            wo.Dispose();
+                        }
+                        ms.Write(emulator.processedAPUBuffer, 0, emulator.processedAPUBuffer.Length);
+                        wo = new WaveOutEvent();*/
                         //throttler.Stop();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
                         while (timetaken < ((emulator.NTSC || NTSC_FPS_Forced) ? NTSC_time : PAL_time))
@@ -176,6 +194,8 @@ namespace Anode
                         throttler.Stop();
                         throttler.Reset();
                         throttler.Start();
+                        //wo.Init(rs);
+                        //wo.Play();
                     }
                     // Setup the next frame
                     waitingForFrame = false;
