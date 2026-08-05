@@ -199,7 +199,6 @@ namespace Anode
 
         uint apuFrameIndex;
         byte apuFrameCounterIndex;
-        //uint[] FrameCounterUpdatePos = new uint[4];
         readonly uint[] frameCounterUpdate_NTSC =
         {
             3728, 7456, 11185, 14914, 18640
@@ -210,6 +209,19 @@ namespace Anode
         };
 
         uint[] frameCounterUpdate;
+
+        readonly ushort[] DMCRateNTSC =
+        {
+            428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54
+        };
+        readonly ushort[] DMCRatePAL =
+        {
+            398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118, 98, 78, 66, 50
+        };
+
+        ushort[] DMCRate;
+
+        ushort DMCCountdown;
 
         // ----- NMI
         bool NMILevelDetector;
@@ -984,6 +996,7 @@ namespace Anode
                 }*/
 
                 frameCounterUpdate = NTSC ? frameCounterUpdate_NTSC : frameCounterUpdate_PAL;
+                DMCRate = NTSC ? DMCRateNTSC : DMCRatePAL;
 
                 rawAPUBuffer = new byte[APUNTSCLength];
                 processedAPUBuffer = new byte[frame_sample_rate];
