@@ -5,14 +5,18 @@ An emulator for the Nintendo Entertainment System
 My aim with this emulator is for an accurate NES system compatible with both PAL and NTSC.
 
 ## Known issues
-- There is no APU
+- APU is only partially implemented, and has no sounds
 - Inaccuracies with some specifics (check the AccuracyCoin results below)
+- No Y scroll support
+- No mapper, alternative expansions, or alternative console support
+- Incorrect PPU flags cause some graphical bugs
+- PAL support remains untested
 
 ## Localisation support
 This program is only built with British English as a language, however the addition of other languages is planned for the future.
 
 ## Platform support
-This program is built and tested on a Windows x64 system. Whilst the program should be compatible with x32 and ARM64, I can't guaruntee that this is the case.<br>
+This program is built and tested on a Windows x64 system. Whilst the program should be compatible with x32 and ARM64, I can't guarantee that this is the case.<br>
 Builds are only created as .EXE, and the program is built in the .NET framework, so support for Linux and MacOS may not be available.<br>
 
 The emulator is built for the .NET framework 4.7.2. It may not work or function correctly with older versions or without the framework entirely.<br>
@@ -54,9 +58,9 @@ As per the requirements, here are the things I must state
 <br>
 Whilst there shouldn't be anything that *could* damage your PC with this program, I can't guaruntee that things like ROMs, TASes (when I add them), or modifications may cause damage. Even if it is from the core program, I don't assume responsibility for any damage that may be caused by this program. (This is for legal reasons)
 
-## Accuracy info (as of 2026.2.3)
+## Accuracy info (as of 2026.3-0.0b)
 ### AccuracyCoin
-<img width="261" height="244" alt="image" src="https://github.com/user-attachments/assets/e07aa26c-8f10-4892-accf-44e707f0e65d" /><br>
+<img width="263" height="245" alt="image" src="https://github.com/user-attachments/assets/0ce1a396-6eaf-45fc-ada8-ea26dd00c864" /><br>
 ### nestest
 *Official opcodes*<br>
 <img width="262" height="247" alt="image" src="https://github.com/user-attachments/assets/a3da22f5-b6ef-4635-be0b-ebc3fb264313" /><br>
