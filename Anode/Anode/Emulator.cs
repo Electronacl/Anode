@@ -135,6 +135,12 @@ namespace Anode
         byte[] ppu_SpriteXposition = new byte[8];
         byte[] ppu_SpriteYposition = new byte[8];
 
+        bool ppuCanSuppressVBLANK;
+        bool ppuVBlankSuppressed;
+
+        bool ppuCanSuppressNMI;
+        bool ppuNMISuppressed;
+
         // ----- APU Registers
         byte sq1_duty;
         bool sq1_loop;
@@ -1231,6 +1237,14 @@ namespace Anode
                         ppu_v &= 0x3FFF;
                         break;
                     case 0x2002:
+                        if (ppuCanSuppressVBLANK)
+                        {
+                            ppuVBlankSuppressed = true;
+                        }
+                        if (ppuCanSuppressNMI)
+                        {
+                            ppuNMISuppressed = true;
+                        }
                         byte ppustatus = 0;
                         ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
                         ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
@@ -3187,6 +3201,14 @@ namespace Anode
 
         void Emulate_CPU()
         {
+            // Check whether NMI should occur
+            bool PreviousNMILevelDetector = NMILevelDetector;
+            NMILevelDetector = ppuEnableNMI && ppuVBlank && !ppuNMISuppressed;
+            if (!PreviousNMILevelDetector && NMILevelDetector)
+            {
+                DoNMI = true;
+            }
+
             if (NTSC) { RunAPUFrame(); }
             RDY_history <<= 1;
             if (OAM_Active || apuDMCRequired)
@@ -3204,14 +3226,6 @@ namespace Anode
             else
             {
                 odd_cycle = !odd_cycle;
-            }
-
-            // Check whether NMI should occur
-            bool PreviousNMILevelDetector = NMILevelDetector;
-            NMILevelDetector = ppuEnableNMI && ppuVBlank;
-            if (!PreviousNMILevelDetector && NMILevelDetector)
-            {
-                DoNMI = true;
             }
 
             // Reading opcodes or starting NMI.
@@ -3554,12 +3568,28 @@ namespace Anode
             {
                 lastPPUIOUpdate++;
             }
+
+            if (ppuDot == 0 && ppuScanLine == 241)
+            {
+                ppuNMISuppressed = false;
+                ppuCanSuppressVBLANK = true;
+            }
             if (ppuDot == 1 && ppuScanLine == 241)
             {
+                ppuCanSuppressVBLANK = false;
                 Render();
-                ppuVBlank = true;
+                if (!ppuVBlankSuppressed) { ppuVBlank = true; }
+                ppuVBlankSuppressed = false;
+                // NMI Suppression can occur
+                ppuCanSuppressNMI = true;
             }
-            else if (ppuDot == 1 && ppuScanLine == 261)
+            if (ppuDot == 3 && ppuScanLine == 241)
+            {
+                ppuCanSuppressNMI = false;
+            }
+            
+
+            if (ppuDot == 1 && ppuScanLine == 261)
             {
                 ppuVBlank = false;
                 ppuStatusOverflow = false;
