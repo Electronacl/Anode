@@ -939,22 +939,6 @@ namespace Anode
 
             GetCompatibility();
 
-            frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
-
-            thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
-            thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
-
-            float updatePositions = thisCyclesFrame / 4f;
-            for (int i = 0; i < 4; i++)
-            {
-                FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
-            }
-
-            rawAPUBuffer = new byte[APUNTSCLength];
-            processedAPUBuffer = new byte[frame_sample_rate];
-
-            InitFrame();
-            
             if (!incompatible)
             {
                 if (detect_region)
@@ -974,7 +958,21 @@ namespace Anode
                         NTSC = true;
                     }
                 }
-                
+
+                frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
+
+                thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
+                thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
+
+                float updatePositions = thisCyclesFrame / 4f;
+                for (int i = 0; i < 4; i++)
+                {
+                    FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
+                }
+
+                rawAPUBuffer = new byte[APUNTSCLength];
+                processedAPUBuffer = new byte[frame_sample_rate];
+
                 // Find where the program counter should start
                 byte PC_Lo = Read_Raw(0xFFFC);
                 byte PC_Hi = Read_Raw(0xFFFD);
