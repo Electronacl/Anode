@@ -21,11 +21,13 @@ namespace Anode
         // ----- Interchangeable values dependiung on console, temp, etc
         readonly byte unstable_magic = 0xCC;
         readonly ushort ppuDecayTime = 0x02FF; // Measured in cycles
+
         uint CPUClockNTSC;
         uint CPUClockPAL;
         uint CPUCyclesFrameNTSC;
         uint CPUCyclesFramePAL;
-        uint APUNTSCLength = 29869; // This may be caused by inaccuracies.
+
+        readonly uint APUNTSCLength = 29869; // This may be caused by inaccuracies.
 
         public uint sample_rate = 44100;
         uint frame_sample_rate = 0;
@@ -197,7 +199,17 @@ namespace Anode
 
         uint apuFrameIndex;
         byte apuFrameCounterIndex;
-        uint[] FrameCounterUpdatePos = new uint[4];
+        //uint[] FrameCounterUpdatePos = new uint[4];
+        readonly uint[] frameCounterUpdate_NTSC =
+        {
+            3728, 7456, 11185, 14914, 18640
+        };
+        readonly uint[] frameCounterUpdate_PAL =
+        {
+            4156, 8313, 12469, 16626, 20782
+        };
+
+        uint[] frameCounterUpdate;
 
         // ----- NMI
         bool NMILevelDetector;
@@ -965,11 +977,13 @@ namespace Anode
                 thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
                 thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
 
-                float updatePositions = thisCyclesFrame / 4f;
+                /*float updatePositions = thisCyclesFrame / 4f;
                 for (int i = 0; i < 4; i++)
                 {
                     FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
-                }
+                }*/
+
+                frameCounterUpdate = NTSC ? frameCounterUpdate_NTSC : frameCounterUpdate_PAL;
 
                 rawAPUBuffer = new byte[APUNTSCLength];
                 processedAPUBuffer = new byte[frame_sample_rate];
@@ -3755,44 +3769,46 @@ namespace Anode
 
         void UpdateFrameCounter()
         {
-            if (apuFrameCounterIndex == 1 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
+            if (apuFrameCounterMode || apuFrameCounterIndex < 5)
             {
-                // Update length counter and sweep
-                if (sq1_lengthCounter > 0 && !sq1_loop)
+                if (apuFrameCounterIndex == 1 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
                 {
-                    sq1_lengthCounter--;
+                    // Update length counter and sweep
+                    if (sq1_lengthCounter > 0 && !sq1_loop)
+                    {
+                        sq1_lengthCounter--;
+                    }
+
+                    if (sq2_lengthCounter > 0 && !sq2_loop)
+                    {
+                        sq2_lengthCounter--;
+                    }
+
+                    if (tri_lengthCounter > 0 && !tri_count)
+                    {
+                        tri_lengthCounter--;
+                    }
+
+                    if (noise_lengthCounter > 0 && !noise_loop)
+                    {
+                        noise_lengthCounter--;
+                    }
                 }
 
-                if (sq2_lengthCounter > 0 && !sq2_loop)
+                if (apuFrameCounterIndex <= 2 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
                 {
-                    sq2_lengthCounter--;
+                    // Update envelope and linear counter
+                    if (tri_linear > 0)
+                    {
+                        tri_linear--;
+                    }
                 }
 
-                if (tri_lengthCounter > 0 && !tri_count)
+                if (apuFrameCounterMode && apuFrameCounterIndex == 3 && !apuFlag_IRQInhibit)
                 {
-                    tri_lengthCounter--;
-                }
-
-                if (noise_lengthCounter > 0 && !noise_loop)
-                {
-                    noise_lengthCounter--;
+                    // IRQ
                 }
             }
-
-            if (apuFrameCounterIndex <= 2 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
-            {
-                // Update envelope and linear counter
-                if (tri_linear > 0)
-                {
-                    tri_linear--;
-                }
-            }
-
-            if (apuFrameCounterMode && apuFrameCounterIndex == 3 && !apuFlag_IRQInhibit)
-            {
-                // IRQ
-            }
-
 
             apuFrameCounterIndex++;
             if (apuFrameCounterIndex > (apuFrameCounterMode ? 5 : 4))
@@ -3805,7 +3821,7 @@ namespace Anode
         {
             float this_APU_frame = 0;
 
-            if (FrameCounterUpdatePos.Contains(apuFrameIndex))
+            if (frameCounterUpdate.Contains(apuFrameIndex))
             {
                 UpdateFrameCounter();
             }
