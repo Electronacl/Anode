@@ -3180,6 +3180,7 @@ namespace Anode
                 }
                 DMCDMACycle = !DMCDMACycle;
             }
+            RDY_history |= 1;
         }
 
         void Emulate_CPU()
