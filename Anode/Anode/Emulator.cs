@@ -870,6 +870,7 @@ namespace Anode
 
         public void Reset()
         {
+            Console.WriteLine("Loading ROM");
             lastPPUIOUpdate = 0;
             // Read the ROM and deposit it into the variables
             byte[] HeaderedROM = File.ReadAllBytes(filepath);
@@ -997,6 +998,11 @@ namespace Anode
                 {
                     Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
                 }
+                Console.WriteLine("Finished loading");
+            }
+            else
+            {
+                Console.WriteLine("Compatibility check failed.");
             }
         }
 
@@ -3752,22 +3758,22 @@ namespace Anode
             if (apuFrameCounterIndex == 1 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
             {
                 // Update length counter and sweep
-                if (sq1_lengthCounter > 0)
+                if (sq1_lengthCounter > 0 && !sq1_loop)
                 {
                     sq1_lengthCounter--;
                 }
 
-                if (sq2_lengthCounter > 0)
+                if (sq2_lengthCounter > 0 && !sq2_loop)
                 {
                     sq2_lengthCounter--;
                 }
 
-                if (tri_lengthCounter > 0)
+                if (tri_lengthCounter > 0 && !tri_count)
                 {
                     tri_lengthCounter--;
                 }
 
-                if (noise_lengthCounter > 0)
+                if (noise_lengthCounter > 0 && !noise_loop)
                 {
                     noise_lengthCounter--;
                 }
@@ -3776,6 +3782,10 @@ namespace Anode
             if (apuFrameCounterIndex <= 2 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
             {
                 // Update envelope and linear counter
+                if (tri_linear > 0)
+                {
+                    tri_linear--;
+                }
             }
 
             if (apuFrameCounterMode && apuFrameCounterIndex == 3 && !apuFlag_IRQInhibit)
