@@ -260,6 +260,8 @@ namespace Anode
 
         public bool incompatible;
 
+        public bool detect_region = true;
+
         // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
         static String[] OpCodeNames =
         {
@@ -866,10 +868,17 @@ namespace Anode
             {
                 if ((Header[7] & 0x0C) == 0x0C)
                 {
+                    // Presumably NES 2.0
                     inesversion = 2;
+                }
+                else if((Header[7] & 0x0C) == 0x04)
+                {
+                    // Presumably archaic
+                    inesversion = 0;
                 }
                 else
                 {
+                    // Presumably iNES or iNES 0.7
                     inesversion = 1;
                 }
             }
@@ -908,16 +917,24 @@ namespace Anode
 
             if (!incompatible)
             {
-                if (inesversion == 1)
+                if (detect_region)
                 {
-                    NTSC = (Header[10] & 0x2) == 0;
+                    if (inesversion == 1)
+                    {
+                        NTSC = (Header[10] & 0x2) == 0;
+                    }
+                    else if (inesversion == 2)
+                    {
+                        // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now.
+                        // Maybe add a user option for this though?
+                        NTSC = (Header[12] & 0x3) != 1;
+                    }
+                    else
+                    {
+                        NTSC = true;
+                    }
                 }
-                else if (inesversion == 2)
-                {
-                    // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now.
-                    // Maybe add a user option for this though?
-                    NTSC = (Header[12] & 0x3) != 1;
-                }
+                
                 // Find where the program counter should start
                 byte PC_Lo = Read_Raw(0xFFFC);
                 byte PC_Hi = Read_Raw(0xFFFD);
