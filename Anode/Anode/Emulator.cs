@@ -3773,7 +3773,7 @@ namespace Anode
 
                 if (PalLow == 0) { PalHi = 0; }
 
-                // This *may* be a memory leak?
+                // Crashes in certain circumstances (e.g. Blargg Litewall 2)
                 Color outColour = Palette[PaletteRAM[PalHi * 4 + PalLow]];
 
                 Stopwatch sw = new Stopwatch();

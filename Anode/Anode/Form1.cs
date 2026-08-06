@@ -361,6 +361,7 @@ namespace Anode
         private void archaicINESToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ines_version = 0;
+            auto_detect_ines = false;
             DisableAlliNESOptions();
             archaicINESToolStripMenuItem.Checked = true;
         }
@@ -368,6 +369,7 @@ namespace Anode
         private void iNESToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             ines_version = 1;
+            auto_detect_ines = false;
             DisableAlliNESOptions();
             iNESToolStripMenuItem1.Checked = true;
         }
@@ -375,6 +377,7 @@ namespace Anode
         private void nES20ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ines_version = 2;
+            auto_detect_ines = false;
             DisableAlliNESOptions();
             nES20ToolStripMenuItem.Checked = true;
         }
