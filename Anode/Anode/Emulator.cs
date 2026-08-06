@@ -914,18 +914,7 @@ namespace Anode
             byte[] HeaderedROM = File.ReadAllBytes(filepath);
             Array.Copy(HeaderedROM, Header, 0x10);
             byte size = Header[4];
-            Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
-
-            CPUCyclesFrameNTSC = (261*341) / 3;
-            CPUClockNTSC = ((261 * 341) / 3) * 60;
-
-
-            // Does the ROM support graphics?
-            if (Header[5] != 0)
-            {
-                Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
-            }
-
+            
             // Check iNES format version
             if (detectines)
             {
@@ -980,6 +969,16 @@ namespace Anode
 
             if (!incompatible)
             {
+                Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
+
+                CPUCyclesFrameNTSC = (261 * 341) / 3;
+                CPUClockNTSC = ((261 * 341) / 3) * 60;
+                // Does the ROM support graphics?
+                if (Header[5] != 0)
+                {
+                    Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
+                }
+
                 if (detect_region)
                 {
                     if (inesversion == 1)
