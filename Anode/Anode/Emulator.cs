@@ -937,7 +937,10 @@ namespace Anode
 
             // Get the mapper used
             mapper = (byte)(Header[6] >> 4);
-            mapper |= (byte)(Header[7] & 0xF0);
+            if (inesversion >= 1)
+            {
+                mapper |= (byte)(Header[7] & 0xF0);
+            }
             if (inesversion == 2)
             {
                 mapper |= (ushort)((Header[8] & 0xF) << 8);
