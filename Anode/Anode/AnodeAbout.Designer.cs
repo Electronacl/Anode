@@ -41,6 +41,7 @@
             this.versionText = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -72,12 +73,14 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(345, 39);
             this.label3.TabIndex = 2;
-            this.label3.Text = "© Electronacl 2026.\r\n\"NES\" and \"Nintendo\" are registered trademarks of Nintendo C" +
-    "o. LTD. \r\nThis program is not endorsed by, nor affiliated with, Nintendo";
+            this.label3.Text = "© Electronacl 2026. Licensed under the MIT licence.\r\n\"NES\" and \"Nintendo\" are reg" +
+    "istered trademarks of Nintendo Co. LTD. \r\nThis program is not endorsed by, nor a" +
+    "ffiliated with, Nintendo";
             this.label3.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.linkLabel3);
             this.panel1.Controls.Add(this.linkLabel2);
             this.panel1.Controls.Add(this.linkLabel1);
             this.panel1.Location = new System.Drawing.Point(12, 165);
@@ -160,6 +163,17 @@
             this.label7.Size = new System.Drawing.Size(439, 2);
             this.label7.TabIndex = 10;
             // 
+            // linkLabel3
+            // 
+            this.linkLabel3.AutoSize = true;
+            this.linkLabel3.Location = new System.Drawing.Point(120, 4);
+            this.linkLabel3.Name = "linkLabel3";
+            this.linkLabel3.Size = new System.Drawing.Size(44, 13);
+            this.linkLabel3.TabIndex = 2;
+            this.linkLabel3.TabStop = true;
+            this.linkLabel3.Text = "License";
+            this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel3_LinkClicked);
+            // 
             // AnodeAbout
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -202,5 +216,6 @@
         private System.Windows.Forms.Label versionText;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.LinkLabel linkLabel3;
     }
 }
