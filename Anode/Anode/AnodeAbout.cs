@@ -78,7 +78,7 @@ namespace Anode
         {
             try
             {
-                linkLabel2.LinkVisited = true;
+                linkLabel3.LinkVisited = true;
                 OpenLink("https://github.com/Electronacl/Anode/blob/main/LICENSE");
             }
             catch
