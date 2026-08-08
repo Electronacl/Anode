@@ -70,10 +70,10 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(9, 197);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(442, 26);
+            this.label3.Size = new System.Drawing.Size(448, 26);
             this.label3.TabIndex = 2;
-            this.label3.Text = "Copyleft Electronacl 2026. \"NES\" and \"Nintendo\" are registered trademarks of Nint" +
-    "endo Co.\r\nLTD. This program is not endorsed by, or affiliated with, Nintendo";
+            this.label3.Text = "Copyright Electronacl 2026. \"NES\" and \"Nintendo\" are registered trademarks of Nin" +
+    "tendo Co.\r\nLTD. This program is not endorsed by, or affiliated with, Nintendo";
             this.label3.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
             // panel1
