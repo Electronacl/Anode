@@ -1,17 +1,6 @@
 # Anode
 An emulator for the Nintendo Entertainment System
 
-## Project goals
-My aim with this emulator is for an accurate NES system compatible with both PAL and NTSC.
-
-## Known issues
-- APU is only partially implemented, and has no sounds
-- Inaccuracies with some specifics (check the AccuracyCoin results below)
-- No Y scroll support
-- No mapper, alternative expansions, or alternative console support
-- Incorrect PPU flags cause some graphical bugs
-- PAL support remains untested
-
 ## Localisation support
 This program is only built with British English as a language, however the addition of other languages is planned for the future.
 
@@ -51,23 +40,24 @@ Beta builds come first, and have the most bugs and issues. Alpha builds are clos
 Example: `2.4b` would have had 2 major changes, 4 minor changes, and be in the beta status.
 
 ## Licenses
-This project is licensed under my own license, _Electronacl Content License V2.0_. 
-As per the requirements, here are the things I must state
-- No AI was used in the creation of the project.
+On version 2026.3-1.0b or later, the software is licensed under the MIT license.<br>
+Versions prior to 2026.3-1.0b are licensed with my own license, ECL 2.0. (Albeit with the mistake of saying "Copyleft" in the about screen, which isn't correct.<br><br>
 
-<br>
-Whilst there shouldn't be anything that *could* damage your PC with this program, I can't guaruntee that things like ROMs, TASes (when I add them), or modifications may cause damage. Even if it is from the core program, I don't assume responsibility for any damage that may be caused by this program. (This is for legal reasons)
+Whilst ECL 2.0 had its own stricter limitations, these limitations are shared between the two licenses:
+- The developer assumes no responsibility for any damage or harm caused by the software
+- The software is provided "as is", and comes without warranty of any kind
+On versions 2026.3-1.0b and later, you may:
+- Copy the software
+- Freely modify it, as long as the changes do not remove any license texts or remove the existing copyright statement (if you wish to add your own copyright for your code, amend it before or after the original statement.
+- Distribute the software
+- Sublicense the software
+
+## Access to the software
+This software is originally provided as open-source free software, and there is no paid version that officially exists or is affiliated with the developer. By downloading a copy of this software, you own that copy until it has been removed - you do not need to buy the software to own a copy.
 
 ## Accuracy info (as of 2026.3-0.0b)
-### AccuracyCoin
-<img width="263" height="245" alt="image" src="https://github.com/user-attachments/assets/0ce1a396-6eaf-45fc-ada8-ea26dd00c864" /><br>
-### nestest
-*Official opcodes*<br>
-<img width="262" height="247" alt="image" src="https://github.com/user-attachments/assets/a3da22f5-b6ef-4635-be0b-ebc3fb264313" /><br>
-*Unofficial opcodes*<br>
-<img width="265" height="251" alt="image" src="https://github.com/user-attachments/assets/ffaa854f-c85d-441c-a295-8773a5398c06" /><br>
-
-### Wondering why a test no longer passes?
-Sometimes, when fixing some bugs, it gets rid of false positives. This can actually cause the score to stay the same, or even go down for a new release. This doesn't necessarily mean it's less accurate on the newer release, in fact it may be _more_ accurate, so take existing test results with a little pinch of salt whilst the emulator is still in a slightly unstable early phase.<br>
-
-Another cause for this is the ROMs that I use. Some of them update regularly to implement new features and bugfixes based on discoveries with hardware specifics. As I aim to use new versions of the test ROMs, the results above may have the ROM changed from what is shown on Anode's previous updates, which can cause the score to decrease.
+Of all the NROM based ROMs I have tested (including separate tests in test suites):
+- 214 pass
+- 151 fail
+- 6 OK
+- 6 crash
