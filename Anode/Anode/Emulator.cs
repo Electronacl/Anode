@@ -3794,8 +3794,15 @@ namespace Anode
 
                 if (PalLow == 0) { PalHi = 0; }
 
+                int colourIndex = PaletteRAM[PalHi * 4 + PalLow] & 0x3F;
+
                 // Crashes in certain circumstances (e.g. Blargg Litewall 2)
-                Color outColour = Palette[PaletteRAM[PalHi * 4 + PalLow]];
+                if (ppuMask_GreyscaleMode)
+                {
+                    colourIndex &= 0x30;
+                }
+
+                Color outColour = Palette[colourIndex];
 
                 Stopwatch sw = new Stopwatch();
 
