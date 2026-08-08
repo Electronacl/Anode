@@ -57,7 +57,6 @@ This software is originally provided as open-source free software, and there is 
 
 ## Accuracy info (as of 2026.3-0.0b)
 Of all the NROM based ROMs I have tested (including separate tests in test suites):
-- 214 pass
-- 151 fail
+- 215 pass
+- 152 fail
 - 6 OK
-- 6 crash
