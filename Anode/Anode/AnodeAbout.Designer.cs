@@ -70,10 +70,10 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(9, 197);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(448, 26);
+            this.label3.Size = new System.Drawing.Size(345, 39);
             this.label3.TabIndex = 2;
-            this.label3.Text = "Copyright Electronacl 2026. \"NES\" and \"Nintendo\" are registered trademarks of Nin" +
-    "tendo Co.\r\nLTD. This program is not endorsed by, or affiliated with, Nintendo";
+            this.label3.Text = "© Electronacl 2026.\r\n\"NES\" and \"Nintendo\" are registered trademarks of Nintendo C" +
+    "o. LTD. \r\nThis program is not endorsed by, nor affiliated with, Nintendo";
             this.label3.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
             // panel1
@@ -164,7 +164,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(464, 232);
+            this.ClientSize = new System.Drawing.Size(464, 242);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.versionText);
