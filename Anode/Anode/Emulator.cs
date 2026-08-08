@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 
@@ -922,6 +923,14 @@ namespace Anode
                     );
                     incompatible = true;
                     break;
+            }
+
+            // Incorrect file format
+            if (mapper == 0 && (0x4000 * Header[4]) > 0x8000)
+            {
+                // If an NROM is bigger than it should be
+                incompatible = true;
+                MessageBox.Show("ROM size is too big to be an NROM, but the cartridge registers as NROM.", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
