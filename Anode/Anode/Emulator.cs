@@ -215,11 +215,12 @@ namespace Anode
         byte apuDMCFrequency;
         bool apuDMCLoops;
         byte apuDMCLoadCounter;
-        byte apuDMCSampleAddress;
-        byte apuDMCSampleLength;
-        byte apuDMCBytesRemaining;
+        ushort apuDMCSampleAddress;
+        ushort apuDMCSampleLength;
+        ushort apuDMCBytesRemaining;
         byte apuDMCBuffer;
         byte apuDMCBufferStep;
+        ushort apuDMCPosition;
         //byte apuDMCOutput;
 
         // Registers used in DMC DMA
@@ -1117,8 +1118,11 @@ namespace Anode
                     rawAPUBuffer = new byte[APULen];
                     processedAPUBuffer = new byte[frame_sample_rate];
 
-                    // SSo that the PPU data bus will decay right after
+                    // So that the PPU data bus will decay right after
                     lastPPUIOUpdate = 0;
+
+                    // APU DMC init
+                    apuDMCSampleLength = 1;
 
                     // Find where the program counter should start
                     byte PC_Lo = Read_Raw(0xFFFC);
@@ -1725,11 +1729,11 @@ namespace Anode
                     case 0x4012:
                         // DMC_START
                         // The real sample address start is found by 0b11AAAAAA AA000000
-                        apuDMCSampleAddress = Value;
+                        apuDMCSampleAddress = (ushort)((Value << 6) | 0b1100000000000000);
                         break;
                     case 0x4013:
                         // DMC_LEN
-                        apuDMCSampleLength = Value;
+                        apuDMCSampleLength = (ushort)((Value << 4) + 1);
                         break;
                 }
             }
@@ -1751,7 +1755,10 @@ namespace Anode
                 apuEnable_sq1 = (Value & 1) != 0;
 
                 // Reset the DMA
-                apuDMCBytesRemaining = apuDMCSampleLength;
+                if (apuEnable_DMC && apuDMCBytesRemaining == 0)
+                {
+                    Begin_DMC();
+                }
             }
             else if (Address == 0x4016)
             {
@@ -3428,10 +3435,10 @@ namespace Anode
             }
             else
             {
-                if (DMCDMACycle)
+                if (!DMCDMACycle)
                 {
                     // Read cycle gets value
-                    DMCDMATempVal = Read_Raw((ushort)(apuDMCSampleAddress+(apuDMCSampleLength-apuDMCBytesRemaining))); // Replace!
+                    DMCDMATempVal = Read_Raw(apuDMCSampleAddress); // Replace!
                 }
                 else
                 {
@@ -4216,6 +4223,15 @@ namespace Anode
         }
 
         /// <summary>
+        /// Initialises the DMC
+        /// </summary>
+        void Begin_DMC()
+        {
+            apuDMCBytesRemaining = apuDMCSampleLength;
+            apuDMCPosition = apuDMCSampleAddress;
+        }
+
+        /// <summary>
         /// Runs 1 cycle of the APU
         /// </summary>
         void RunAPUFrame()
@@ -4242,25 +4258,27 @@ namespace Anode
             }
 
             // DMC
-            if (apuEnable_DMC && (apuDMCBytesRemaining > 0 || apuDMCLoops))
+            if (apuDMCBytesRemaining > 0 || apuDMCLoops)
             {
                 if (DMCCountdown == 0)
                 {
                     // A change occurs
                     apuDMCBuffer >>= 1;
                     apuDMCBufferStep++;
-                    if (apuDMCBufferStep == 7)
+                    if (apuDMCBufferStep == 8)
                     {
                         apuDMCBytesRemaining--;
+                        apuDMCSampleAddress++;
                         if (apuDMCBytesRemaining == 0 && apuDMCLoops)
                         {
-                            apuDMCBytesRemaining = apuDMCSampleLength;
+                            Begin_DMC();
                         }
-                        if (apuDMCBytesRemaining != 0)
+                        else if (apuDMCBytesRemaining == 0)
                         {
-                            apuDMCRequired = true;
-                            apuDMCDMAStep = 0;
+                            // Nothing atm, IRQ?
                         }
+                        apuDMCRequired = true;
+                        apuDMCDMAStep = 0;
                         apuDMCBufferStep = 0;
                     }
                     DMCCountdown = DMCRate[apuDMCFrequency];
