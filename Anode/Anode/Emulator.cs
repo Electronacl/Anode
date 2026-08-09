@@ -337,6 +337,7 @@ namespace Anode
         public bool detectines;
 
         public bool incompatible;
+        public bool invalid_ROM;
 
         public bool detect_region = true;
 
@@ -938,142 +939,176 @@ namespace Anode
         {
             Console.WriteLine("Loading ROM");
             lastPPUIOUpdate = 0;
-            // Read the ROM and deposit it into the variables
             byte[] HeaderedROM = File.ReadAllBytes(filepath);
-            Array.Copy(HeaderedROM, Header, 0x10);
-            byte size = Header[4];
+            byte size = 0;
+
             
-            // Check iNES format version
-            if (detectines)
+
+            if (HeaderedROM.Length < 16)
             {
-                if ((Header[7] & 0x0C) == 0x0C)
-                {
-                    // Presumably NES 2.0
-                    inesversion = 2;
-                }
-                else if((Header[7] & 0x0C) == 0x04)
-                {
-                    // Presumably archaic
-                    inesversion = 0;
-                }
-                else
-                {
-                    // Presumably iNES or iNES 0.7
-                    inesversion = 1;
-                }
-            }
-
-            // Get the mapper used
-            mapper = (byte)(Header[6] >> 4);
-            if (inesversion >= 1)
-            {
-                mapper |= (byte)(Header[7] & 0xF0);
-            }
-            if (inesversion == 2)
-            {
-                mapper |= (ushort)((Header[8] & 0xF) << 8);
-                mapper_sub = (byte)(Header[8] >> 4);
-            }
-
-            // Check console used
-            if (inesversion >= 1)
-            {
-                nesversion = (byte)(Header[7] & 0x3);
-                // 0 = famicom/NES
-                // 1 = Vs. System
-                // 2 = PlayChoice 10
-                // 3 = Extended console type
-                if (nesversion == 3)
-                {
-                    ext_nesversion = (byte)(Header[13] & 0xF);
-                    nesversion = ext_nesversion;
-                }
-            }
-            
-            // Get the default expansion device used
-            if (inesversion == 2)
-            {
-                expansion = (byte)(Header[15] & 0x7F);
-            }
-
-            GetCompatibility();
-
-            if (!incompatible)
-            {
-                Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
-
-                CPUCyclesFrameNTSC = (261 * 341) / 3;
-                CPUClockNTSC = ((261 * 341) / 3) * 60;
-                // Does the ROM support graphics?
-                if (Header[5] != 0)
-                {
-                    Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
-                }
-
-                if (detect_region)
-                {
-                    if (inesversion == 1)
-                    {
-                        NTSC = (Header[10] & 0x2) == 0;
-                    }
-                    else if (inesversion == 2)
-                    {
-                        // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now.
-                        // Maybe add a user option for this though?
-                        NTSC = (Header[12] & 0x3) != 1;
-                    }
-                    else
-                    {
-                        NTSC = true;
-                    }
-                }
-
-                frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
-
-                thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
-                thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
-
-                /*float updatePositions = thisCyclesFrame / 4f;
-                for (int i = 0; i < 4; i++)
-                {
-                    FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
-                }*/
-
-                frameCounterUpdate = NTSC ? frameCounterUpdate_NTSC : frameCounterUpdate_PAL;
-                DMCRate = NTSC ? DMCRateNTSC : DMCRatePAL;
-
-                rawAPUBuffer = new byte[APUNTSCLength];
-                processedAPUBuffer = new byte[frame_sample_rate];
-
-                // Find where the program counter should start
-                byte PC_Lo = Read_Raw(0xFFFC);
-                byte PC_Hi = Read_Raw(0xFFFD);
-                ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
-
-                // Setup some initial variables (more stuff will be needed when I add the soft reset)
-                SP = 0xFD;
-                flag_InterruptDisable = true;
-
-                // Check if logging and start writing if so
-                if (logging)
-                {
-                    tracelog = new StreamWriter(tracepath);
-                }
-
-                output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
-
-                InitFrame();
-
-                // Init palette
-                for (int j = 0; j < 64; j++)
-                {
-                    Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
-                }
-                Console.WriteLine("Finished loading");
+                invalid_ROM = true;
+                MessageBox.Show("File too short to be a cartridge", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-                Console.WriteLine("Compatibility check failed.");
+                if (HeaderedROM[0] != 0x4E || HeaderedROM[1] != 0x45 || HeaderedROM[2] != 0x53 ||  HeaderedROM[3] != 26)
+                {
+                    invalid_ROM = true;
+                    MessageBox.Show("No cartridge detected", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    Array.Copy(HeaderedROM, Header, 0x10);
+                    size = Header[4];
+                    if (HeaderedROM.Length < 0x4000 * size + 0x10 + ((Header[5] != 0) ? 0x2000 : 0))
+                    {
+                        invalid_ROM = true;
+                        MessageBox.Show("Cart was too small for the size provided", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            
+
+            incompatible = invalid_ROM;
+
+            if (!invalid_ROM)
+            {
+                // Check iNES format version
+                if (detectines)
+                {
+                    if ((Header[7] & 0x0C) == 0x0C)
+                    {
+                        // Presumably NES 2.0
+                        inesversion = 2;
+                    }
+                    else if ((Header[7] & 0x0C) == 0x04)
+                    {
+                        // Presumably archaic
+                        inesversion = 0;
+                    }
+                    else
+                    {
+                        // Presumably iNES or iNES 0.7
+                        inesversion = 1;
+                    }
+                }
+
+                // Get the mapper used
+                mapper = (byte)(Header[6] >> 4);
+                if (inesversion >= 1)
+                {
+                    mapper |= (byte)(Header[7] & 0xF0);
+                }
+                if (inesversion == 2)
+                {
+                    mapper |= (ushort)((Header[8] & 0xF) << 8);
+                    mapper_sub = (byte)(Header[8] >> 4);
+                }
+
+                // Check console used
+                if (inesversion >= 1)
+                {
+                    nesversion = (byte)(Header[7] & 0x3);
+                    // 0 = famicom/NES
+                    // 1 = Vs. System
+                    // 2 = PlayChoice 10
+                    // 3 = Extended console type
+                    if (nesversion == 3)
+                    {
+                        ext_nesversion = (byte)(Header[13] & 0xF);
+                        nesversion = ext_nesversion;
+                    }
+                }
+
+                // Get the default expansion device used
+                if (inesversion == 2)
+                {
+                    expansion = (byte)(Header[15] & 0x7F);
+                }
+
+                GetCompatibility();
+
+                if (!incompatible)
+                {
+                    Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
+
+                    CPUCyclesFrameNTSC = (261 * 341) / 3;
+                    CPUClockNTSC = ((261 * 341) / 3) * 60;
+                    // Does the ROM support graphics?
+                    if (Header[5] != 0)
+                    {
+                        Array.Copy(HeaderedROM, 0x4000 * size + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
+                    }
+
+                    if (detect_region)
+                    {
+                        if (inesversion == 1)
+                        {
+                            NTSC = (Header[10] & 0x2) == 0;
+                        }
+                        else if (inesversion == 2)
+                        {
+                            // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now.
+                            // Maybe add a user option for this though?
+                            NTSC = (Header[12] & 0x3) != 1;
+                        }
+                        else
+                        {
+                            NTSC = true;
+                        }
+                    }
+
+                    frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
+
+                    thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
+                    thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
+
+                    /*float updatePositions = thisCyclesFrame / 4f;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
+                    }*/
+
+                    frameCounterUpdate = NTSC ? frameCounterUpdate_NTSC : frameCounterUpdate_PAL;
+                    DMCRate = NTSC ? DMCRateNTSC : DMCRatePAL;
+
+                    rawAPUBuffer = new byte[APUNTSCLength];
+                    processedAPUBuffer = new byte[frame_sample_rate];
+
+                    // Find where the program counter should start
+                    byte PC_Lo = Read_Raw(0xFFFC);
+                    byte PC_Hi = Read_Raw(0xFFFD);
+                    ProgramCounter = (ushort)((PC_Hi * 0x100) + PC_Lo);
+
+                    // Setup some initial variables (more stuff will be needed when I add the soft reset)
+                    SP = 0xFD;
+                    flag_InterruptDisable = true;
+
+                    // Check if logging and start writing if so
+                    if (logging)
+                    {
+                        tracelog = new StreamWriter(tracepath);
+                    }
+
+                    output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
+
+                    InitFrame();
+
+                    // Init palette
+                    for (int j = 0; j < 64; j++)
+                    {
+                        Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
+                    }
+                    Console.WriteLine("Finished loading");
+                }
+                else
+                {
+                    Console.WriteLine("Compatibility check failed.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Valid check failed");
             }
         }
 
