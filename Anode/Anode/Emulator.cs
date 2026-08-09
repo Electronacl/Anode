@@ -39,21 +39,23 @@ namespace Anode
         // C# optimisation.
 
         // ----- Interchangeable values dependiung on console, temp, etc
-        readonly byte unstable_magic = 0xCC;
+        readonly byte unstable_magic = 0xCC; // For simplicity and making it easier to understand, everything uses the same magic
         readonly ushort ppuDecayTime = 0x02FF; // Measured in cycles
 
-        uint CPUClockNTSC;
-        uint CPUClockPAL;
-        uint CPUCyclesFrameNTSC;
-        uint CPUCyclesFramePAL;
+        // ----- Timing based values
+        // These are calculated just before, but may be switched to precalculated later
 
+        // The total number of APU clocks in a frame
         readonly uint APUNTSCLength = 29869; // This may be caused by inaccuracies.
+        readonly uint APUPALLength = 1000000; // This isn't correct ofc, but it's just temporary to stop crashes.
+        uint APULen;
 
+        // Sample rate values
         public uint sample_rate = 44100;
-        uint frame_sample_rate = 0;
+        uint frame_sample_rate; // How many samples per frame
 
-        uint thisClock;
-        uint thisCyclesFrame;
+        // Values which are set after the PAL/NTSC has been determined.
+
 
         // ----- Unstable data
         bool changedBoundary = false;
@@ -88,11 +90,13 @@ namespace Anode
         ushort ppu_v; // VRAM Address
         byte ppu_x; // PPU X scroll
 
+        // BG Shift registers
         ushort ppuShiftRegister_patternL;
         ushort ppuShiftRegister_patternH;
         ushort ppuShiftRegister_attributeL;
         ushort ppuShiftRegister_attributeH;
 
+        // Registers used in the 8-step BG render sequence
         byte ppu8Step_patternLowBitPlane;
         byte ppu8Step_patternHighBitPlane;
         byte ppu8Step_attribute;
@@ -105,12 +109,9 @@ namespace Anode
 
         // PPU registers
         ushort TempVRAMAddress;
-        byte PPUReadBuffer;
-
-        byte ppuSecondaryOAMAddress;
-
-        bool ppuSecondaryOAMFull;
-
+        byte PPUReadBuffer; // Used in reads from $2007
+        
+        // PPU Data bus used for communication with the CPU
         byte PPUIOBus;
 
         // ----- PPU Flags
@@ -130,23 +131,29 @@ namespace Anode
         bool ppuStatusSprZeroHit;
 
         // Updated PPU data
+        // The data bus is kinda an address bus, because of the way the pins are used
         byte PPUAddressBus;
         byte PPUDataBus;
-        ushort PPUTargetAddress;
+        ushort PPUTargetAddress; // ppu t register
 
+        // Values used on real hardware but might not be needed in emulation
         // bool ALE; // Address latch enable
-
         // bool RDL; // Whether to write or read data
 
+        // Wheter it's a read/write cycle. This alternates
         bool PPUcycle = false;
 
+        // OAM registers
         byte ppuSpriteEvalTemp;
         byte ppuOAMAddress;
+        byte ppuSecondaryOAMAddress;
+        byte ppuSecondaryOAMSize;
         byte ppuSpriteEvalTick;
         bool ppuScanLineContainsSpriteZero;
         bool ppuSpriteEvaluationOAMOverflowed;
-        byte ppuSecondaryOAMSize;
+        bool ppuSecondaryOAMFull;
 
+        // Sprite shift registers
         byte[] ppu_SpriteShiftRegisterL = new byte[8];
         byte[] ppu_SpriteShiftRegisterH = new byte[8];
 
@@ -155,6 +162,7 @@ namespace Anode
         byte[] ppu_SpriteXposition = new byte[8];
         byte[] ppu_SpriteYposition = new byte[8];
 
+        // Set as the read is determined with the CPU's code.
         bool ppuCanSuppressVBLANK;
         bool ppuVBlankSuppressed;
 
@@ -162,6 +170,7 @@ namespace Anode
         bool ppuNMISuppressed;
 
         // ----- APU Registers
+        // sq1 registers
         byte sq1_duty;
         bool sq1_loop;
         bool sq1_constant;
@@ -175,6 +184,7 @@ namespace Anode
         byte sq1_lengthCounter;
         uint sq1_ftime;
 
+        // sq2 registers
         byte sq2_duty;
         bool sq2_loop;
         bool sq2_constant;
@@ -187,12 +197,14 @@ namespace Anode
         byte sq2_timer_hi;
         byte sq2_lengthCounter;
 
+        // tri registers
         bool tri_count;
         byte tri_linear;
         byte tri_timer_lo;
         byte tri_timer_hi;
         byte tri_lengthCounter;
 
+        // noise registers
         bool noise_loop;
         bool noise_constant;
         byte noise_vol;
@@ -200,6 +212,7 @@ namespace Anode
         byte noise_period;
         byte noise_lengthCounter;
 
+        // DMC registers
         byte apuDMCFrequency;
         bool apuDMCLoops;
         byte apuDMCLoadCounter;
@@ -210,29 +223,36 @@ namespace Anode
         byte apuDMCBufferStep;
         //byte apuDMCOutput;
 
+        // Registers used in DMC DMA
         bool apuDMCRequired;
         byte apuDMCDMAStep;
         bool DMCDMACycle;
         byte DMCDMATempVal;
 
+        // Enable registers
         bool apuEnable_DMC;
         bool apuEnable_Noise;
         bool apuEnable_Tri;
         bool apuEnable_sq2;
         bool apuEnable_sq1;
 
+        // APU Flags
         bool apuFlag_DMCInterrupt;
         bool apuFlag_frameInterrupt;
         bool apuFlag_IRQInhibit; // Frame Counter IRQ
         bool apuFlag_IRQEnable; // DMC DMA IRQ
 
+        // 0 = 4 step, 1 = 5 step
         bool apuFrameCounterMode;
 
+        // Buffers used for outputting audio
         byte[] rawAPUBuffer;
         public byte[] processedAPUBuffer;
 
+        // Frame counter timing values
         uint apuFrameIndex;
         byte apuFrameCounterIndex;
+        // These values are from the nesdev wiki
         readonly uint[] frameCounterUpdate_NTSC =
         {
             3728, 7456, 11185, 14914, 18640
@@ -242,8 +262,10 @@ namespace Anode
             4156, 8313, 12469, 16626, 20782
         };
 
+        // Determined after NTSC or PAL is chosen
         uint[] frameCounterUpdate;
 
+        // DMC Rate cycle diff, also from nesdev
         readonly ushort[] DMCRateNTSC =
         {
             428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54
@@ -253,8 +275,10 @@ namespace Anode
             398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118, 98, 78, 66, 50
         };
 
+        // Also determined after NTSC or PAL is chosen
         ushort[] DMCRate;
 
+        // Counts down until the next DMC DMA
         ushort DMCCountdown;
 
         // ----- NMI
@@ -265,36 +289,39 @@ namespace Anode
         byte Master_Clock = 1;
 
         // ----- Storage
-        public byte[] RAM = new byte[0x800];
-        byte[] ROM = new byte[0x8000];
-        byte[] CHRData = new byte[0x2000];
-        byte[] Header = new byte[0x10];
-        byte[] VRAM = new byte[0x800];
-        byte[] PaletteRAM = new byte[32];
+        public byte[] RAM = new byte[0x800]; // Random Access Memory
+        byte[] ROM = new byte[0x8000]; // Read Only Memory
+        byte[] CHRData = new byte[0x2000]; // Character data
+        byte[] Header = new byte[0x10]; // iNES header
+        byte[] VRAM = new byte[0x800]; // Video Random Access Memory
+        byte[] PaletteRAM = new byte[32]; // Palette Random Access Memory
         byte[] OAM = new byte[0x100]; // Object Attribute Memory
-        byte[] SecondaryOAM = new byte[0x20];
+        byte[] SecondaryOAM = new byte[0x20]; // Secondary Object Attribute Memory
 
         // ----- Controller
         public byte controller1;
         byte Controller1ShiftRegister;
 
         // ----- Emulator specific
-        // Timing
+        // CPU Timing registers
         byte op_t;
         bool inc_op_t;
 
+        // Temporary registers for storing values between instructions
         int signedTemp;
         int IntSum;
         bool FutureFlag_Carry;
 
+        // Has the CPU encountered a halt instruction?
         public bool CPU_Halted;
 
+        // OAM reading values
         byte OAM_DMA_Address;
         byte OAM_POS = 0xFF;
         bool OAM_cycle = false;
         bool odd_cycle = false;
         byte OAM_cycle_init_t = 0;
-        byte OAM_Temp_Value; // Unsure where this is actually stored, I can swap this later
+        byte OAM_Temp_Value; // Unsure where this is actually stored on hardware, I can swap this later
         bool OAM_Active;
 
         // Opcode splits
@@ -302,7 +329,7 @@ namespace Anode
         byte op_b;
         byte op_c;
 
-        // Accumulator, badly named but resharper brokey
+        // Accumulator, badly named but intelliSense brokey and ReSharper isn't working at all
         bool a_indexed = false;
 
         // Paths and logging
@@ -310,7 +337,6 @@ namespace Anode
         public string tracepath;
         public bool logging;
 
-        string this_trace;
         StreamWriter tracelog;
 
         // PPU output data
@@ -320,28 +346,29 @@ namespace Anode
         // Thanks to https://stackoverflow.com/questions/7768711/setpixel-is-too-slow-is-there-a-faster-way-to-draw-to-bitmap
         // for the code to speed up bitmap drawing
 
+        public bool detect_region = true; // Detect whether PAL or NTSC
         public bool NTSC = true; // PAL or NTSC?
         public bool frame_Ready = false;
 
+        // Unused atm, but is a value used for accuracy on SH* opcodes
         byte RDY_history;
 
         // ----- iNES data
         ushort mapper;
         byte mapper_sub;
-        bool usestandardNES;
         byte nesversion;
         byte ext_nesversion;
         byte expansion;
 
+        // iNES version
         public byte inesversion = 1;
         public bool detectines;
 
+        // Whether the ROM is compatible with the emulator
         public bool incompatible;
         public bool invalid_ROM;
 
-        public bool detect_region = true;
-
-        // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future.
+        // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future. (it's been a while and I still haven't done this lol)
         static String[] OpCodeNames =
         {
             "BRK", "ORA", "HLT", "SLO", "NOP", "ORA", "ASL", "SLO", "PHP", "ORA", "ASL", "ANC", "NOP", "ORA", "ASL", "SLO",
@@ -363,7 +390,7 @@ namespace Anode
         };
 
         // PPU Palette, from 100th Coin's tutorial. I will probably keep this as the NTSC variant, but it'll be temporary for PAL
-        // as I'll use my own if I figure out how to.
+        // as I'll use my own if I can get the hardware to use my hardware to get the colour values.
         byte[] Pal = {
             0x65, 0x65, 0x65, 0x00, 0x2A, 0x84, 0x15, 0x13, 0xA2, 0x3A, 0x01, 0x9E, 0x59, 0x00, 0x7A, 0x6A, 0x00, 0x3E, 0x68, 0x08, 0x00, 0x53, 0x1D, 0x00, 0x32, 0x34, 0x00, 0x0D, 0x46, 0x00, 0x00, 0x4F, 0x00, 0x00, 0x4C, 0x09, 0x00, 0x3F, 0x4B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0xAE, 0xAE, 0xAE, 0x17, 0x5F, 0xD6, 0x43, 0x41, 0xFF, 0x75, 0x29, 0xFA, 0x9E, 0x1D, 0xCA, 0xB4, 0x20, 0x7B, 0xB1, 0x33, 0x22, 0x96, 0x4E, 0x00, 0x6A, 0x6C, 0x00, 0x39, 0x84, 0x00, 0x0F, 0x90, 0x00, 0x00, 0x8D, 0x33, 0x00, 0x7B, 0x8C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -374,8 +401,13 @@ namespace Anode
         Color[] Palette = new Color[64];
         int pal_i = 0;
 
+        // PPU Decay value
         ushort lastPPUIOUpdate;
 
+        /// <summary>
+        /// Simplified function for writing data about an opcode to the tracelog
+        /// </summary>
+        /// <param name="opcode">CPU opcode to write to the tracelog</param>
         void Tracelogger(byte opcode)
         {
             if (logging)
@@ -400,21 +432,22 @@ namespace Anode
             }
         }
 
+        /// <summary>Function determining whether the ROM is compatible with the emulator</summary>
         public void GetCompatibility()
         {
             // Check compatibility with the emulator
-            // Compatibility errors
             if ((Header[6] & 2) != 0 && inesversion == 1)
             {
+                // Header[6] denotes PRG RAM
                 MessageBox.Show("This emulator is incompatible with PRG RAM cartridges.", "Compatibility error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 incompatible = true;
             }
             if (((Header[12] & 0x3) == 3) && inesversion == 2)
             {
+                // I think only NES 2.0 is compatible with the dendy
                 MessageBox.Show("This emulator is incompatible with the \"Dendy\" console.", "Compatibility error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 incompatible = true;
             }
-            // Compatibility warnings
 
             // Console type compat
             // If you're wondering why these don't just return incompatible, I leave them like this just in case the extended functionality isn't used or isn't important.
@@ -912,6 +945,7 @@ namespace Anode
                     incompatible = true;
                     break;
             }
+            // Mapper compat
             switch (mapper)
             {
                 case 0:
@@ -935,40 +969,45 @@ namespace Anode
             }
         }
 
+        /// <summary>Code used to intitalise the emulator</summary>
         public void Reset()
         {
             Console.WriteLine("Loading ROM");
-            lastPPUIOUpdate = 0;
+            
+            // Load the ROM from the file
             byte[] HeaderedROM = File.ReadAllBytes(filepath);
             byte size = 0;
 
-            
-
             if (HeaderedROM.Length < 16)
             {
+                // The header is 16 bytes long
                 invalid_ROM = true;
                 MessageBox.Show("File too short to be a cartridge", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
-                if (HeaderedROM[0] != 0x4E || HeaderedROM[1] != 0x45 || HeaderedROM[2] != 0x53 ||  HeaderedROM[3] != 26)
+                // Copy the header of the cart into a separate array
+                Array.Copy(HeaderedROM, Header, 0x10);
+                size = Header[4]; // Amount of banks
+
+                if (Header[0] != 0x4E || Header[1] != 0x45 || Header[2] != 0x53 ||  Header[3] != 0x1A)
                 {
+                    // iNES headers start with "NES<eof>"
                     invalid_ROM = true;
                     MessageBox.Show("No cartridge detected", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {
-                    Array.Copy(HeaderedROM, Header, 0x10);
-                    size = Header[4];
                     if (HeaderedROM.Length < 0x4000 * size + 0x10 + ((Header[5] != 0) ? 0x2000 : 0))
                     {
+                        // Check that there's actually enough bytes available
                         invalid_ROM = true;
                         MessageBox.Show("Cart was too small for the size provided", "Corrupt cartridge error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
             
-
+            // Simplifies checking it when determining when to run the code
             incompatible = invalid_ROM;
 
             if (!invalid_ROM)
@@ -988,19 +1027,22 @@ namespace Anode
                     }
                     else
                     {
-                        // Presumably iNES or iNES 0.7
+                        // Presumably iNES or iNES 0.7 (or archaic). iNES is assumed.
                         inesversion = 1;
                     }
                 }
 
                 // Get the mapper used
+                // All iNES versions have the low nybble
                 mapper = (byte)(Header[6] >> 4);
                 if (inesversion >= 1)
                 {
+                    // iNES 0.7 and later have a high nybble
                     mapper |= (byte)(Header[7] & 0xF0);
                 }
                 if (inesversion == 2)
                 {
+                    // NES 2.0 has another nybble and a subtype
                     mapper |= (ushort)((Header[8] & 0xF) << 8);
                     mapper_sub = (byte)(Header[8] >> 4);
                 }
@@ -1013,8 +1055,10 @@ namespace Anode
                     // 1 = Vs. System
                     // 2 = PlayChoice 10
                     // 3 = Extended console type
-                    if (nesversion == 3)
+                    if (nesversion == 3 && inesversion == 2)
                     {
+                        // Only avbailable on NES 2.0
+                        // More console types are available
                         ext_nesversion = (byte)(Header[13] & 0xF);
                         nesversion = ext_nesversion;
                     }
@@ -1026,14 +1070,14 @@ namespace Anode
                     expansion = (byte)(Header[15] & 0x7F);
                 }
 
+                // Send the existing data to get compatibility checked
                 GetCompatibility();
 
                 if (!incompatible)
                 {
+                    // Data is now copied over into the ROM
                     Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * size);
 
-                    CPUCyclesFrameNTSC = (261 * 341) / 3;
-                    CPUClockNTSC = ((261 * 341) / 3) * 60;
                     // Does the ROM support graphics?
                     if (Header[5] != 0)
                     {
@@ -1042,38 +1086,38 @@ namespace Anode
 
                     if (detect_region)
                     {
+                        // Auto detecting region
                         if (inesversion == 1)
                         {
+                            // In iNES, the region is in header 10.
+                            // This isn't supported by iNES 0.7 and isn't widely used either.
                             NTSC = (Header[10] & 0x2) == 0;
                         }
                         else if (inesversion == 2)
                         {
-                            // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now.
+                            // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now, so that will be the standard.
                             // Maybe add a user option for this though?
                             NTSC = (Header[12] & 0x3) != 1;
                         }
                         else
                         {
+                            // Archaic iNES has absolutely no region support, so NTSC is just assumed
                             NTSC = true;
                         }
                     }
 
+                    // Set a bunch of values based on the region now to save performance later
                     frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
-
-                    thisClock = NTSC ? CPUClockNTSC : CPUClockPAL;
-                    thisCyclesFrame = NTSC ? CPUCyclesFrameNTSC : CPUCyclesFramePAL;
-
-                    /*float updatePositions = thisCyclesFrame / 4f;
-                    for (int i = 0; i < 4; i++)
-                    {
-                        FrameCounterUpdatePos[i] = (uint)(i * updatePositions);
-                    }*/
-
                     frameCounterUpdate = NTSC ? frameCounterUpdate_NTSC : frameCounterUpdate_PAL;
                     DMCRate = NTSC ? DMCRateNTSC : DMCRatePAL;
+                    APULen = NTSC ? APUNTSCLength : APUPALLength;
 
-                    rawAPUBuffer = new byte[APUNTSCLength];
+                    // Initialise the APU buffers
+                    rawAPUBuffer = new byte[APULen];
                     processedAPUBuffer = new byte[frame_sample_rate];
+
+                    // SSo that the PPU data bus will decay right after
+                    lastPPUIOUpdate = 0;
 
                     // Find where the program counter should start
                     byte PC_Lo = Read_Raw(0xFFFC);
@@ -1090,8 +1134,10 @@ namespace Anode
                         tracelog = new StreamWriter(tracepath);
                     }
 
+                    // Create the bitmap which will than be used in games.
                     output = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
 
+                    // Run first init frame
                     InitFrame();
 
                     // Init palette
@@ -1112,8 +1158,13 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Determines whether there is a header or not
+        /// </summary>
+        /// <returns>bool stating if a title is present in the header</returns>
         public bool CheckHeader()
         {
+            // The header can be determined based on whether all header bytes checksum to 0 (overflow included)
             byte checksum = 0;
             for (byte i = 2; i < 0xA; i++)
             {
@@ -1122,15 +1173,21 @@ namespace Anode
 
             if (checksum == 0)
             {
+                // Check if a title is present
                 return Read_Raw(0xFFF7) != 0;
             }
             return false;
         }
 
+        /// <summary>
+        /// Finds the title stored in the cartridge header, if applicable
+        /// </summary>
+        /// <returns>Title in the cartridge header</returns>
         public string GetTitle()
         {
             string title = "";
             byte encoding = Read_Raw(0xFFF7);
+            // The title is 16 bytes long.
             for (byte i = 0; i < 0x10; i++)
             {
                 byte this_char = Read_Raw((ushort)(0xFFE0 | i));
@@ -1144,14 +1201,19 @@ namespace Anode
                         }
                         break;
                     case 2:
+                        // JIS
                         return "JIS unavailable";
                     default:
+                        // Unknown
                         return $"Unknown encoding {encoding:X}";
                 }
             }
             return title;
         }
 
+        /// <summary>
+        /// Initialises the pixel lock.
+        /// </summary>
         public void InitFrame()
         {
             // Optimisation as SetPixel is SO SLOW!
@@ -1159,14 +1221,14 @@ namespace Anode
             stride = outputData.Stride;
         }
 
-        // Focus check
+        // Focus check, stack overflow link mentioned above
         /// <summary>Returns true if the current application has focus, false otherwise</summary>
         public static bool ApplicationIsActivated()
         {
             var activatedHandle = GetForegroundWindow();
             if (activatedHandle == IntPtr.Zero)
             {
-                return false;       // No window is currently activated
+                return false; // No window is currently activated
             }
 
             var procId = Process.GetCurrentProcess().Id;
@@ -1183,10 +1245,16 @@ namespace Anode
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
 
+        /// <summary>
+        /// Updates the controller value
+        /// </summary>
         void Update_Controller()
         {
+            // This function can still get input, even if the application is minimised.
+            // Therefore, I need to check focus
             if (ApplicationIsActivated())
             {
+                // Hopefully I can make custom control schemes somewhen
                 controller1 = 0;
                 if (Keyboard.IsKeyDown(Key.X)) { controller1 |= 0x80; }
                 if (Keyboard.IsKeyDown(Key.Z)) { controller1 |= 0x40; }
@@ -1199,18 +1267,21 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Clocks 1 cycle of all parts
+        /// </summary>
         public void Advance_Cycle()
         {
             // Clocking
             if (!CPU_Halted)
             {
-                // PPU runs 1:4
+                // PPU runs 1:4 on NTSC, or 1:5 on PAL
                 if ((Master_Clock - 1) % (NTSC ? 4 : 5) == 0)
                 {
                     Emulate_PPU();
                 }
 
-                // CPU runs 1:12
+                // CPU (and the APU) runs 1:12 on NTSC, or 1:16 on PAL
                 if (Master_Clock % (NTSC ? 12 : 16) == 0)
                 {
                     Emulate_CPU();
@@ -1234,31 +1305,49 @@ namespace Anode
                     tracelog.Close();
                     Console.WriteLine("Tracelog saved!");
                 }
+                unsafe
+                {
+                    // Sets the pixel that the CPU halted on to red.
+                    byte* ptr = (byte*)outputData.Scan0;
+                    //output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride] = 0;
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = 0;
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = 255;
+                }
                 Render();
-                // Also make pixel red
-                // Not really applicable at the moment.
+
             }
         }
 
+        /// <summary>
+        /// Continually clocks the CPU until the frame is complete
+        /// </summary>
         public void Advance_Frame()
         {
             while (!frame_Ready)
             {
                 Advance_Cycle();
             }
+            // Reset the APU's index into the current frame
             apuFrameIndex = 0;
             // ProcessAudioBuffer();
         }
 
+        /// <summary>
+        /// Converts the raw buffer into a reasonable sample rate
+        /// </summary>
         public void ProcessAudioBuffer()
         {
-            float index_increment = thisCyclesFrame / (float)frame_sample_rate;
+            float index_increment = APULen / (float)frame_sample_rate;
             for (uint a = 0; a < frame_sample_rate; a++)
             {
                 processedAPUBuffer[a] = rawAPUBuffer[(int)(a * index_increment)];
             }
         }
 
+        /// <summary>
+        /// Renders the screen
+        /// </summary>
         void Render()
         {
             output.UnlockBits(outputData);
@@ -1266,6 +1355,11 @@ namespace Anode
             // Sometimes extra code is necessary
         }
 
+        /// <summary>
+        /// Reads a value based on a raw address rather than the address bus and data bus
+        /// </summary>
+        /// <param name="Address">Address to read from</param>
+        /// <returns>Value at the address</returns>
         byte Read_Raw(ushort Address)
         {
             if (Address < 0x2000)
@@ -1298,10 +1392,12 @@ namespace Anode
                             PPUReadBuffer = ReadPPU(ppu_v);
                         }
 
+                        // Increment v
                         ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
                         ppu_v &= 0x3FFF;
                         break;
                     case 0x2002:
+                        // Suppress VBLANK or NMI if possible
                         if (ppuCanSuppressVBLANK)
                         {
                             ppuVBlankSuppressed = true;
@@ -1310,6 +1406,8 @@ namespace Anode
                         {
                             ppuNMISuppressed = true;
                         }
+
+                        // Get the PPU flags and return them
                         byte ppustatus = 0;
                         ppustatus |= (byte)(ppuVBlank ? 0x80 : 0);
                         ppustatus |= (byte)(ppuStatusSprZeroHit ? 0x40 : 0);
@@ -1321,9 +1419,11 @@ namespace Anode
                         ppuVBlank = false;
                         ppu_w = false;
 
+                        // Other bits are PPU open bus
                         PPUIOBus = (byte)((PPUIOBus & 0b00011111) | ppustatus);
                         break;
                     case 0x2004:
+                        // Read from OAM
                         PPUIOBus = OAM[ppuOAMAddress];
                         break;
                     default:
@@ -1347,12 +1447,14 @@ namespace Anode
                 apuFlags |= (byte)(sq2_lengthCounter > 0 ? 2 : 0);
                 apuFlags |= (byte)(sq1_lengthCounter > 0 ? 1 : 0);
 
+                // Clears this flag
                 apuFlag_frameInterrupt = false;
 
                 return apuFlags;
             }
             else if (Address == 0x4016)
             {
+                // Read from the controller
                 byte controllerBit = (byte)((Controller1ShiftRegister & 0x80) >> 7);
                 Controller1ShiftRegister <<= 1;
                 controllerBit |= (byte)(ExternalDataBus & 0b11100000);
@@ -1360,7 +1462,7 @@ namespace Anode
             }
             else if (Address == 0x4017)
             {
-                // P2 controller isn't implemented, so it's just open bus here
+                // P2 controller isn't implemented, so it's just open bus in the upper bits and 0 in lower
                 return (byte)(ExternalDataBus & 0b11100000);
             }
             else if (Address >= 0x8000)
@@ -1371,20 +1473,31 @@ namespace Anode
             return ExternalDataBus;
         }
 
+
+        /// <summary>
+        /// Reads using the address and data buses
+        /// </summary>
         void Read()
         {
             // Avoids a repeated line in case this needs to be used in the future
             if (AddressBus != 0x4015)
             {
+                // External data bus is used in most situations
                 DataBus = Read_Raw(AddressBus);
                 ExternalDataBus = DataBus;
             }
             else
             {
+                // Except for this APU register
                 DataBus = Read_Raw(AddressBus);
             }
         }
-
+        
+        /// <summary>
+        /// Writes a value directly without using address or data bus
+        /// </summary>
+        /// <param name="Address">Address to write to</param>
+        /// <param name="Value">Value to write</param>
         void Write_Raw(ushort Address, byte Value)
         {
             if (Address < 0x2000)
@@ -1422,15 +1535,18 @@ namespace Anode
                         break;
                     case 0x2003: // OAMADDR
                         //Console.WriteLine("OAMADDR not implemented");
+                        // Sets the OAM address, simple!
                         ppuOAMAddress = Value;
                         break;
                     case 0x2004: // OAMDATA
+                        // Gets the OAM value and increments the address
                         OAM[ppuOAMAddress] = Value;
                         ppuOAMAddress += 1;
                         break;
                     case 0x2005: // PPUSCROLL
                         if (!ppu_w)
                         {
+                            // Set the x scroll
                             ppu_x = (byte)(Value & 7);
                             TempVRAMAddress = (ushort)((TempVRAMAddress & 0x7FE0) | (Value >> 3));
                         }
@@ -1441,10 +1557,6 @@ namespace Anode
                         ppu_w = !ppu_w;
                         break;
                     case 0x2006: // PPUADDR
-                        if (Value == 0x3f)
-                        {
-
-                        }
                         if (!ppu_w)
                         {
                             // First write sets high byte
@@ -1635,6 +1747,7 @@ namespace Anode
                 apuEnable_sq2 = (Value & 2) != 0;
                 apuEnable_sq1 = (Value & 1) != 0;
 
+                // Reset the DMA
                 apuDMCBytesRemaining = apuDMCSampleLength;
             }
             else if (Address == 0x4016)
@@ -1660,6 +1773,9 @@ namespace Anode
             // 4018-401A is APU test, 401C-401F is always disabled
         }
 
+        /// <summary>
+        /// Uses the address bus and data bus to write a value
+        /// </summary>
         void Write()
         {
             // Again, repeated line
@@ -1667,6 +1783,11 @@ namespace Anode
             ExternalDataBus = DataBus;
         }
 
+        /// <summary>
+        /// Reads from the PPU's registers
+        /// </summary>
+        /// <param name="Address">Address to read from</param>
+        /// <returns>Value read</returns>
         byte ReadPPU(ushort Address)
         {
             if (Address < 0x2000)
@@ -1710,12 +1831,16 @@ namespace Anode
                 }
                 if (ppuMask_GreyscaleMode)
                 {
+                    // Remove lower nybble for greyscale mode
                     PalResult &= 0x30;
                 }
                 return PalResult;
             }
         }
 
+        /// <summary>
+        /// Pushes a value to the stack
+        /// </summary>
         void Push()
         {
             // Writes to stack, then decrements stack pointer
@@ -1724,6 +1849,9 @@ namespace Anode
             SP--;
         }
 
+        /// <summary>
+        /// Pulls a value from the stack
+        /// </summary>
         void Pull()
         {
             // Increments stack pointer, then reads from stack
@@ -1732,15 +1860,22 @@ namespace Anode
             Read();
         }
 
+        /// <summary>
+        /// Halts the CPU
+        /// </summary>
         void Halt_Instr()
         {
-            // Groups the musltiple sections containing halts
+            // Groups the multiple sections containing halts
             MessageBox.Show($"Encountered a halt instruction: opcode ${opcode:X}({op_a}, {op_b}, {op_c}) at {ProgramCounter:X})",
                 "NES Error: Halted", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             CPU_Halted = true;
             Console.WriteLine($"Halt instruction: {opcode:X} ({op_a}, {op_b}, {op_c})");
         }
 
+        /// <summary>
+        /// Cross a boundary, but as an unstable opcode
+        /// </summary>
+        /// <param name="CrossVal">Value anded with the upper byte of the address bus</param>
         void Unstable_Cross(byte CrossVal)
         {
             // The edge case might not be applicable at the moment as DMA is not a thing.
@@ -1750,6 +1885,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Used in opcodes, gets the value based on the operand. Also handles halt.
+        /// </summary>
         void Read_Operand()
         {
             if (op_b == 2 || op_b == 0)
@@ -1987,6 +2125,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Read-Modify-Write
+        /// </summary>
         void RMW_Instr()
         {
             if (((op_c & 1) == 0) && op_b == 2)
@@ -2164,6 +2305,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// ST* instructions
+        /// </summary>
         void Store_Instr()
         {
             // Read addresses, this is different
@@ -2386,6 +2530,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Moves the PC based on conditions
+        /// </summary>
         void Branch_Instr()
         {
             switch (t)
@@ -2460,6 +2607,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// BRK, Return, and jump instructions
+        /// </summary>
         void Move_Instr()
         {
             if (op_b == 0)
@@ -2687,6 +2837,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Push and pull instructions
+        /// </summary>
         void Stack_Instr()
         {
             if ((op_a & 1) == 0)
@@ -2762,6 +2915,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Implied opcodes
+        /// </summary>
         void Single_Byte_Instr()
         {
             Read(); // Dummy Read
@@ -2905,6 +3061,9 @@ namespace Anode
             t = 255;
         }
 
+        /// <summary>
+        /// Operations on internal registers
+        /// </summary>
         void Internal_Mem_Instr()
         {
             if (!inc_op_t)
@@ -3083,6 +3242,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// All of the unofficial immediates, which combine existing opcodes
+        /// </summary>
         void Unofficial_Immediate_Instr()
         {
             Read();
@@ -3191,10 +3353,13 @@ namespace Anode
             t = 255;
         }
 
+        /// <summary>
+        /// Either single bytes or internal execution, or unofficial opcodes
+        /// </summary>
         void General_Instr()
         {
             // op_b 3 == 2?
-            if ((op_b == 2 || op_b == 6) && (op_c == 0 || (op_c == 2 && (op_a >= 4 || op_b == 6))))
+            if (((op_b & 0b011) == 0b010) && (op_c == 0 || (op_c == 2 && (op_a >= 4 || op_b == 6))))
             {
                 // Single byte instructions
                 Single_Byte_Instr();
@@ -3213,6 +3378,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Occurs when values need to be transferred into OAM. CPU is suspended in this time
+        /// </summary>
         void Perform_OAM_DMA()
         {
             if (OAM_cycle_init_t < (odd_cycle ? 2 : 1))
@@ -3225,10 +3393,12 @@ namespace Anode
             {
                 if (!OAM_cycle)
                 {
+                    // Read cycle gets value
                     OAM_Temp_Value = Read_Raw((ushort)((OAM_POS << 8) | OAM_DMA_Address));
                 }
                 else
                 {
+                    // Write cycle puts value into OAM
                     OAM[OAM_DMA_Address] = OAM_Temp_Value;
                     OAM_DMA_Address++;
                     if (OAM_DMA_Address == 0x00)
@@ -3238,13 +3408,18 @@ namespace Anode
                 }
                 OAM_cycle = !OAM_cycle;
             }
+            // RDY is enabled iirc
             RDY_history |= 1;
         }
 
+        /// <summary>
+        /// Occurs when the DMC's buffer runs out
+        /// </summary>
         void Perform_DMC_DMA()
         {
             if (apuDMCDMAStep < (odd_cycle ? 2 : 1))
             {
+                // Blank cycles, used to init again
                 apuDMCDMAStep++;
                 DMCDMACycle = false;
             }
@@ -3252,18 +3427,24 @@ namespace Anode
             {
                 if (DMCDMACycle)
                 {
+                    // Read cycle gets value
                     DMCDMATempVal = Read_Raw((ushort)(apuDMCSampleAddress+(apuDMCSampleLength-apuDMCBytesRemaining))); // Replace!
                 }
                 else
                 {
+                    // Write cycle puts value into DMC buffer
                     apuDMCBuffer = DMCDMATempVal;
                     apuDMCRequired = false;
                 }
                 DMCDMACycle = !DMCDMACycle;
             }
+            // RDY is enabled iirc
             RDY_history |= 1;
         }
 
+        /// <summary>
+        /// Run a cycle of the CPU, including APU
+        /// </summary>
         void Emulate_CPU()
         {
             // Check whether NMI should occur
@@ -3271,11 +3452,17 @@ namespace Anode
             NMILevelDetector = ppuEnableNMI && ppuVBlank && !ppuNMISuppressed;
             if (!PreviousNMILevelDetector && NMILevelDetector)
             {
+                // Yep, do it!
                 DoNMI = true;
             }
 
+            // Currently the APU isn't available on PAL
             if (NTSC) { RunAPUFrame(); }
+
+            // Shift the hsitory 1 bit to the left, which puts 0 into bit 1 if there is no DMA
             RDY_history <<= 1;
+
+            // Check for DMAs
             if (OAM_Active || apuDMCRequired)
             {
                 if (apuDMCRequired)
@@ -3390,6 +3577,11 @@ namespace Anode
         }
 
         // As I just need to get things working, this is copied straight from my old emulator
+        /// <summary>
+        /// Gets the address of the sprite's pattern in CHRData
+        /// </summary>
+        /// <param name="SecondaryOAMSlot">Which sprite is this for?</param>
+        /// <returns>Address of the pattern data</returns>
         ushort FindSpritePatternAddress(byte SecondaryOAMSlot)
         {
             if (!ppuUse8x16Sprites) // 8x8
@@ -3435,10 +3627,14 @@ namespace Anode
         }
 
         // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
+        /// <summary>
+        /// Runs sprite evaluation on the dot provided
+        /// </summary>
         void SpriteEval()
         {
             if (ppuDot == 0)
             {
+                // Init sprite evaluation
                 ppuSecondaryOAMAddress = 0;
                 ppuOAMAddress = 0; // assumed
                 ppuSecondaryOAMFull = false;
@@ -3622,6 +3818,9 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Emulates a ctcle of the PPU
+        /// </summary>
         void Emulate_PPU()
         {
             // Decay the PPU IO Bus
@@ -3634,13 +3833,16 @@ namespace Anode
                 lastPPUIOUpdate++;
             }
 
+            // Check if suppression is available
             if (ppuDot == 0 && ppuScanLine == 241)
             {
+                // Can suppress VBLANK
                 ppuNMISuppressed = false;
                 ppuCanSuppressVBLANK = true;
             }
             if (ppuDot == 1 && ppuScanLine == 241)
             {
+                // Can no longer suppress VBLANK
                 ppuCanSuppressVBLANK = false;
                 Render();
                 if (!ppuVBlankSuppressed) { ppuVBlank = true; }
@@ -3650,12 +3852,14 @@ namespace Anode
             }
             if (ppuDot == 3 && ppuScanLine == 241)
             {
+                // Can no longer suppress NMI
                 ppuCanSuppressNMI = false;
             }
             
 
             if (ppuDot == 1 && ppuScanLine == 261)
             {
+                // Clear flags - new frame
                 ppuVBlank = false;
                 ppuStatusOverflow = false;
                 ppuStatusSprZeroHit = false;
@@ -3691,6 +3895,7 @@ namespace Anode
                         }
                     }
                 }
+                // Sprite evaluation occurs
                 SpriteEval();
                 // Visible scanline or pre-render line
                 if (ppuMask_RenderBG || ppuMask_RenderSprites)
@@ -3713,20 +3918,25 @@ namespace Anode
                         switch (cycleTick)
                         {
                             case 0:
+                                // Update BG shift registers
                                 PPUcycle = false;
                                 ppuShiftRegister_patternL = (ushort)((ppuShiftRegister_patternL & 0xFF00) | ppu8Step_patternLowBitPlane);
                                 ppuShiftRegister_patternH = (ushort)((ppuShiftRegister_patternH & 0xFF00) | ppu8Step_patternHighBitPlane);
                                 ppuShiftRegister_attributeL = (ushort)((ppuShiftRegister_attributeL & 0xFF00) | ((ppu8Step_attribute & 1) == 1 ? 0xFF : 0));
                                 ppuShiftRegister_attributeH = (ushort)((ppuShiftRegister_attributeH & 0xFF00) | ((ppu8Step_attribute & 2) == 2 ? 0xFF : 0));
+                                // Set the address
                                 PPUTargetAddress = (ushort)(0x2000 | (ppu_v & 0x0FFF));
                                 break;
                             case 1:
+                                // Load data into the register for the next character
                                 ppu8Step_NextCharacter = PPUDataBus;
                                 break;
                             case 2:
+                                // Set the address
                                 PPUTargetAddress = (ushort)(0x23C0 | (ppu_v & 0x0C00) | ((ppu_v >> 4) & 0x38) | ((ppu_v >> 2) & 0x07));
                                 break;
                             case 3:
+                                // Load data for the attribute
                                 ppu8Step_attribute = PPUDataBus;
                                 // Determine which tile attribute data is for
                                 if ((ppu_v & 3) >= 2) // Right tile
@@ -3740,15 +3950,19 @@ namespace Anode
                                 ppu8Step_attribute &= 3;
                                 break;
                             case 4:
+                                // Set the address
                                 PPUTargetAddress = (ushort)(((ppu_v & 0x7000) >> 12) | (ppu8Step_NextCharacter << 4) | (ppuBGPatternTable ? 0x1000 : 0));
                                 break;
                             case 5:
+                                // Load the data into the low bit plane
                                 ppu8Step_patternLowBitPlane = PPUDataBus;
                                 break;
                             case 6:
+                                // Increment the address
                                 PPUTargetAddress += 8;
                                 break;
                             case 7:
+                                // Load the data into the high bit plane
                                 ppu8Step_patternHighBitPlane = PPUDataBus;
                                 if ((ppu_v & 0x001F) == 0x001F)
                                 {
@@ -3782,20 +3996,24 @@ namespace Anode
 
             if (ppuScanLine < 240 && ppuDot > 0 && ppuDot <= 256)
             {
+                // Rendering to the screen
+
+                // BG Rendering
                 byte PalHi = 0; // Colour palette
                 byte PalLow = 0; // Index in palette
                 if (ppuMask_RenderBG && (ppuDot > 8 || ppuMask_8pxMaskBG))
                 {
                     byte ppu_x_index = (byte)(0xF - ppu_x);
-                    byte col0 = (byte)((ppuShiftRegister_patternL >> (0xF - ppu_x)) & 1);
-                    byte col1 = (byte)((ppuShiftRegister_patternH >> (0xF - ppu_x)) & 1);
+                    byte col0 = (byte)((ppuShiftRegister_patternL >> ppu_x_index) & 1);
+                    byte col1 = (byte)((ppuShiftRegister_patternH >> ppu_x_index) & 1);
                     PalLow = (byte)((col1 << 1) | col0);
 
-                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> (0xF - ppu_x)) & 1);
-                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> (0xF - ppu_x)) & 1);
+                    byte pal0 = (byte)(((ppuShiftRegister_attributeL) >> ppu_x_index) & 1);
+                    byte pal1 = (byte)(((ppuShiftRegister_attributeH) >> ppu_x_index) & 1);
                     PalHi = (byte)((pal1 << 1) | pal0);
                 }
 
+                // Sprite rendering
                 byte SpritePalHi = 0; // Colour palette
                 byte SpritePalLow = 0; // Index in palette
                 bool SpritePriority = false; // In front or behind BG?
@@ -3830,26 +4048,29 @@ namespace Anode
                     }
                 }
 
+                // Transparency behind sprites
                 if ((SpritePriority && SpritePalLow != 0) || PalLow == 0)
                 {
                     PalLow = SpritePalLow;
                     PalHi = SpritePalHi;
                 }
 
+                // Use the BG colour
                 if (PalLow == 0) { PalHi = 0; }
 
+                // Get the index into palette RAM
                 int colourIndex = PaletteRAM[PalHi * 4 + PalLow] & 0x3F;
 
-                // Crashes in certain circumstances (e.g. Blargg Litewall 2)
+                // Disable lower nybble on greyscale mode
                 if (ppuMask_GreyscaleMode)
                 {
                     colourIndex &= 0x30;
                 }
 
+                // Set the colour to output to the screen
                 Color outColour = Palette[colourIndex];
 
-                Stopwatch sw = new Stopwatch();
-
+                // Render a pixel
                 unsafe
                 {
                     byte* ptr = (byte*)outputData.Scan0;
@@ -3858,9 +4079,9 @@ namespace Anode
                     ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = outColour.G;
                     ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = outColour.R;
                 }
-                
             }
 
+            // Increment the position
             ppuDot++;
             if (ppuDot > 341)
             {
@@ -3872,6 +4093,7 @@ namespace Anode
                 }
             }
 
+            // Cycle for setting the address
             if (!PPUcycle)
             {
                 // Set the data and address buses
@@ -3879,9 +4101,13 @@ namespace Anode
                 PPUAddressBus = (byte)(PPUTargetAddress >> 8);
             }
 
+            // Swap cycle
             PPUcycle = !PPUcycle;
         }
 
+        /// <summary>
+        /// Moves down to the next line 
+        /// </summary>
         void PPU_IncrementScrollY()
         {
             if ((ppu_v & 0x7000) != 0x7000)
@@ -3907,28 +4133,44 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Moves x back
+        /// </summary>
         void PPU_ResetXScroll()
         {
             ppu_v = (ushort)((ppu_v & 0x7BE0) | (ppu_t & 0x041F));
         }
 
+        /// <summary>
+        /// Moves Y back to the top
+        /// </summary>
         void PPU_ResetYScroll()
         {
             ppu_v = (ushort)((ppu_v & 0x041F) | (ppu_t & 0x7BE0));
         }
 
+        /// <summary>
+        /// Get the value of a pulse wave with the parameters
+        /// </summary>
+        /// <param name="duty">Duty cycle (0, 1, 2, 3)</param>
+        /// <param name="frequency">Frequency of the wave</param>
+        /// <param name="ftime">Time into the wave</param>
+        /// <returns></returns>
         byte GetPulseChannel(byte duty, uint frequency, uint ftime)
         {
             return (byte)((ftime < (1f / duty * frequency)) ? 0xFF : 0);
         }
 
+        /// <summary>
+        /// Updates registers when the frame counter has been updated
+        /// </summary>
         void UpdateFrameCounter()
         {
             if (apuFrameCounterMode || apuFrameCounterIndex < 5)
             {
                 if (apuFrameCounterIndex == 1 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
                 {
-                    // Update length counter and sweep
+                    // Update length counter and sweep for all channels
                     if (sq1_lengthCounter > 0 && !sq1_loop)
                     {
                         sq1_lengthCounter--;
@@ -3965,6 +4207,7 @@ namespace Anode
                 }
             }
 
+            // Wrap around to index 0
             apuFrameCounterIndex++;
             if (apuFrameCounterIndex > (apuFrameCounterMode ? 5 : 4))
             {
@@ -3972,10 +4215,15 @@ namespace Anode
             }
         }
 
+        /// <summary>
+        /// Runs 1 cycle of the APU
+        /// </summary>
         void RunAPUFrame()
         {
+            // Value which all the channels will be added to
             float this_APU_frame = 0;
 
+            // Update the frame counter if that needs to happen
             if (frameCounterUpdate.Contains(apuFrameIndex))
             {
                 UpdateFrameCounter();
@@ -3989,7 +4237,7 @@ namespace Anode
                 {
                     sq1_ftime = 0;
                 }
-                this_APU_frame += GetPulseChannel(sq1_duty, sq1_freq, sq1_ftime) * (sq1_vol / 15f) * 0.25f;
+                this_APU_frame += GetPulseChannel(sq1_duty, sq1_freq, sq1_ftime) * (sq1_vol / 15f) * 0.2f;
                 sq1_ftime++;
             }
 
@@ -4020,12 +4268,8 @@ namespace Anode
                 DMCCountdown--;
             }
 
-            if (this_APU_frame != 0)
-            {
-                Console.WriteLine(this_APU_frame);
-            }
-
-            rawAPUBuffer[apuFrameIndex] = (byte)(this_APU_frame);
+            // Send the APU frame off to the buffer to be processed later
+            rawAPUBuffer[apuFrameIndex] = (byte)this_APU_frame;
             apuFrameIndex++;
         }
     }
