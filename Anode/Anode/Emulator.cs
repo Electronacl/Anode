@@ -223,6 +223,9 @@ namespace Anode
         ushort apuDMCPosition;
         //byte apuDMCOutput;
 
+        // IRQ For DMC and Frame Counter
+        bool doIRQ;
+
         // Registers used in DMC DMA
         bool apuDMCRequired;
         byte apuDMCDMAStep;
@@ -3497,7 +3500,14 @@ namespace Anode
                 inc_op_t = false;
                 // Read next opcode
                 AddressBus = ProgramCounter;
-                if (!DoNMI)
+
+                // IRQ is disabled if the flag is enabled
+                if (doIRQ && flag_InterruptDisable)
+                {
+                    doIRQ = false;
+                }
+
+                if (!(DoNMI || doIRQ))
                 {
                     // Read the opcode
                     Read();
@@ -3512,12 +3522,25 @@ namespace Anode
                 }
                 else
                 {
-                    // NMI is similar to BRK
-                    opcode = 0x00;
-                    if (logging)
+                    if (DoNMI)
                     {
-                        tracelog.WriteLine("-- NMI");
-                        Tracelogger(opcode);
+                        // NMI is similar to BRK
+                        opcode = 0x00;
+                        if (logging)
+                        {
+                            tracelog.WriteLine("-- NMI");
+                            Tracelogger(opcode);
+                        }
+                    }
+                    else if (doIRQ)
+                    {
+                        flag_InterruptDisable = true;
+                        opcode = 0x00;
+                        if (logging)
+                        {
+                            tracelog.WriteLine("-- IRQ");
+                            Tracelogger(opcode);
+                        }
                     }
                 }
                 // Split it up, as this can be used to determine what to do
@@ -4211,6 +4234,7 @@ namespace Anode
                 if (apuFrameCounterMode && apuFrameCounterIndex == 3 && !apuFlag_IRQInhibit)
                 {
                     // IRQ
+                    doIRQ = true;
                 }
             }
 
@@ -4275,7 +4299,11 @@ namespace Anode
                         }
                         else if (apuDMCBytesRemaining == 0)
                         {
-                            // Nothing atm, IRQ?
+                            if (apuFlag_IRQEnable)
+                            {
+                                // Perform an IRQ
+                                doIRQ = true;
+                            }
                         }
                         apuDMCRequired = true;
                         apuDMCDMAStep = 0;
