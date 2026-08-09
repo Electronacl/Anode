@@ -398,7 +398,9 @@ namespace Anode
             0xFE, 0xFE, 0xFE, 0xC0, 0xDE, 0xFF, 0xD2, 0xD1, 0xFF, 0xE7, 0xC7, 0xFF, 0xF8, 0xC2, 0xFF, 0xFF, 0xC3, 0xE9, 0xFF, 0xCB, 0xC4, 0xF5, 0xD7, 0xA5, 0xE2, 0xE3, 0x94, 0xCE, 0xED, 0x96, 0xBC, 0xF2, 0xAA, 0xB3, 0xF1, 0xCB, 0xB4, 0xE9, 0xF0, 0xB6, 0xB6, 0xB6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         };
 
-        Color[] Palette = new Color[64];
+        byte[] Pal_R = new byte[64];
+        byte[] Pal_G = new byte[64];
+        byte[] Pal_B = new byte[64];
         int pal_i = 0;
 
         // PPU Decay value
@@ -1143,7 +1145,9 @@ namespace Anode
                     // Init palette
                     for (int j = 0; j < 64; j++)
                     {
-                        Palette[j] = Color.FromArgb(Pal[pal_i++], Pal[pal_i++], Pal[pal_i++]);
+                        Pal_R[j] = Pal[pal_i++];
+                        Pal_G[j] = Pal[pal_i++];
+                        Pal_B[j] = Pal[pal_i++];
                     }
                     Console.WriteLine("Finished loading");
                 }
@@ -3522,7 +3526,7 @@ namespace Anode
 
                 // Saying that, there's no permanent solution like a temporary solution, am I right?!
 
-                if (((op_c == 2) && ((op_a < 4) || ((op_a > 5) && ((op_b & 1) != 0))) && op_b != 6) || (op_c == 3 && !(op_a == 4 || op_a == 5) && !(op_b == 2)))
+                if ((op_c == 2 && ((op_a < 4 && op_b != 6) || (op_a > 5 && (op_b & 1) != 0))) || (op_c == 3 && !((op_a & 0b110) == 0b100) && !(op_b == 2)))
                 {
                     // RMW instructions
                     RMW_Instr();
@@ -4049,7 +4053,7 @@ namespace Anode
                 }
 
                 // Transparency behind sprites
-                if ((SpritePriority && SpritePalLow != 0) || PalLow == 0)
+                if (PalLow == 0 || (SpritePriority && SpritePalLow != 0) )
                 {
                     PalLow = SpritePalLow;
                     PalHi = SpritePalHi;
@@ -4067,17 +4071,14 @@ namespace Anode
                     colourIndex &= 0x30;
                 }
 
-                // Set the colour to output to the screen
-                Color outColour = Palette[colourIndex];
-
                 // Render a pixel
                 unsafe
                 {
                     byte* ptr = (byte*)outputData.Scan0;
                     //output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride] = outColour.B;
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = outColour.G;
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = outColour.R;
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride] = Pal_B[colourIndex];
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = Pal_G[colourIndex];
+                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = Pal_R[colourIndex];
                 }
             }
 
