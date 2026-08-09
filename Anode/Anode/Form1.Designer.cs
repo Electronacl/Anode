@@ -39,6 +39,11 @@
             this.advanceFrameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.disableThrottlerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.regionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.autodetectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nTSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleTracelogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.forceHaltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -53,11 +58,6 @@
             this.iNESToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.nES20ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.regionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.autodetectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.nTSCToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pALToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
@@ -162,6 +162,48 @@
             this.disableThrottlerToolStripMenuItem.ToolTipText = resources.GetString("disableThrottlerToolStripMenuItem.ToolTipText");
             this.disableThrottlerToolStripMenuItem.Click += new System.EventHandler(this.disableThrottlerToolStripMenuItem_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(193, 6);
+            // 
+            // regionToolStripMenuItem
+            // 
+            this.regionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.autodetectToolStripMenuItem,
+            this.nTSCToolStripMenuItem,
+            this.pALToolStripMenuItem});
+            this.regionToolStripMenuItem.Name = "regionToolStripMenuItem";
+            this.regionToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.regionToolStripMenuItem.Text = "Region";
+            // 
+            // autodetectToolStripMenuItem
+            // 
+            this.autodetectToolStripMenuItem.Checked = true;
+            this.autodetectToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.autodetectToolStripMenuItem.Name = "autodetectToolStripMenuItem";
+            this.autodetectToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.autodetectToolStripMenuItem.Text = "Auto-detect";
+            this.autodetectToolStripMenuItem.ToolTipText = "Automatically determine the region from the iNES header. Uses NTSC if the iNES ve" +
+    "rsion is archaic.";
+            this.autodetectToolStripMenuItem.Click += new System.EventHandler(this.autodetectToolStripMenuItem_Click);
+            // 
+            // nTSCToolStripMenuItem
+            // 
+            this.nTSCToolStripMenuItem.Name = "nTSCToolStripMenuItem";
+            this.nTSCToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.nTSCToolStripMenuItem.Text = "NTSC";
+            this.nTSCToolStripMenuItem.ToolTipText = "Region used for the standard NES and Family Computer consoles.\r\nRuns at 60Hz.";
+            this.nTSCToolStripMenuItem.Click += new System.EventHandler(this.nTSCToolStripMenuItem_Click);
+            // 
+            // pALToolStripMenuItem
+            // 
+            this.pALToolStripMenuItem.Name = "pALToolStripMenuItem";
+            this.pALToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.pALToolStripMenuItem.Text = "PAL";
+            this.pALToolStripMenuItem.ToolTipText = "Region used for the NES Edition and Mattel Edition consoles.\r\nRuns at 50Hz.";
+            this.pALToolStripMenuItem.Click += new System.EventHandler(this.pALToolStripMenuItem_Click);
+            // 
             // debuggingToolStripMenuItem
             // 
             this.debuggingToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -211,7 +253,7 @@
             this.videoToolStripMenuItem,
             this.cartridgeToolStripMenuItem});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.optionsToolStripMenuItem.Text = "Options";
             // 
             // videoToolStripMenuItem
@@ -238,7 +280,7 @@
             this.iNESToolStripMenuItem1,
             this.nES20ToolStripMenuItem});
             this.cartridgeToolStripMenuItem.Name = "cartridgeToolStripMenuItem";
-            this.cartridgeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.cartridgeToolStripMenuItem.Size = new System.Drawing.Size(104, 22);
             this.cartridgeToolStripMenuItem.Text = "iNES";
             // 
             // iNESToolStripMenuItem
@@ -246,7 +288,7 @@
             this.iNESToolStripMenuItem.Checked = true;
             this.iNESToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.iNESToolStripMenuItem.Name = "iNESToolStripMenuItem";
-            this.iNESToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.iNESToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.iNESToolStripMenuItem.Text = "Auto-detect";
             this.iNESToolStripMenuItem.ToolTipText = "Automatically determine the iNES version from the header.\r\nThis might not be able" +
     " to determine whether Archaic iNES is used, but can determine whether to use iNE" +
@@ -256,7 +298,7 @@
             // archaicINESToolStripMenuItem
             // 
             this.archaicINESToolStripMenuItem.Name = "archaicINESToolStripMenuItem";
-            this.archaicINESToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.archaicINESToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.archaicINESToolStripMenuItem.Text = "Archaic iNES";
             this.archaicINESToolStripMenuItem.ToolTipText = "Earliest version of the iNES header, which doesn\'t use bytes 7-15.\r\nUsed in early" +
     " versions of iNES and NESticle.";
@@ -265,7 +307,7 @@
             // iNESToolStripMenuItem1
             // 
             this.iNESToolStripMenuItem1.Name = "iNESToolStripMenuItem1";
-            this.iNESToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.iNESToolStripMenuItem1.Size = new System.Drawing.Size(145, 22);
             this.iNESToolStripMenuItem1.Text = "iNES/iNES 0.7";
             this.iNESToolStripMenuItem1.ToolTipText = "Newer iNES header with more features, used between about 2000-2010.\r\nCompatible w" +
     "ith both iNES 0.7 and iNES, but not all carts support the extended features of t" +
@@ -275,7 +317,7 @@
             // nES20ToolStripMenuItem
             // 
             this.nES20ToolStripMenuItem.Name = "nES20ToolStripMenuItem";
-            this.nES20ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.nES20ToolStripMenuItem.Size = new System.Drawing.Size(145, 22);
             this.nES20ToolStripMenuItem.Text = "NES 2.0";
             this.nES20ToolStripMenuItem.ToolTipText = "Modern version of the iNES header with extended functionality. Used since around " +
     "2010.";
@@ -293,48 +335,6 @@
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
             // 
-            // regionToolStripMenuItem
-            // 
-            this.regionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.autodetectToolStripMenuItem,
-            this.nTSCToolStripMenuItem,
-            this.pALToolStripMenuItem});
-            this.regionToolStripMenuItem.Name = "regionToolStripMenuItem";
-            this.regionToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
-            this.regionToolStripMenuItem.Text = "Region";
-            // 
-            // autodetectToolStripMenuItem
-            // 
-            this.autodetectToolStripMenuItem.Checked = true;
-            this.autodetectToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autodetectToolStripMenuItem.Name = "autodetectToolStripMenuItem";
-            this.autodetectToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.autodetectToolStripMenuItem.Text = "Auto-detect";
-            this.autodetectToolStripMenuItem.ToolTipText = "Automatically determine the region from the iNES header. Uses NTSC if the iNES ve" +
-    "rsion is archaic.";
-            this.autodetectToolStripMenuItem.Click += new System.EventHandler(this.autodetectToolStripMenuItem_Click);
-            // 
-            // nTSCToolStripMenuItem
-            // 
-            this.nTSCToolStripMenuItem.Name = "nTSCToolStripMenuItem";
-            this.nTSCToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.nTSCToolStripMenuItem.Text = "NTSC";
-            this.nTSCToolStripMenuItem.ToolTipText = "Region used for the standard NES and Family Computer consoles.\r\nRuns at 60Hz.";
-            this.nTSCToolStripMenuItem.Click += new System.EventHandler(this.nTSCToolStripMenuItem_Click);
-            // 
-            // pALToolStripMenuItem
-            // 
-            this.pALToolStripMenuItem.Name = "pALToolStripMenuItem";
-            this.pALToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.pALToolStripMenuItem.Text = "PAL";
-            this.pALToolStripMenuItem.ToolTipText = "Region used for the NES Edition and Mattel Edition consoles.\r\nRuns at 50Hz.";
-            this.pALToolStripMenuItem.Click += new System.EventHandler(this.pALToolStripMenuItem_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(193, 6);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -343,6 +343,7 @@
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MinimumSize = new System.Drawing.Size(312, 349);

@@ -182,6 +182,7 @@ namespace Anode
         byte sq1_timer_hi;
         byte sq1_lengthCounter;
         uint sq1_ftime;
+        bool sq1_playing;
 
         // sq2 registers
         byte sq2_duty;
@@ -195,6 +196,7 @@ namespace Anode
         byte sq2_timer_lo;
         byte sq2_timer_hi;
         byte sq2_lengthCounter;
+        bool sq2_playing;
 
         // tri registers
         bool tri_count;
@@ -202,6 +204,7 @@ namespace Anode
         byte tri_timer_lo;
         byte tri_timer_hi;
         byte tri_lengthCounter;
+        bool tri_playing;
 
         // noise registers
         bool noise_loop;
@@ -210,6 +213,7 @@ namespace Anode
         bool noise_mode;
         byte noise_period;
         byte noise_lengthCounter;
+        bool noise_playing;
 
         // DMC registers
         byte apuDMCFrequency;
@@ -225,6 +229,7 @@ namespace Anode
 
         // IRQ For DMC and Frame Counter
         bool doIRQ;
+        bool IRQLevelDetector; // Inverse of what actually happens.
 
         // Registers used in DMC DMA
         bool apuDMCRequired;
@@ -248,6 +253,9 @@ namespace Anode
         // 0 = 4 step, 1 = 5 step
         bool apuFrameCounterMode;
 
+        bool apuCycle;
+        uint apuFrameCycle;
+
         // Buffers used for outputting audio
         byte[] rawAPUBuffer;
         public byte[] processedAPUBuffer;
@@ -255,18 +263,6 @@ namespace Anode
         // Frame counter timing values
         uint apuFrameIndex;
         byte apuFrameCounterIndex;
-        // These values are from the nesdev wiki
-        readonly uint[] frameCounterUpdate_NTSC =
-        {
-            3728, 7456, 11185, 14914, 18640
-        };
-        readonly uint[] frameCounterUpdate_PAL =
-        {
-            4156, 8313, 12469, 16626, 20782
-        };
-
-        // Determined after NTSC or PAL is chosen
-        uint[] frameCounterUpdate;
 
         // DMC Rate cycle diff, also from nesdev
         readonly ushort[] DMCRateNTSC =
@@ -283,6 +279,13 @@ namespace Anode
 
         // Counts down until the next DMC DMA
         ushort DMCCountdown;
+
+        // Length counter teable
+        readonly byte[] LengthTable =
+        {
+            10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14,
+            12, 16, 24, 18, 48, 20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30
+        };
 
         // ----- NMI
         bool NMILevelDetector;
@@ -1113,7 +1116,6 @@ namespace Anode
 
                     // Set a bunch of values based on the region now to save performance later
                     frame_sample_rate = (uint)(sample_rate / (NTSC ? 60 : 50));
-                    frameCounterUpdate = NTSC ? frameCounterUpdate_NTSC : frameCounterUpdate_PAL;
                     DMCRate = NTSC ? DMCRateNTSC : DMCRatePAL;
                     APULen = NTSC ? APUNTSCLength : APUPALLength;
 
@@ -1648,7 +1650,10 @@ namespace Anode
                         break;
                     case 0x4003:
                         // SQ1_HI
-                        sq1_lengthCounter = (byte)(Value >> 3);
+                        if (apuEnable_sq1)
+                        {
+                            sq1_lengthCounter = LengthTable[Value >> 3];
+                        }
                         sq1_timer_hi = (byte)(Value & 0xB);
                         break;
                     
@@ -1673,7 +1678,10 @@ namespace Anode
                         break;
                     case 0x4007:
                         // SQ2_HI
-                        sq2_lengthCounter = (byte)(Value >> 3);
+                        if (apuEnable_sq2)
+                        {
+                            sq2_lengthCounter = LengthTable[Value >> 3];
+                        }
                         sq2_timer_hi = (byte)(Value & 0xB);
                         break;
 
@@ -1690,8 +1698,12 @@ namespace Anode
                         break;
                     case 0x400B:
                         // TRI_HI
-                        tri_lengthCounter = (byte)(Value >> 3);
+                        if (apuEnable_Tri)
+                        {
+                            tri_lengthCounter = LengthTable[Value >> 3];
+                        }
                         tri_timer_hi = (byte)(Value & 0xB);
+                        
                         break;
 
                     // Noise channel
@@ -1709,7 +1721,10 @@ namespace Anode
                         break;
                     case 0x400F:
                         // NOISE_HI
-                        noise_lengthCounter = (byte)(Value >> 3);
+                        if (apuEnable_Noise)
+                        {
+                            noise_lengthCounter = LengthTable[Value >> 3];
+                        }
                         break;
                 }
             }
@@ -1762,6 +1777,22 @@ namespace Anode
                 {
                     Begin_DMC();
                 }
+                if (!apuEnable_Noise)
+                {
+                    noise_lengthCounter = 0;
+                }
+                if (!apuEnable_Tri)
+                {
+                    tri_lengthCounter = 0;
+                }
+                if (!apuEnable_sq2)
+                {
+                    sq2_lengthCounter = 0;
+                }
+                if (!apuEnable_sq1)
+                {
+                    sq1_lengthCounter = 0;
+                }
             }
             else if (Address == 0x4016)
             {
@@ -1778,8 +1809,7 @@ namespace Anode
                 apuFrameCounterMode = (Value & 0x80) != 0;
                 if (apuFrameCounterMode)
                 {
-                    apuFrameCounterIndex = 0;
-                    UpdateFrameCounter();
+                    Clock_Length_Counters();
                 }
                 apuFlag_IRQInhibit = (Value & 0x40) != 0;
             }
@@ -4191,58 +4221,43 @@ namespace Anode
             return (byte)((ftime < (1f / duty * frequency)) ? 0xFF : 0);
         }
 
-        /// <summary>
-        /// Updates registers when the frame counter has been updated
-        /// </summary>
-        void UpdateFrameCounter()
+        void APUFrameQuarterStep()
         {
-            if (apuFrameCounterMode || apuFrameCounterIndex < 5)
+            // Envelopes
+            // Also linear counter
+            if (tri_linear > 0)
             {
-                if (apuFrameCounterIndex == 1 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
-                {
-                    // Update length counter and sweep for all channels
-                    if (sq1_lengthCounter > 0 && !sq1_loop)
-                    {
-                        sq1_lengthCounter--;
-                    }
+                tri_linear--;
+            }
+        }
 
-                    if (sq2_lengthCounter > 0 && !sq2_loop)
-                    {
-                        sq2_lengthCounter--;
-                    }
+        void APUFrameHalfStep()
+        {
+            // Length counters
+            Clock_Length_Counters();
+            // Sweep units
+        }
 
-                    if (tri_lengthCounter > 0 && !tri_count)
-                    {
-                        tri_lengthCounter--;
-                    }
-
-                    if (noise_lengthCounter > 0 && !noise_loop)
-                    {
-                        noise_lengthCounter--;
-                    }
-                }
-
-                if (apuFrameCounterIndex <= 2 || apuFrameCounterIndex == (apuFrameCounterMode ? 4 : 3))
-                {
-                    // Update envelope and linear counter
-                    if (tri_linear > 0)
-                    {
-                        tri_linear--;
-                    }
-                }
-
-                if (apuFrameCounterMode && apuFrameCounterIndex == 3 && !apuFlag_IRQInhibit)
-                {
-                    // IRQ
-                    doIRQ = true;
-                }
+        void Clock_Length_Counters()
+        {
+            if (sq1_lengthCounter > 0 && !sq1_loop)
+            {
+                sq1_lengthCounter--;
             }
 
-            // Wrap around to index 0
-            apuFrameCounterIndex++;
-            if (apuFrameCounterIndex > (apuFrameCounterMode ? 5 : 4))
+            if (sq2_lengthCounter > 0 && !sq2_loop)
             {
-                apuFrameCounterIndex = 0;
+                sq2_lengthCounter--;
+            }
+
+            if (tri_lengthCounter > 0 && !tri_count)
+            {
+                tri_lengthCounter--;
+            }
+
+            if (noise_lengthCounter > 0 && !noise_loop)
+            {
+                noise_lengthCounter--;
             }
         }
 
@@ -4255,6 +4270,11 @@ namespace Anode
             apuDMCPosition = apuDMCSampleAddress;
         }
 
+        void Poll_Interrupts()
+        {
+
+        }
+
         /// <summary>
         /// Runs 1 cycle of the APU
         /// </summary>
@@ -4263,10 +4283,56 @@ namespace Anode
             // Value which all the channels will be added to
             float this_APU_frame = 0;
 
-            // Update the frame counter if that needs to happen
-            if (frameCounterUpdate.Contains(apuFrameIndex))
+            apuCycle = !apuCycle;
+            if (apuCycle)
             {
-                UpdateFrameCounter();
+                apuFrameCycle++;
+            }
+
+            // Update the frame counter if that needs to happen
+            if (NTSC)
+            {
+                switch (apuFrameCycle)
+                {
+                    case 3728:
+                        APUFrameQuarterStep();
+                        break;
+                    case 7456:
+                        APUFrameQuarterStep();
+                        APUFrameHalfStep();
+                        break;
+                    case 11185:
+                        APUFrameQuarterStep();
+                        break;
+                    case 14913:
+                        if (!apuFlag_IRQInhibit)
+                        {
+                            apuFlag_frameInterrupt = true;
+                        }
+                        break;
+                    case 14914:
+                        if (!apuFrameCounterMode)
+                        {
+                            APUFrameQuarterStep();
+                            APUFrameHalfStep();
+                        }
+                        break;
+                    case 14915:
+                        if (!apuFrameCounterMode)
+                        {
+                            apuFrameCycle = 0;
+                        }
+                        break;
+                    case 18640:
+                        APUFrameQuarterStep();
+                        APUFrameHalfStep();
+                        break;
+                    case 18641:
+                        apuFrameCycle = 0;
+                        break;
+                    default:
+                        break;
+                }
             }
 
             // Pulse channel 1
@@ -4302,7 +4368,7 @@ namespace Anode
                             if (apuFlag_IRQEnable)
                             {
                                 // Perform an IRQ
-                                doIRQ = true;
+                                IRQLevelDetector = true;
                             }
                         }
                         apuDMCRequired = true;

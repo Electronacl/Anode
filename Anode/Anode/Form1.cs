@@ -91,6 +91,7 @@ namespace Anode
             if (files != null && files.Any())
             {
                 rompath = files.First();
+                this.Activate();
                 init_Emulator();
             }
         }
