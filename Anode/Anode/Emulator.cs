@@ -254,6 +254,7 @@ namespace Anode
         bool apuFrameCounterMode;
 
         bool apuCycle;
+        byte apuFrameResetCountdown;
         uint apuFrameCycle;
 
         // Buffers used for outputting audio
@@ -1813,8 +1814,7 @@ namespace Anode
                 }
                 apuFlag_IRQInhibit = (Value & 0x40) != 0;
 
-                // On the NES, this takes a 3-4 cycles to do. Here, I'm temporarily doing it immediately
-                apuFrameCycle = 0;
+                apuFrameResetCountdown = (byte)(apuCycle ? 3 : 4);
             }
             // 4018-401A is APU test, 401C-401F is always disabled
         }
@@ -4290,6 +4290,15 @@ namespace Anode
             if (apuCycle)
             {
                 apuFrameCycle++;
+            }
+
+            if (apuFrameResetCountdown > 0)
+            {
+                apuFrameResetCountdown--;
+                if (apuFrameResetCountdown == 0)
+                {
+                    apuFrameCycle = 0;
+                }
             }
 
             // Update the frame counter if that needs to happen
