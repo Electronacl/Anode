@@ -4310,7 +4310,7 @@ namespace Anode
                     case 14913:
                         if (!apuFlag_IRQInhibit)
                         {
-                            apuFlag_frameInterrupt = true;
+                            // apuFlag_frameInterrupt = true;
                         }
                         break;
                     case 14914:
