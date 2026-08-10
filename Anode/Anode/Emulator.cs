@@ -1472,7 +1472,7 @@ namespace Anode
                         PPUIOBus = OAM[ppuOAMAddress];
 
                         // Attributes follow the pattern 4n+2
-                        if (((PPUIOBus - 2) & 0b11) == 0)
+                        if (((ppuOAMAddress - 2) & 0b11) == 0)
                         {
                             // And are missing some of their bits
                             PPUIOBus &= 0b11100011;
