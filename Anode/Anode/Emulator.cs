@@ -1477,6 +1477,10 @@ namespace Anode
                             // And are missing some of their bits
                             PPUIOBus &= 0b11100011;
                         }
+                        /*if (ppuScanLine < 240 && ppuDot > 0 && ppuDot <= 64 & (ppuMask_RenderSprites || ppuMask_RenderBG))
+                        {
+                            PPUIOBus = 0xFF;
+                        }*/
                         break;
                     default:
                         // Stuff I haven't implemented
@@ -3680,7 +3684,6 @@ namespace Anode
             }
         }
 
-        // As I just need to get things working, this is copied straight from my old emulator
         /// <summary>
         /// Gets the address of the sprite's pattern in CHRData
         /// </summary>
@@ -3730,7 +3733,6 @@ namespace Anode
             }
         }
 
-        // Sprite Eval is slightly inaccurate, but I just want to get it working at the moment
         /// <summary>
         /// Runs sprite evaluation on the dot provided
         /// </summary>
