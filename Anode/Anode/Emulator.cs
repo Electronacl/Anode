@@ -1439,6 +1439,13 @@ namespace Anode
                     case 0x2004:
                         // Read from OAM
                         PPUIOBus = OAM[ppuOAMAddress];
+
+                        // Attributes follow the pattern 4n+2
+                        if (((PPUIOBus - 2) & 0b11) == 0)
+                        {
+                            // And are missing some of their bits
+                            PPUIOBus &= 0b11100011;
+                        }
                         break;
                     default:
                         // Stuff I haven't implemented
@@ -1486,7 +1493,6 @@ namespace Anode
             }
             return ExternalDataBus;
         }
-
 
         /// <summary>
         /// Reads using the address and data buses
