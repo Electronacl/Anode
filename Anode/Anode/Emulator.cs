@@ -1812,6 +1812,9 @@ namespace Anode
                     Clock_Length_Counters();
                 }
                 apuFlag_IRQInhibit = (Value & 0x40) != 0;
+
+                // On the NES, this takes a 3-4 cycles to do. Here, I'm temporarily doing it immediately
+                apuFrameCycle = 0;
             }
             // 4018-401A is APU test, 401C-401F is always disabled
         }
