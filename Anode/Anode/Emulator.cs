@@ -148,6 +148,7 @@ namespace Anode
         byte ppuSecondaryOAMAddress;
         byte ppuSecondaryOAMSize;
         byte ppuSpriteEvalTick;
+        bool lastScanLineContainsSpriteZero;
         bool ppuScanLineContainsSpriteZero;
         bool ppuSpriteEvaluationOAMOverflowed;
         bool ppuSecondaryOAMFull;
@@ -3706,6 +3707,9 @@ namespace Anode
                 ppuSecondaryOAMFull = false;
                 ppuSpriteEvalTick = 0;
 
+                // As sprite eval handles the *next* scanline
+                lastScanLineContainsSpriteZero = ppuScanLineContainsSpriteZero;
+
                 ppuScanLineContainsSpriteZero = false;
                 ppuSpriteEvaluationOAMOverflowed = false;
                 ppuStatusOverflow = false;
@@ -4105,7 +4109,7 @@ namespace Anode
 
                         if (SpritePalLow != 0)
                         {
-                            if (i == 0 && ppuScanLineContainsSpriteZero && SpritePalLow != 0 && PalLow != 0 && ppuMask_RenderBG && ppuDot < 256)
+                            if (i == 0 && lastScanLineContainsSpriteZero && SpritePalLow != 0 && PalLow != 0 && ppuMask_RenderBG && ppuDot < 256)
                             {
                                 ppuStatusSprZeroHit = true;
                             }
