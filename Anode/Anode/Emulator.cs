@@ -2729,14 +2729,14 @@ namespace Anode
                         {
                             case 1:
                                 Poll_Interrupts();
-                                // Dummy read
-                                Read();
                                 // As the NMI is based on the BRK instruction, but has slight changes
                                 // Add to the program counter to go to the next instruction when not an NMI
-                                if (!inNMI)
+                                if (!(inNMI || inIRQ))
                                 {
                                     ProgramCounter++;
                                 }
+                                // Dummy read
+                                Read();
                                 break;
                             case 2:
                                 Poll_Interrupts();
@@ -2758,7 +2758,7 @@ namespace Anode
                                 DataBus |= (byte)(flag_Zero             ? 2 : 0);
                                 DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
                                 DataBus |= (byte)(flag_Decimal          ? 8 : 0);
-                                DataBus += (byte)(inNMI ? 0 : 0x10); // NMI has no B flag
+                                DataBus += (byte)((inNMI || inIRQ) ? 0 : 0x10); // NMI has no B flag
                                 DataBus |= 0x20; // Always set
                                 DataBus |= (byte)(flag_Overflow         ? 0x40 : 0);
                                 DataBus |= (byte)(flag_Negative         ? 0x80 : 0);
@@ -3608,6 +3608,11 @@ namespace Anode
                 inIRQ = doIRQ && !flag_InterruptDisable;
                 inNMI = DoNMI;
 
+                if (inIRQ)
+                {
+
+                }
+
                 if (!(inNMI || inIRQ))
                 {
                     // Read the opcode
@@ -4356,7 +4361,7 @@ namespace Anode
                 DoNMI = true;
             }
 
-            // doIRQ = soonIRQ;
+            doIRQ = soonIRQ;
         }
 
         /// <summary>
