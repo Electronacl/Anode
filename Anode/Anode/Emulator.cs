@@ -107,6 +107,7 @@ namespace Anode
         int ppuDot;
         int ppuScanLine;
         bool ppuVBlank;
+        bool ppuInVBlank;
 
         // PPU registers
         ushort TempVRAMAddress;
@@ -1441,8 +1442,16 @@ namespace Anode
                         }
 
                         // Increment v
-                        ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
-                        ppu_v &= 0x3FFF;
+                        if ((ppuMask_RenderBG || ppuMask_RenderSprites) & !ppuInVBlank)
+                        {
+                            PPU_IncrementScrollY();
+                        }
+                        else
+                        {
+                            ppu_v += (ushort)(ppuVRAMInc32Mode ? 32 : 1);
+                            ppu_v &= 0x3FFF;
+                        }
+                        
                         break;
                     case 0x2002:
                         // Suppress VBLANK or NMI if possible
@@ -3992,6 +4001,7 @@ namespace Anode
                 ppuVBlankSuppressed = false;
                 // NMI Suppression can occur
                 ppuCanSuppressNMI = true;
+                ppuInVBlank = true;
             }
             if (ppuDot == 3 && ppuScanLine == 241)
             {
@@ -4004,6 +4014,7 @@ namespace Anode
             {
                 // Clear flags - new frame
                 ppuVBlank = false;
+                ppuInVBlank = false;
                 ppuStatusOverflow = false;
                 ppuStatusSprZeroHit = false;
             }
