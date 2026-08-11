@@ -232,6 +232,7 @@ namespace Anode
 
         // IRQ For DMC and Frame Counter
         bool doIRQ;
+        bool soonIRQ;
         bool IRQLevelDetector; // Inverse of what actually happens.
 
         // Registers used in DMC DMA
@@ -3682,6 +3683,9 @@ namespace Anode
             t++;
             if (inc_op_t) { op_t++; }
 
+            IRQLevelDetector |= apuFlag_frameInterrupt;
+            soonIRQ = IRQLevelDetector;
+
             // In case of failure.
             if (t > 20)
             {
@@ -4334,6 +4338,8 @@ namespace Anode
                 // Yep, do it!
                 DoNMI = true;
             }
+
+            doIRQ = soonIRQ;
         }
 
         /// <summary>
@@ -4375,9 +4381,9 @@ namespace Anode
                         APUFrameQuarterStep();
                         break;
                     case 14913:
-                        if (!apuFlag_IRQInhibit)
+                        if (!apuFrameCounterMode)
                         {
-                            // apuFlag_frameInterrupt = true;
+                            apuFlag_frameInterrupt = !apuFlag_IRQInhibit;
                         }
                         break;
                     case 14914:
@@ -4385,12 +4391,16 @@ namespace Anode
                         {
                             APUFrameQuarterStep();
                             APUFrameHalfStep();
+                            apuFlag_frameInterrupt = !apuFlag_IRQInhibit;
+                            IRQLevelDetector |= apuFlag_frameInterrupt;
                         }
                         break;
                     case 14915:
                         if (!apuFrameCounterMode)
                         {
                             apuFrameCycle = 0;
+                            apuFlag_frameInterrupt = !apuFlag_IRQInhibit;
+                            IRQLevelDetector |= apuFlag_frameInterrupt;
                         }
                         break;
                     case 18640:
