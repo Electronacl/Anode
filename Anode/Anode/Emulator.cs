@@ -2385,6 +2385,7 @@ namespace Anode
                 }
                 else if (op_t == 2)
                 {
+                    Poll_Interrupts();
                     // Write properly this time
                     Write();
                     // Overflow for use in next inctruction
@@ -2575,6 +2576,7 @@ namespace Anode
             }
             else
             {
+                Poll_Interrupts();
                 // Write to the correct location using the relavent register
                 switch (op_c)
                 {
@@ -2626,6 +2628,7 @@ namespace Anode
             switch (t)
             {
                 case 1:
+                    Poll_Interrupts();
                     Read();
                     // Determine the branch condition
                     ProgramCounter++;
@@ -2686,6 +2689,7 @@ namespace Anode
                     }
                     break;
                 case 3:
+                    Poll_Interrupts();
                     Read(); // Dummy read
                     // Move to the new position
                     AddressBus = (ushort)(AddressBus + signedTemp);
@@ -2709,6 +2713,7 @@ namespace Anode
                         switch (t)
                         {
                             case 1:
+                                Poll_Interrupts();
                                 // Dummy read
                                 Read();
                                 // As the NMI is based on the BRK instruction, but has slight changes
@@ -2719,16 +2724,19 @@ namespace Anode
                                 }
                                 break;
                             case 2:
+                                Poll_Interrupts();
                                 // Push high byte of PC to the stack
                                 DataBus = (byte)(ProgramCounter >> 8);
                                 Push();
                                 break;
                             case 3:
+                                Poll_Interrupts();
                                 // Push low byte of PC to the stack
                                 DataBus = (byte)ProgramCounter;
                                 Push();
                                 break;
                             case 4:
+                                Poll_Interrupts();
                                 // Push processor flags to the stack
                                 DataBus = 0;
                                 DataBus |= (byte)(flag_Carry            ? 1 : 0);
@@ -2788,6 +2796,7 @@ namespace Anode
                                 Push();
                                 break;
                             case 5:
+                                Poll_Interrupts();
                                 // Finally, get high byte of PC and move back
                                 AddressBus = ProgramCounter;
                                 Read();
@@ -2824,6 +2833,7 @@ namespace Anode
                                 ADD = DataBus;
                                 break;
                             case 5:
+                                Poll_Interrupts();
                                 // Get high byte of PC
                                 Pull();
                                 ProgramCounter = (ushort)((DataBus << 8) | ADD);
@@ -2858,6 +2868,7 @@ namespace Anode
                                 break;
                             case 5:
                                 // Dummy read
+                                Poll_Interrupts();
                                 ProgramCounter++;
                                 AddressBus = ProgramCounter;
                                 Read();
@@ -2917,6 +2928,7 @@ namespace Anode
                         break;
                     case 2:
                         // Read high byte of address
+                        Poll_Interrupts();
                         Read();
                         ProgramCounter = (ushort)((DataBus << 8) | ADD);
                         t = 255;
@@ -2940,6 +2952,7 @@ namespace Anode
                         Read();
                         break;
                     case 2:
+                        Poll_Interrupts();
                         if ((op_a & 2) == 0)
                         {
                             // PHP
@@ -2979,6 +2992,7 @@ namespace Anode
                         Read();
                         break;
                     case 3:
+                        Poll_Interrupts();
                         Pull();
                         if ((op_a & 2) == 0)
                         {
@@ -3008,6 +3022,7 @@ namespace Anode
         /// </summary>
         void Single_Byte_Instr()
         {
+            Poll_Interrupts();
             Read(); // Dummy Read
             if (op_c == 0)
             {
@@ -3162,6 +3177,7 @@ namespace Anode
 
             if(inc_op_t)
             {
+                Poll_Interrupts();
                 switch (op_a)
                 {
                     case 0:
@@ -3335,6 +3351,7 @@ namespace Anode
         /// </summary>
         void Unofficial_Immediate_Instr()
         {
+            Poll_Interrupts();
             Read();
             ProgramCounter++;
             AddressBus++;
@@ -3535,15 +3552,6 @@ namespace Anode
         /// </summary>
         void Emulate_CPU()
         {
-            // Check whether NMI should occur
-            bool PreviousNMILevelDetector = NMILevelDetector;
-            NMILevelDetector = ppuEnableNMI && ppuVBlank && !ppuNMISuppressed;
-            if (!PreviousNMILevelDetector && NMILevelDetector)
-            {
-                // Yep, do it!
-                DoNMI = true;
-            }
-
             // Currently the APU isn't available on PAL
             if (NTSC) { RunAPUFrame(); }
 
@@ -4318,7 +4326,14 @@ namespace Anode
 
         void Poll_Interrupts()
         {
-
+            // Check whether NMI should occur
+            bool PreviousNMILevelDetector = NMILevelDetector;
+            NMILevelDetector = ppuEnableNMI && ppuVBlank && !ppuNMISuppressed;
+            if (!PreviousNMILevelDetector && NMILevelDetector)
+            {
+                // Yep, do it!
+                DoNMI = true;
+            }
         }
 
         /// <summary>
