@@ -1506,6 +1506,7 @@ namespace Anode
 
                 // Clears this flag
                 apuFlag_frameInterrupt = false;
+                IRQLevelDetector = false;
 
                 return apuFlags;
             }
@@ -1862,6 +1863,11 @@ namespace Anode
                     Clock_Length_Counters();
                 }
                 apuFlag_IRQInhibit = (Value & 0x40) != 0;
+                if (apuFlag_IRQInhibit)
+                {
+                    apuFlag_frameInterrupt = false;
+                    IRQLevelDetector = false;
+                }
 
                 apuFrameResetCountdown = (byte)(apuCycle ? 3 : 4);
             }
