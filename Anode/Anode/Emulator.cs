@@ -232,6 +232,7 @@ namespace Anode
 
         // IRQ For DMC and Frame Counter
         bool doIRQ;
+        bool inIRQ;
         bool soonIRQ;
         bool IRQLevelDetector; // Inverse of what actually happens.
 
@@ -295,6 +296,7 @@ namespace Anode
         // ----- NMI
         bool NMILevelDetector;
         bool DoNMI;
+        bool inNMI;
 
         // ----- Clock
         byte Master_Clock = 1;
@@ -2731,7 +2733,7 @@ namespace Anode
                                 Read();
                                 // As the NMI is based on the BRK instruction, but has slight changes
                                 // Add to the program counter to go to the next instruction when not an NMI
-                                if (!DoNMI)
+                                if (!inNMI)
                                 {
                                     ProgramCounter++;
                                 }
@@ -2756,7 +2758,7 @@ namespace Anode
                                 DataBus |= (byte)(flag_Zero             ? 2 : 0);
                                 DataBus |= (byte)(flag_InterruptDisable ? 4 : 0);
                                 DataBus |= (byte)(flag_Decimal          ? 8 : 0);
-                                DataBus += (byte)(DoNMI                 ? 0 : 0x10); // NMI has no B flag
+                                DataBus += (byte)(inNMI ? 0 : 0x10); // NMI has no B flag
                                 DataBus |= 0x20; // Always set
                                 DataBus |= (byte)(flag_Overflow         ? 0x40 : 0);
                                 DataBus |= (byte)(flag_Negative         ? 0x80 : 0);
@@ -2767,7 +2769,7 @@ namespace Anode
                                 // For RES, FFFC
                                 // For BRK, FFFE
                                 // Find where the program counter moves to for the low byte
-                                AddressBus = (ushort)(DoNMI ? 0xFFFA : 0xFFFE);
+                                AddressBus = (ushort)(inNMI ? 0xFFFA : 0xFFFE);
                                 Read();
                                 ADD = DataBus;
                                 break;
@@ -3603,12 +3605,10 @@ namespace Anode
                 AddressBus = ProgramCounter;
 
                 // IRQ is disabled if the flag is enabled
-                if (doIRQ && flag_InterruptDisable)
-                {
-                    doIRQ = false;
-                }
+                inIRQ = doIRQ && !flag_InterruptDisable;
+                inNMI = DoNMI;
 
-                if (!(DoNMI || doIRQ))
+                if (!(inNMI || inIRQ))
                 {
                     // Read the opcode
                     Read();
@@ -3623,7 +3623,7 @@ namespace Anode
                 }
                 else
                 {
-                    if (DoNMI)
+                    if (inNMI)
                     {
                         // NMI is similar to BRK
                         opcode = 0x00;
@@ -3633,7 +3633,7 @@ namespace Anode
                             Tracelogger(opcode);
                         }
                     }
-                    else if (doIRQ)
+                    else if (inIRQ)
                     {
                         flag_InterruptDisable = true;
                         opcode = 0x00;
