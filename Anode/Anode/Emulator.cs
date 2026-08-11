@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Anode.Common;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -420,33 +421,6 @@ namespace Anode
 
         // PPU Decay value
         ushort lastPPUIOUpdate;
-
-        // Clone code taken from https://stackoverflow.com/questions/78536/deep-cloning-objects/78612#78612
-        /// <summary>
-        /// Creates a deep copy of a value provided
-        /// </summary>
-        public static T Clone<T>(T source)
-        {
-            if (!typeof(T).IsSerializable)
-            {
-                throw new ArgumentException("The type must be serializable.", "source");
-            }
-
-            // Don't serialize a null object, simply return the default for that object
-            if (Object.ReferenceEquals(source, null))
-            {
-                return default(T);
-            }
-
-            IFormatter formatter = new BinaryFormatter();
-            Stream stream = new MemoryStream();
-            using (stream)
-            {
-                formatter.Serialize(stream, source);
-                stream.Seek(0, SeekOrigin.Begin);
-                return (T)formatter.Deserialize(stream);
-            }
-        }
 
         /// <summary>
         /// Simplified function for writing data about an opcode to the tracelog
@@ -1269,29 +1243,7 @@ namespace Anode
             stride = outputData.Stride;
         }
 
-        // Focus check, stack overflow link mentioned above
-        /// <summary>Returns true if the current application has focus, false otherwise</summary>
-        public static bool ApplicationIsActivated()
-        {
-            var activatedHandle = GetForegroundWindow();
-            if (activatedHandle == IntPtr.Zero)
-            {
-                return false; // No window is currently activated
-            }
-
-            var procId = Process.GetCurrentProcess().Id;
-            int activeProcId;
-            GetWindowThreadProcessId(activatedHandle, out activeProcId);
-
-            return activeProcId == procId;
-        }
-
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        private static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
+        
 
         /// <summary>
         /// Updates the controller value
@@ -1300,7 +1252,7 @@ namespace Anode
         {
             // This function can still get input, even if the application is minimised.
             // Therefore, I need to check focus
-            if (ApplicationIsActivated())
+            if (Util.ApplicationIsActivated())
             {
                 // Hopefully I can make custom control schemes somewhen
                 controller1 = 0;
@@ -1399,7 +1351,7 @@ namespace Anode
         void Render()
         {
             op_out.UnlockBits(outputData);
-            output = Clone(op_out);
+            output = Util.Clone(op_out);
             frame_Ready = true;
             // Sometimes extra code is necessary
         }
