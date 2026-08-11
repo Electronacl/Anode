@@ -2766,6 +2766,7 @@ namespace Anode
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
                                 ProgramCounter = AddressBus;
                                 DoNMI = false;
+                                doIRQ = false;
                                 t = 255;
                                 break;
                         }
