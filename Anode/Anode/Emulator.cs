@@ -1783,6 +1783,10 @@ namespace Anode
                         apuFlag_IRQEnable = (Value & 0x80) != 0;
                         apuDMCLoops = (Value & 0x40) != 0;
                         apuDMCFrequency = (byte)(Value & 0xF); // Lower nybble is copied only
+                        if (!apuFlag_IRQEnable)
+                        {
+                            apuFlag_DMCInterrupt = false;
+                        }
                         break;
                     case 0x4011:
                         // DMC_RAW
@@ -1837,6 +1841,8 @@ namespace Anode
                 {
                     sq1_lengthCounter = 0;
                 }
+
+                apuFlag_DMCInterrupt = false;
             }
             else if (Address == 0x4016)
             {
@@ -2765,9 +2771,12 @@ namespace Anode
                                 Read();
                                 AddressBus = (ushort)((DataBus << 8) | ADD);
                                 ProgramCounter = AddressBus;
+
                                 DoNMI = false;
                                 doIRQ = false;
                                 soonIRQ = false;
+                                IRQLevelDetector = false;
+
                                 t = 255;
                                 break;
                         }
@@ -4450,7 +4459,8 @@ namespace Anode
                             if (apuFlag_IRQEnable)
                             {
                                 // Perform an IRQ
-                                IRQLevelDetector = true;
+                                apuFlag_DMCInterrupt = true;
+                                IRQLevelDetector |= apuFlag_DMCInterrupt;
                             }
                         }
                         apuDMCRequired = true;
