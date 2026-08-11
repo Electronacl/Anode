@@ -4356,7 +4356,7 @@ namespace Anode
                 DoNMI = true;
             }
 
-            doIRQ = soonIRQ;
+            // doIRQ = soonIRQ;
         }
 
         /// <summary>
