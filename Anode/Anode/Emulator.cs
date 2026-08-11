@@ -2767,6 +2767,7 @@ namespace Anode
                                 ProgramCounter = AddressBus;
                                 DoNMI = false;
                                 doIRQ = false;
+                                soonIRQ = false;
                                 t = 255;
                                 break;
                         }
