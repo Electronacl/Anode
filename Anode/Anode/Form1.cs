@@ -41,30 +41,19 @@ namespace Anode
         string romname;
         Thread processThread;
         // bool testenabled = false;
-        bool tracelogging = false;
         PictureBox ScreenObject;
-        int samplerate = 16000;
         //MemoryStream ms;
         //RawSourceWaveStream rs;
         //WaveOutEvent wo;
-
 
         bool fileUpdated = false;
 
         bool paused = false;
         bool waitingForFrame = false;
 
-        readonly double NTSC_time = 1d / 60d;
-        readonly double PAL_time = 1d / 50d;
         bool throttled = true;
         double timetaken;
         Stopwatch throttler = new Stopwatch();
-        bool is_NTSC = true;
-        bool detect_region = true;
-        bool NTSC_FPS_Forced = false;
-
-        bool auto_detect_ines = true;
-        byte ines_version = 0;
 
         // Winforms stuff
         public Form1()
