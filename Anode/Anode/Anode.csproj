@@ -150,8 +150,13 @@
     <Compile Include="Common\Constants.cs" />
     <Compile Include="Common\Renderer.cs" />
     <Compile Include="Common\Util.cs" />
+    <Compile Include="Cores\NES\Nessie\Cart\CompatChecker.cs" />
+    <Compile Include="Cores\NES\Nessie\Component\2a03.cs" />
+    <Compile Include="Cores\NES\Nessie\Component\2c0x.cs" />
+    <Compile Include="Cores\NES\Nessie\Cart\NESIO.cs" />
+    <Compile Include="Cores\NES\Nessie\NessieCore.cs" />
     <Compile Include="Cores\NES\PartialNES\PartialNES.cs" />
-    <Compile Include="Emulator.cs" />
+    <Compile Include="Cores\NES\PartialNES\Emulator.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -207,8 +212,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Cores\NES\Nessie\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
