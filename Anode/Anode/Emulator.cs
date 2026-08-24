@@ -355,12 +355,7 @@ namespace Anode
         StreamWriter tracelog;
 
         // PPU output data
-        public Bitmap output;
-        Bitmap op_out;
-        BitmapData outputData;
-        int stride;
-        // Thanks to https://stackoverflow.com/questions/7768711/setpixel-is-too-slow-is-there-a-faster-way-to-draw-to-bitmap
-        // for the code to speed up bitmap drawing
+        public Renderer renderer;
 
         public bool detect_region = true; // Detect whether PAL or NTSC
         public bool NTSC = true; // PAL or NTSC?
@@ -1155,10 +1150,10 @@ namespace Anode
                     }
 
                     // Create the bitmap which will than be used in games.
-                    op_out = new Bitmap(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
+                    renderer = new Renderer(32 * 8, (30 * 8) - (NTSC ? 0 : 1));
 
                     // Run first init frame
-                    InitFrame();
+                    renderer.InitFrame();
 
                     // Init palette
                     for (int j = 0; j < 64; j++)
@@ -1232,17 +1227,6 @@ namespace Anode
             }
             return title;
         }
-
-        /// <summary>
-        /// Initialises the pixel lock.
-        /// </summary>
-        public void InitFrame()
-        {
-            // Optimisation as SetPixel is SO SLOW!
-            outputData = op_out.LockBits(new Rectangle(0, 0, op_out.Width, op_out.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-            stride = outputData.Stride;
-        }
-
         
 
         /// <summary>
@@ -1305,15 +1289,6 @@ namespace Anode
                     tracelog.Close();
                     Console.WriteLine("Tracelog saved!");
                 }
-                unsafe
-                {
-                    // Sets the pixel that the CPU halted on to red.
-                    byte* ptr = (byte*)outputData.Scan0;
-                    //output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride] = 0;
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = 0;
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = 255;
-                }
                 Render();
 
             }
@@ -1350,8 +1325,7 @@ namespace Anode
         /// </summary>
         void Render()
         {
-            op_out.UnlockBits(outputData);
-            output = Util.Clone(op_out);
+            renderer.FinishFrame();
             frame_Ready = true;
             // Sometimes extra code is necessary
         }
@@ -4173,15 +4147,7 @@ namespace Anode
                     colourIndex &= 0x30;
                 }
 
-                // Render a pixel
-                unsafe
-                {
-                    byte* ptr = (byte*)outputData.Scan0;
-                    //output.SetPixel(ppuDot - 1, ppuScanLine, outColour);
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride] = Pal_B[colourIndex];
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 1] = Pal_G[colourIndex];
-                    ptr[((ppuDot - 1) * 3) + ppuScanLine * stride + 2] = Pal_R[colourIndex];
-                }
+                renderer.SetPixel(ppuDot - 1, ppuScanLine, Pal_R[colourIndex], Pal_G[colourIndex], Pal_B[colourIndex]);
             }
 
             // Increment the position

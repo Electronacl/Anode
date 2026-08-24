@@ -126,16 +126,6 @@
 Disabling this will run the emulator at the highest speed your hardware can do, which
 can be useful if you need to run things quickly, but it may make gameplay difficult or impossible.</value>
   </data>
-  <data name="forceHaltToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>Forces the CPU into a halted state.
-This cannot be recovered from, and is only intended as an option to finish the tracelog.
-Use the "pause" option instead, or use the game's inbuilt pause screen, to stop gameplay properly.</value>
-  </data>
-  <data name="force60hzForPALToolStripMenuItem.ToolTipText" xml:space="preserve">
-    <value>As some games are built for NTSC originally, they may run slow on PAL hardware.
-Enabling this option will force all games to use the NTSC framerate, which may help to fix the issue.
-This does not affect gameplay accuracy, but will affect speedruns.</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

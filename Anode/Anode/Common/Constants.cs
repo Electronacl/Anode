@@ -21,6 +21,6 @@ namespace Anode
 {
     internal static class Constants
     {
-        public static string version_name = "2026.3-3.0b";
+        public static string version_name = "2.0.0 (b0a0)";
     }
 }

@@ -1,4 +1,7 @@
 ﻿// using NAudio.Wave;
+using Anode.Base;
+using Anode.Common;
+using Anode.Cores.NES;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -33,7 +36,7 @@ namespace Anode
         Form aboutForm;
 
         // Initialise variables which are used later
-        Emulator emulator;
+        EmuCore emulator;
         string rompath;
         string romname;
         Thread processThread;
@@ -126,50 +129,25 @@ namespace Anode
 
         void Run_Emulator()
         {
-            // Setup emulator
+            emulator = new PartialNES();
+            emulator.HardReset(rompath);
 
-            // Personal debug only
-            // testenabled = true;
+            string romHeader = emulator.GetTitle();
+            if (romHeader == "") { romHeader = romname; }
 
-            // Init the emulator
-            emulator = new Emulator();
-            emulator.filepath = rompath;
-            emulator.logging = tracelogging;
-            emulator.tracepath = Path.GetDirectoryName(Application.ExecutablePath) + "/tracelog.txt";
-
-            // Update the emulator's user settings
-            emulator.inesversion = ines_version;
-            emulator.detectines = auto_detect_ines;
-
-            emulator.NTSC = is_NTSC;
-            emulator.sample_rate = (uint)samplerate;
-            emulator.detect_region = detect_region;
-
-            // Get the emulator to prepare for running
-            emulator.Reset();
-
-            // The header value is used if it's both supported by the ROM, and it's enabled.
-            if (emulator.CheckHeader())
-            {
-                ChangeTitle($"{emulator.GetTitle()} (Anode {Constants.version_name})");
-            }
-
-            // override for nestest only
-            // emulator.ProgramCounter = 0xC000;
-
+            this.ChangeTitle($"{romname} - Anode {Constants.version_name}");
             // For locking
             ScreenObject = pictureBox1;
             // Start the throttler
             throttler.Start();
-            // ms = new MemoryStream();
-            // rs = new RawSourceWaveStream(ms, new WaveFormat(samplerate, 8, 1));
-            while (!emulator.CPU_Halted && !emulator.incompatible)
+
+            while (emulator.CanEmulatorRun())
             {
-                if ((!paused) || waitingForFrame)
+                if (!paused || waitingForFrame)
                 {
-                    // 1 cycle at a time
-                    emulator.Advance_Frame();
-                    // When the emulator has completed a frame, or crashed
+                    emulator.AdvanceFrame();
+                    Renderer emuRenderer = emulator.GetRenderer();
+
                     lock (ScreenObject)
                     {
                         // Update the frame
@@ -179,18 +157,18 @@ namespace Anode
                                 delegate ()
                                 {
                                     // This method runs if something is using the object
-                                    pictureBox1.Image = emulator.output;
+                                    pictureBox1.Image = emuRenderer.outputBitmap;
                                     pictureBox1.Update();
                                 }));
                         }
                         else
                         {
                             // Otherwise, just update
-                            pictureBox1.Image = emulator.output;
+                            pictureBox1.Image = emuRenderer.outputBitmap;
                             pictureBox1.Update();
                         }
                     }
-                    emulator.frame_Ready = false;
+
                     if (throttled && !waitingForFrame)
                     {
                         /*if (wo != null)
@@ -204,8 +182,9 @@ namespace Anode
                         ms.Write(emulator.processedAPUBuffer, 0, emulator.processedAPUBuffer.Length);
                         wo = new WaveOutEvent();*/
                         //throttler.Stop();
+                        float timerequired = emulator.GetSpeed();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
-                        while (timetaken < ((emulator.NTSC || NTSC_FPS_Forced) ? NTSC_time : PAL_time))
+                        while (timetaken < timerequired)
                         {
                             // Spin loop
                             timetaken = ((double)throttler.ElapsedTicks) / (double)Stopwatch.Frequency;
@@ -219,33 +198,16 @@ namespace Anode
                     }
                     // Setup the next frame
                     waitingForFrame = false;
-                    emulator.InitFrame();
                 }
             }
 
-            // Prevent the throttler from constantly running
             throttler.Stop();
 
+            Console.WriteLine("Stopped running emulation");
+
             // Disable the menu items that only work when running
-            enableMenuItem(forceHaltToolStripMenuItem, false);
             enableMenuItem(pauseToolStripMenuItem, false);
             enableMenuItem(advanceFrameToolStripMenuItem, false);
-
-            // Use the tester if I've enabled that
-            /*if (testenabled)
-            {
-                Tester tester = new Tester();
-                tester.Test_Ram(emulator);
-            }*/
-        }
-
-        private void haltToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Halt the CPU
-            if (emulator != null)
-            {
-                emulator.CPU_Halted = true;
-            }
         }
 
         private void hardResetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -273,14 +235,6 @@ namespace Anode
             }
         }
 
-        private void toggleTracelogToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Toggles the tracelog
-            tracelogging = !tracelogging;
-            toggleTracelogToolStripMenuItem.Text = "Tracelog " + (tracelogging ? "enabled" : "disabled");
-            toggleTracelogToolStripMenuItem.Checked = tracelogging;
-        }
-
         private void init_Emulator()
         {
             romname = Path.GetFileName(rompath);
@@ -289,7 +243,6 @@ namespace Anode
 
             pauseToolStripMenuItem.Text = "Pause";
             pauseToolStripMenuItem.Enabled = true;
-            forceHaltToolStripMenuItem.Enabled = true;
             hardResetToolStripMenuItem.Enabled = true;
             if (processThread != null)
             {
@@ -300,11 +253,6 @@ namespace Anode
             processThread.SetApartmentState(ApartmentState.STA);
             processThread.IsBackground = true;
             processThread.Start();
-        }
-
-        private void forceHaltToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            emulator.CPU_Halted = true;
         }
 
         private void enableMenuItem(ToolStripMenuItem menuItem, bool enabled)
@@ -354,90 +302,6 @@ namespace Anode
             throttled = !throttled;
             disableThrottlerToolStripMenuItem.Text = "Throttler " + (throttled ? "enabled" : "disabled");
             disableThrottlerToolStripMenuItem.Checked = throttled;
-        }
-
-        private void force60hzForPALToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            NTSC_FPS_Forced = !NTSC_FPS_Forced;
-            force60hzForPALToolStripMenuItem.Checked = NTSC_FPS_Forced;
-        }
-
-        private void DisableAlliNESOptions()
-        {
-            iNESToolStripMenuItem.Checked = false;
-            iNESToolStripMenuItem1.Checked = false;
-            archaicINESToolStripMenuItem.Checked = false;
-            nES20ToolStripMenuItem.Checked = false;
-        }
-
-        private void iNESToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // Auto-detect
-            auto_detect_ines = true;
-            DisableAlliNESOptions();
-            iNESToolStripMenuItem.Checked = true;
-        }
-
-        private void archaicINESToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ines_version = 0;
-            auto_detect_ines = false;
-            DisableAlliNESOptions();
-            archaicINESToolStripMenuItem.Checked = true;
-        }
-
-        private void iNESToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            ines_version = 1;
-            auto_detect_ines = false;
-            DisableAlliNESOptions();
-            iNESToolStripMenuItem1.Checked = true;
-        }
-
-        private void nES20ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ines_version = 2;
-            auto_detect_ines = false;
-            DisableAlliNESOptions();
-            nES20ToolStripMenuItem.Checked = true;
-        }
-
-        private void autodetectToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            autodetectToolStripMenuItem.Checked = true;
-            nTSCToolStripMenuItem.Checked = false;
-            pALToolStripMenuItem.Checked = false;
-            detect_region = true;
-            if (emulator != null)
-            {
-                init_Emulator();
-            }
-        }
-
-        private void nTSCToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            nTSCToolStripMenuItem.Checked = true;
-            pALToolStripMenuItem.Checked = false;
-            autodetectToolStripMenuItem.Checked = false;
-            is_NTSC = true;
-            detect_region = false;
-            if (emulator != null)
-            {
-                init_Emulator();
-            }
-        }
-
-        private void pALToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            pALToolStripMenuItem.Checked = true;
-            nTSCToolStripMenuItem.Checked = false;
-            autodetectToolStripMenuItem.Checked = false;
-            is_NTSC = false;
-            detect_region = false;
-            if (emulator != null)
-            {
-                init_Emulator();
-            }
         }
     }
 }
