@@ -8,6 +8,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Anode.Common
 {
@@ -70,6 +71,21 @@ namespace Anode.Common
             {
                 Properties.Settings.Default.NESCore = 0;
             }
+        }
+
+        public static void ThrowError(string title, string msg)
+        {
+            MessageBox.Show(msg, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        public static void ThrowWarn(string title, string msg)
+        {
+            MessageBox.Show(msg, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        public static void ThrowInfo(string title, string msg)
+        {
+            MessageBox.Show(msg, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

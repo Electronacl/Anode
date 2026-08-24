@@ -2,6 +2,7 @@
 using Anode.Base;
 using Anode.Common;
 using Anode.Cores.NES;
+using Anode.Cores.NES.Nessie;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -128,7 +129,8 @@ namespace Anode
                             emulator = new PartialNES();
                             break;
                         case 1:
-                            return;
+                            emulator = new NessieCore();
+                            break;
                     }
                     break;
             }
