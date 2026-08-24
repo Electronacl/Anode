@@ -63,5 +63,13 @@ namespace Anode.Common
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetWindowThreadProcessId(IntPtr handle, out int processId);
+
+        public static void ValidateOptions()
+        {
+            if (Properties.Settings.Default.NESCore > 1)
+            {
+                Properties.Settings.Default.NESCore = 0;
+            }
+        }
     }
 }

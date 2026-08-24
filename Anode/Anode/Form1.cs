@@ -34,6 +34,7 @@ namespace Anode
     {
         // Anode windows
         Form aboutForm;
+        Form optionForm;
 
         // Initialise variables which are used later
         EmuCore emulator;
@@ -118,7 +119,19 @@ namespace Anode
 
         void Run_Emulator()
         {
-            emulator = new PartialNES();
+            switch (Path.GetExtension(rompath).ToLower())
+            {
+                case ".nes":
+                    switch (Properties.Settings.Default.NESCore)
+                    {
+                        case 0:
+                            emulator = new PartialNES();
+                            break;
+                        case 1:
+                            return;
+                    }
+                    break;
+            }
             emulator.HardReset(rompath);
 
             string romHeader = emulator.GetTitle();
@@ -291,6 +304,12 @@ namespace Anode
             throttled = !throttled;
             disableThrottlerToolStripMenuItem.Text = "Throttler " + (throttled ? "enabled" : "disabled");
             disableThrottlerToolStripMenuItem.Checked = throttled;
+        }
+
+        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            optionForm = new AnodeOptions();
+            optionForm.Show();
         }
     }
 }
