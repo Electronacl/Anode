@@ -1,4 +1,5 @@
 ﻿using Anode.Common;
+using Anode.Cores.NES.Nessie.Cart;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,6 +28,11 @@ namespace Anode.Cores.NES.Nessie
         public bool region;
 
         byte inesversion;
+        ushort mapper;
+        byte mapper_sub;
+        byte nesversion;
+        byte expansion;
+        byte ext_nesversion;
 
         public void LoadCart(string path)
         {
@@ -106,7 +112,7 @@ namespace Anode.Cores.NES.Nessie
                     // 3 = Extended console type
                     if (nesversion == 3 && inesversion == 2)
                     {
-                        // Only avbailable on NES 2.0
+                        // Only available on NES 2.0
                         // More console types are available
                         ext_nesversion = (byte)(Header[13] & 0xF);
                         nesversion = ext_nesversion;
@@ -117,6 +123,8 @@ namespace Anode.Cores.NES.Nessie
                 {
                     expansion = (byte)(Header[15] & 0x7F);
                 }
+
+                compatible = !CompatChecker.CheckCartCompat(mapper, expansion, nesversion, inesversion, Header);
             }
         }
 
