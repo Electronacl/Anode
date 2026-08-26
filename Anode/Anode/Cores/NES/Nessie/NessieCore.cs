@@ -14,18 +14,58 @@ namespace Anode.Cores.NES.Nessie
         byte CPUClock;
         byte APUClock;
 
+        byte MaxPPU;
+        byte MaxCPU;
+
         _2a03 CPU;
         _2c0x PPU;
         NESIO IO;
 
+        Renderer renderer;
+
         void EmuCore.AdvanceFrame()
         {
-            throw new NotImplementedException();
+            if (IO.CHRDataUpdate)
+            {
+                // The PPU needs to update its internal CHRData
+                PPU.CHRData = IO.CHRData;
+            }
+
+            if (CPUClock == MaxCPU)
+            {
+                if (CPU.getRequired)
+                {
+                    // The next cycle is a "Get" cycle
+                    // This needs to be set *before* the next cycle gets
+                    CPU.DataBus = IO.ReadCPU(CPU.AddressBus, CPU.DataBus);
+                    CPU.RunCycle();
+                }
+                else
+                {
+                    // The next cycle is a "Put" cycle
+                    CPU.RunCycle();
+                    IO.WriteCPU(CPU.AddressBus, CPU.DataBus);
+                }
+            }
+
+            PPUClock--;
+            CPUClock--;
+            //APUClock--;
+
+            if (PPUClock == 0)
+            {
+                PPUClock = MaxPPU;
+            }
+            if (CPUClock == 0)
+            {
+                CPUClock = MaxCPU;
+            }
+            APUClock = CPUClock;
         }
 
         bool EmuCore.CanEmulatorRun()
         {
-            throw new NotImplementedException();
+            return !CPU.halt && IO.compatible;
         }
 
         byte[] EmuCore.GetAudioBuffer()
@@ -35,7 +75,11 @@ namespace Anode.Cores.NES.Nessie
 
         byte[] EmuCore.GetCompatibleFeatures()
         {
-            throw new NotImplementedException();
+            byte[] features =
+            {
+                0b00000100
+            };
+            return features;
         }
 
         Renderer EmuCore.GetRenderer()
@@ -45,7 +89,8 @@ namespace Anode.Cores.NES.Nessie
 
         float EmuCore.GetSpeed()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return 1 / 60f;
         }
 
         string EmuCore.GetTitle()
@@ -58,6 +103,14 @@ namespace Anode.Cores.NES.Nessie
             CPU = new _2a03();
             PPU = new _2c0x();
             IO = new NESIO();
+
+            IO.LoadCart(ROM);
+
+            MaxPPU = (byte)(IO.region ? 4 : 5);
+            MaxCPU = (byte)(IO.region ? 12 : 16);
+
+            PPUClock = MaxPPU;
+            CPUClock = MaxCPU;
         }
 
         void EmuCore.SoftReset()

@@ -8,5 +8,6 @@ namespace Anode.Cores.NES.Nessie.Cart
 {
     internal class CompatChecker
     {
+
     }
 }

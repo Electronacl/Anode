@@ -78,9 +78,19 @@ namespace Anode.Common
             MessageBox.Show(msg, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
+        public static void ThrowErrorLegacy(string msg, string title)
+        {
+            ThrowError(title, msg);
+        }
+
         public static void ThrowWarn(string title, string msg)
         {
             MessageBox.Show(msg, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        public static void ThrowWarnLegacy(string msg, string title)
+        {
+            ThrowWarn(title, msg);
         }
 
         public static void ThrowInfo(string title, string msg)
