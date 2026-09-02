@@ -25,6 +25,7 @@ namespace Anode.Cores.NES.Nessie
 
         void EmuCore.AdvanceFrame()
         {
+            renderer.InitFrame();
             if (IO.CHRDataUpdate)
             {
                 // The PPU needs to update its internal CHRData
@@ -61,6 +62,7 @@ namespace Anode.Cores.NES.Nessie
                 CPUClock = MaxCPU;
             }
             APUClock = CPUClock;
+            renderer.FinishFrame();
         }
 
         bool EmuCore.CanEmulatorRun()
@@ -111,6 +113,9 @@ namespace Anode.Cores.NES.Nessie
 
             PPUClock = MaxPPU;
             CPUClock = MaxCPU;
+
+            CPU.PC = (ushort)((IO.ReadCPU(0xFFFD, 0) << 8) | IO.ReadCPU(0xFFFC, 0));
+            CPU.getRequired = true;
         }
 
         void EmuCore.SoftReset()

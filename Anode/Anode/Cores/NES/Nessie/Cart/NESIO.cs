@@ -14,8 +14,11 @@ namespace Anode.Cores.NES.Nessie
     internal class NESIO
     {
         byte[] InternalROM;
-        public byte[] ROM = new byte[0x8000];
-        public byte[] RAM = new byte[0x800]; // Random Access Memory
+        byte[] ROM = new byte[0x8000];
+        byte[] RAM = new byte[0x800]; // Random Access Memory
+
+        byte[] HeaderedROM;
+        byte cartSize;
 
         byte[] InternalCHRData;
         public byte[] CHRData = new byte[0x2000];
@@ -37,8 +40,8 @@ namespace Anode.Cores.NES.Nessie
         public void LoadCart(string path)
         {
             // Load the ROM from the file
-            byte[] HeaderedROM = File.ReadAllBytes(path);
-            byte cartSize = 0;
+            HeaderedROM = File.ReadAllBytes(path);
+            cartSize = 0;
 
             if (HeaderedROM.Length < 16)
             {
@@ -68,69 +71,103 @@ namespace Anode.Cores.NES.Nessie
                     }
                 }
             }
-
-            if (compatible)
+            if (!compatible)
             {
-                if ((Header[7] & 0x0C) == 0x0C)
-                {
-                    // Presumably NES 2.0
-                    inesversion = 2;
-                }
-                else if ((Header[7] & 0x0C) == 0x04)
-                {
-                    // Presumably archaic
-                    inesversion = 0;
-                }
-                else
-                {
-                    // Presumably iNES or iNES 0.7 (or archaic). iNES is assumed.
-                    inesversion = 1;
-                }
+                return;
+            }
 
-                // Get the mapper used
-                // All iNES versions have the low nybble
-                mapper = (byte)(Header[6] >> 4);
-                if (inesversion >= 1)
-                {
-                    // iNES 0.7 and later have a high nybble
-                    mapper |= (byte)(Header[7] & 0xF0);
-                }
-                if (inesversion == 2)
-                {
-                    // NES 2.0 has another nybble and a subtype
-                    mapper |= (ushort)((Header[8] & 0xF) << 8);
-                    mapper_sub = (byte)(Header[8] >> 4);
-                }
+            if ((Header[7] & 0x0C) == 0x0C)
+            {
+                // Presumably NES 2.0
+                inesversion = 2;
+            }
+            else if ((Header[7] & 0x0C) == 0x04)
+            {
+                // Presumably archaic
+                inesversion = 0;
+            }
+            else
+            {
+                // Presumably iNES or iNES 0.7 (or archaic). iNES is assumed.
+                inesversion = 1;
+            }
 
-                // Check console used
-                if (inesversion >= 1)
-                {
-                    nesversion = (byte)(Header[7] & 0x3);
-                    // 0 = famicom/NES
-                    // 1 = Vs. System
-                    // 2 = PlayChoice 10
-                    // 3 = Extended console type
-                    if (nesversion == 3 && inesversion == 2)
-                    {
-                        // Only available on NES 2.0
-                        // More console types are available
-                        ext_nesversion = (byte)(Header[13] & 0xF);
-                        nesversion = ext_nesversion;
-                    }
-                }
+            // Get the mapper used
+            // All iNES versions have the low nybble
+            mapper = (byte)(Header[6] >> 4);
+            if (inesversion >= 1)
+            {
+                // iNES 0.7 and later have a high nybble
+                mapper |= (byte)(Header[7] & 0xF0);
+            }
+            if (inesversion == 2)
+            {
+                // NES 2.0 has another nybble and a subtype
+                mapper |= (ushort)((Header[8] & 0xF) << 8);
+                mapper_sub = (byte)(Header[8] >> 4);
+            }
 
-                if (inesversion == 2)
+            // Check console used
+            if (inesversion >= 1)
+            {
+                nesversion = (byte)(Header[7] & 0x3);
+                // 0 = famicom/NES
+                // 1 = Vs. System
+                // 2 = PlayChoice 10
+                // 3 = Extended console type
+                if (nesversion == 3 && inesversion == 2)
                 {
-                    expansion = (byte)(Header[15] & 0x7F);
+                    // Only available on NES 2.0
+                    // More console types are available
+                    ext_nesversion = (byte)(Header[13] & 0xF);
+                    nesversion = ext_nesversion;
                 }
+            }
 
-                compatible = !CompatChecker.CheckCartCompat(mapper, expansion, nesversion, inesversion, Header);
+            if (inesversion == 2)
+            {
+                expansion = (byte)(Header[15] & 0x7F);
+            }
+
+            compatible = !CompatChecker.CheckCartCompat(mapper, expansion, nesversion, inesversion, Header);
+
+            if (!compatible)
+            {
+                return;
+            }
+
+            InitBanks();
+
+            // Auto detecting region
+            if (inesversion == 1)
+            {
+                // In iNES, the region is in header 10.
+                // This isn't supported by iNES 0.7 and isn't widely used either.
+                region = (Header[10] & 0x2) == 0;
+            }
+            else if (inesversion == 2)
+            {
+                // When it's multi-region, NTSC is used as 60Hz is the standard for most monitors now, so that will be the standard.
+                // Maybe add a user option for this though?
+                region = (Header[12] & 0x3) != 1;
+            }
+            else
+            {
+                // Archaic iNES has absolutely no region support, so NTSC is just assumed
+                region = true;
             }
         }
 
         void InitBanks()
         {
-
+            if (cartSize <= 2)
+            {
+                Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x4000 * cartSize);
+            }
+            else
+            {
+                Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x8000);
+            }
         }
 
         public byte ReadCPU(ushort AddressBus, byte DataBus)
