@@ -14,6 +14,7 @@ namespace Anode.Cores.NES.Nessie
         public byte r;
         public byte g;
         public byte b;
+        public bool FrameComplete;
 
         public byte[] CHRData = new byte[0x2000]; // Character data
         byte[] VRAM = new byte[0x800]; // Video Random Access Memory
@@ -33,6 +34,25 @@ namespace Anode.Cores.NES.Nessie
         byte[] Pal_R = new byte[64];
         byte[] Pal_G = new byte[64];
         byte[] Pal_B = new byte[64];
+
+        public void Run_PPU()
+        {
+            if (xRender == 1 && yRender == 241)
+            {
+                FrameComplete = true;
+            }
+
+            xRender++;
+            if (xRender > 341)
+            {
+                xRender = 0;
+                yRender++;
+                if (yRender > 261)
+                {
+                    yRender = 0;
+                }
+            }
+        }
 
         public _2c0x()
         {

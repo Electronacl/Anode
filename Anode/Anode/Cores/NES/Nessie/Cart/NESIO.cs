@@ -39,6 +39,7 @@ namespace Anode.Cores.NES.Nessie
 
         public void LoadCart(string path)
         {
+            compatible = true;
             // Load the ROM from the file
             HeaderedROM = File.ReadAllBytes(path);
             cartSize = 0;

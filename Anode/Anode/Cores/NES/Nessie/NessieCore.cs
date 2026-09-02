@@ -26,42 +26,45 @@ namespace Anode.Cores.NES.Nessie
         void EmuCore.AdvanceFrame()
         {
             renderer.InitFrame();
-            if (IO.CHRDataUpdate)
+            while (!PPU.FrameComplete && !CPU.halt)
             {
-                // The PPU needs to update its internal CHRData
-                PPU.CHRData = IO.CHRData;
-            }
-
-            if (CPUClock == MaxCPU)
-            {
-                if (CPU.getRequired)
+                if (CPUClock == MaxCPU)
                 {
-                    // The next cycle is a "Get" cycle
-                    // This needs to be set *before* the next cycle gets
-                    CPU.DataBus = IO.ReadCPU(CPU.AddressBus, CPU.DataBus);
-                    CPU.RunCycle();
+                    CPU.AddressBus = CPU.DelayedAddr;
+
+                    if (CPU.getRequired)
+                    {
+                        // The next cycle is a "Get" cycle
+                        // This needs to be set *before* the next cycle gets
+                        CPU.DataBus = IO.ReadCPU(CPU.AddressBus, CPU.DataBus);
+                        CPU.RunCycle();
+                    }
+                    else
+                    {
+                        // The next cycle is a "Put" cycle
+                        CPU.RunCycle();
+                        CPU.DataBus = CPU.DataLatch;
+                        IO.WriteCPU(CPU.AddressBus, CPU.DataBus);
+                    }
                 }
-                else
+
+                PPUClock--;
+                CPUClock--;
+                //APUClock--;
+
+                if (PPUClock == 0)
                 {
-                    // The next cycle is a "Put" cycle
-                    CPU.RunCycle();
-                    IO.WriteCPU(CPU.AddressBus, CPU.DataBus);
+                    PPUClock = MaxPPU;
                 }
+                if (CPUClock == 0)
+                {
+                    CPUClock = MaxCPU;
+                }
+                APUClock = CPUClock;
             }
 
-            PPUClock--;
-            CPUClock--;
-            //APUClock--;
+            PPU.FrameComplete = false;
 
-            if (PPUClock == 0)
-            {
-                PPUClock = MaxPPU;
-            }
-            if (CPUClock == 0)
-            {
-                CPUClock = MaxCPU;
-            }
-            APUClock = CPUClock;
             renderer.FinishFrame();
         }
 
@@ -86,7 +89,7 @@ namespace Anode.Cores.NES.Nessie
 
         Renderer EmuCore.GetRenderer()
         {
-            throw new NotImplementedException();
+            return renderer;
         }
 
         float EmuCore.GetSpeed()
@@ -116,6 +119,9 @@ namespace Anode.Cores.NES.Nessie
 
             CPU.PC = (ushort)((IO.ReadCPU(0xFFFD, 0) << 8) | IO.ReadCPU(0xFFFC, 0));
             CPU.getRequired = true;
+            CPU.DelayedAddr = CPU.PC;
+
+            renderer = new Renderer(32 * 8, (30 * 8) - (IO.region ? 0 : 1));
         }
 
         void EmuCore.SoftReset()

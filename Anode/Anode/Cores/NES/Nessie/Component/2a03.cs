@@ -1,6 +1,7 @@
 ﻿using Anode.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,16 +18,24 @@ namespace Anode.Cores.NES.Nessie
         byte SP; // Stack Pointer
         public ushort PC; // Program Counter
 
-        bool flag_InterruptDisable = true;
+        bool flag_Carry;
+        bool flag_Zero;
+        bool flag_InterruptDisable;
+        bool flag_Decimal;
+        bool flag_Overflow;
+        bool flag_Negative;
 
         byte op_t;
         byte t;
         bool resetInstr;
         bool finishedOp;
+        bool quickOpComplete;
 
         public ushort AddressBus;
-        byte DataLatch; // Internal bus
+        public byte DataLatch; // Internal bus
         public byte DataBus;
+
+        public ushort DelayedAddr;
 
         public bool halt;
 
@@ -78,6 +87,34 @@ namespace Anode.Cores.NES.Nessie
         byte operand_type;
         bool getAddrOnly;
 
+        // Temp values for debug
+        bool logging = false;
+        StreamWriter tracelog;
+        public string tracepath;
+        void Tracelogger(byte opcode)
+        {
+            if (logging)
+            {
+                String line = "$" + PC.ToString("X4")
+                    + "\t" + opcode.ToString("X2")
+                    + "\t" + OpCodeNames[opcode]
+                    + "\t\tA: " + A.ToString("X2")
+                    + "\tX: " + X.ToString("X2")
+                    + "\tY: " + Y.ToString("X2")
+                    + "\tSP: " + SP.ToString("X2")
+                    + "\tProcessor Flags: "
+                    + (flag_Negative ? "N" : "n")
+                    + (flag_Overflow ? "V" : "v")
+                    + "--"
+                    + (flag_Decimal ? "D" : "d")
+                    + (flag_InterruptDisable ? "I" : "i")
+                    + (flag_Zero ? "Z" : "z")
+                    + (flag_Carry ? "C" : "c");
+                //+ "\tCycle: " + cycle.ToString();
+                tracelog.WriteLine(line);
+            }
+        }
+
         public void Initialise()
         {
             getRequired = true;
@@ -85,13 +122,24 @@ namespace Anode.Cores.NES.Nessie
 
         public void RunCycle()
         {
-            if (op_t == 0)
+            if (op_t == 0 && t == 0)
             {
                 // Read the opcode
-                PC = DataBus;
+                opcode = DataBus;
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
                 op_c = (byte)(opcode & 0x3);
+
+                getRequired = true;
+
+                if (logging)
+                {
+                    Tracelogger(opcode);
+                }
+
+                PC++;
+                DelayedAddr++;
+
 
                 // Opcode types
                 // 0x0x:
@@ -175,7 +223,7 @@ namespace Anode.Cores.NES.Nessie
                                 if ((op_a & 4) == 0)
                                 {
                                     // HLT
-                                    halt = true;
+                                    Halt();
                                 }
                                 else
                                 {
@@ -194,7 +242,7 @@ namespace Anode.Cores.NES.Nessie
                             operand_type = 0x10;
                             break;
                         case 2:
-                            if ((op_c & 1) == 0)
+                            if ((op_c & 1) == 1)
                             {
                                 // Immediate (#)
                                 operand_type = 0x01;
@@ -213,7 +261,7 @@ namespace Anode.Cores.NES.Nessie
                             if (op_c == 2)
                             {
                                 // HLT
-                                halt = true;
+                                Halt();
                             }
                             else
                             {
@@ -242,17 +290,80 @@ namespace Anode.Cores.NES.Nessie
                             operand_type = 0x21;
                             break;
                     }
+
+                    if ((operand_type & 0b11110000) == 0)
+                    {
+                        quickOpComplete = true;
+                        finishedOp = true;
+                    }
                 }
             }
             else
             {
-                if (!finishedOp && operand_type != 0)
+                if (!finishedOp)
                 {
-
+                    switch (operand_type)
+                    {
+                        case 0x10:
+                        case 0x11:
+                        case 0x12:
+                            break;
+                        case 0x20:
+                        case 0x21:
+                        case 0x22:
+                            break;
+                        case 0x31:
+                            break;
+                        case 0x32:
+                            break;
+                    }
+                    if (finishedOp)
+                    {
+                        switch (opcode_type)
+                        {
+                            case 2:
+                                getRequired = true;
+                                break;
+                        }
+                    }
                 }
                 else
                 {
+                    if (quickOpComplete)
+                    {
+                        // Immediate and A
+                        if (operand_type == 2)
+                        {
+                            DataBus = A;
+                        }
+                        else
+                        {
+                            PC++;
+                        }
+                        quickOpComplete = false;
+                    }
+                    DataLatch = DataBus;
 
+                    switch (opcode_type)
+                    {
+                        case 0:
+                            break;
+                        case 1:
+                            break;
+                        case 2:
+                            Internal_Mem();
+                            break;
+                        case 0x80:
+                            break;
+                        case 0x81:
+                            break;
+                        case 0x82:
+                            break;
+                        case 0x83:
+                            break;
+                        case 0x84:
+                            break;
+                    }
                 }
             }
 
@@ -268,7 +379,7 @@ namespace Anode.Cores.NES.Nessie
             else
             {
                 op_t++;
-                if (t > 20)
+                if (op_t > 20)
                 {
                     Util.ThrowError("CPU Error", $"The operand on opcode {opcode:X} didn't reset. This is an emulation bug and should be reported to the developer.");
                     halt = true;
@@ -280,25 +391,94 @@ namespace Anode.Cores.NES.Nessie
                 getRequired = true;
                 resetInstr = false;
                 finishedOp = false;
+                quickOpComplete = false;
                 op_t = 0;
                 t = 0;
-                getAddrOnly = false;
+
+                DelayedAddr = PC;
             }
         }
 
-        public void ReadOperands()
+        void Internal_Mem()
         {
+            switch (op_a)
+            {
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    break;
+                case 5:
+                    // Load instruction
+                    // Transfers into the correct register and then sets flags
+                    switch (op_c)
+                    {
+                        case 0:
+                            // LDY
+                            Y = DataLatch;
+                            break;
+                        case 1:
+                            // LDA
+                            A = DataLatch;
+                            break;
+                        case 2:
+                            // LDX
+                            X = DataLatch;
+                            break;
+                        case 3:
+                            // LAX (Unofficial)
+                            if (op_b == 6)
+                            {
+                                // LAR/LAS
+                                DataLatch &= SP;
+                                SP = DataLatch;
+                            }
+                            A = X = DataLatch;
+                            break;
+                    }
+                    flag_Zero = DataLatch == 0;
+                    flag_Negative = DataLatch >= 0x80;
+                    break;
+                case 6:
+                    break;
+                case 7:
+                    break;
+            }
+            resetInstr = true;
 
+            if (halt && logging)
+            {
+                tracelog.Close();
+            }
         }
-
-        public void RMW()
+        
+        void Halt()
         {
-
+            halt = true;
+            Util.ThrowError("CPU Halted", $"Encountered a halt instruction: {opcode:X}");
         }
 
         public _2a03()
         {
             SP = 0xFD;
+            flag_InterruptDisable = true;
+            getRequired = true;
+            resetInstr = false;
+            finishedOp = false;
+            op_t = 0;
+            t = 0;
+            getAddrOnly = false;
+
+            tracepath = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + "\\tracelog.txt";
+            if (logging)
+            {
+                tracelog = new StreamWriter(tracepath);
+            }
         }
     }
 }
