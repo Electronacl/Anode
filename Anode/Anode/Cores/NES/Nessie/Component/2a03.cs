@@ -19,6 +19,7 @@ namespace Anode.Cores.NES.Nessie
         public ushort PC; // Program Counter
 
         byte ADD;
+        int signedTemp;
 
         bool flag_Carry;
         bool flag_Zero;
@@ -123,6 +124,10 @@ namespace Anode.Cores.NES.Nessie
 
         public void RunCycle()
         {
+            if (opcode == 0xD0)
+            {
+
+            }
             DataLatch = DataBus;
             if (op_t == 0 && t == 0)
             {
@@ -142,7 +147,7 @@ namespace Anode.Cores.NES.Nessie
                 PC++;
                 DelayedAddr++;
 
-
+                
                 // Opcode types
                 // 0x0x:
                 // 0 - RMW
@@ -214,6 +219,7 @@ namespace Anode.Cores.NES.Nessie
                 if ((opcode_type & 0x80) != 0)
                 {
                     operand_type = 0x00;
+                    finishedOp = true;
                 }
                 else
                 {
@@ -369,6 +375,7 @@ namespace Anode.Cores.NES.Nessie
                         case 0x82:
                             break;
                         case 0x83:
+                            Branch();
                             break;
                         case 0x84:
                             break;
@@ -502,6 +509,73 @@ namespace Anode.Cores.NES.Nessie
                 //DataBus = (byte)(DataBus & (preIndex_Hi + 1));
             }
             resetInstr = true;
+        }
+
+        void Branch()
+        {
+            switch(t)
+            {
+                case 1:
+                    PC++;
+                    DelayedAddr++;
+                    bool branch_condition = false;
+                    switch (op_a)
+                    {
+                        case 0:
+                        case 1:
+                            // BPL, BMI
+                            branch_condition = flag_Negative;
+                            break;
+                        case 2:
+                        case 3:
+                            // BVC, BVS
+                            branch_condition = flag_Overflow;
+                            break;
+                        case 4:
+                        case 5:
+                            // BCC, BCS
+                            branch_condition = flag_Carry;
+                            break;
+                        case 6:
+                        case 7:
+                            // BNE, BEQ
+                            branch_condition = flag_Zero;
+                            break;
+                    }
+                    if ((!branch_condition && ((op_a & 1) != 0)) || (branch_condition && ((op_a & 1) == 0)))
+                    {
+                        // Don't take the branch
+                        resetInstr = true;
+                    }
+                    signedTemp = DataLatch;
+                    break;
+                case 2:
+                    if ((signedTemp & 0x80) != 0)
+                    {
+                        signedTemp -= 256;
+                    }
+
+                    // Change the lower byte only...
+                    ushort BranchTemp = (ushort)(((PC + signedTemp) & 0xFF) | (PC & 0xFF00));
+                    // ... and use it to figure out whether it crosses a page boundary
+                    signedTemp = PC + signedTemp - BranchTemp;
+
+                    // Update the PC
+                    PC = BranchTemp;
+                    DelayedAddr = PC;
+
+                    // Check for a boundary cross
+                    if (signedTemp == 0)
+                    {
+                        // The next cycle is therefore skipped
+                        resetInstr = true;
+                    }
+                    break;
+                case 3:
+                    DelayedAddr = (ushort)(AddressBus + signedTemp);
+                    PC = DelayedAddr;
+                    break;
+            }
         }
 
         void Zero_Page()
