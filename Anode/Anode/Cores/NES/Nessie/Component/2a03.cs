@@ -124,10 +124,6 @@ namespace Anode.Cores.NES.Nessie
 
         public void RunCycle()
         {
-            if (opcode == 0xD0)
-            {
-
-            }
             DataLatch = DataBus;
             if (op_t == 0 && t == 0)
             {
@@ -333,9 +329,6 @@ namespace Anode.Cores.NES.Nessie
                     {
                         switch (opcode_type)
                         {
-                            case 2:
-                                getRequired = true;
-                                break;
                             case 1:
                                 getRequired = false;
                                 break;
@@ -369,8 +362,10 @@ namespace Anode.Cores.NES.Nessie
                             Internal_Mem();
                             break;
                         case 0x80:
+                            Move();
                             break;
                         case 0x81:
+                            Stack();
                             break;
                         case 0x82:
                             break;
@@ -578,6 +573,81 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
+        void Stack()
+        {
+            if (getRequired)
+            {
+                // Pull
+                switch (t)
+                {
+                    case 1:
+                        DelayedAddr = (ushort)(0x100 + SP);
+                        break;
+                    case 2:
+                        SP++;
+                        DelayedAddr = (ushort)(0x100 + SP);
+                        break;
+                    case 3:
+                        if ((op_a & 2) == 0)
+                        {
+                            // PLP
+                            flag_Carry = (DataLatch & 1) != 0;
+                            flag_Zero = (DataLatch & 2) != 0;
+                            flag_InterruptDisable = (DataLatch & 4) != 0;
+                            flag_Decimal = (DataLatch & 8) != 0;
+                            flag_Overflow = (DataLatch & 0x40) != 0;
+                            flag_Negative = (DataLatch & 0x80) != 0;
+                        }
+                        else
+                        {
+                            // PLA
+                            A = DataLatch;
+                            flag_Zero = A == 0;
+                            flag_Negative = A >= 0x80;
+                        }
+                        resetInstr = true;
+                        break;
+                }
+            }
+            else
+            {
+                // Push
+                switch (t)
+                {
+                    case 1:
+                        getRequired = false;
+                        break;
+                    case 2:
+                        if ((op_a & 2) == 0)
+                        {
+                            // PHP
+                            DataLatch = 0;
+                            DataLatch |= (byte)(flag_Carry ? 1 : 0);
+                            DataLatch |= (byte)(flag_Zero ? 2 : 0);
+                            DataLatch |= (byte)(flag_InterruptDisable ? 4 : 0);
+                            DataLatch |= (byte)(flag_Decimal ? 8 : 0);
+                            DataLatch |= 0x10; // Always set
+                            DataLatch |= 0x20; // Always set
+                            DataLatch |= (byte)(flag_Overflow ? 0x40 : 0);
+                            DataLatch |= (byte)(flag_Negative ? 0x80 : 0);
+                        }
+                        else
+                        {
+                            // PHA
+                            DataLatch = A;
+                        }
+                        Push();
+                        resetInstr = true;
+                        break;
+                }
+            }
+        }
+
+        void Move()
+        {
+
+        }
+
         void Zero_Page()
         {
             DelayedAddr = DataLatch;
@@ -600,6 +670,20 @@ namespace Anode.Cores.NES.Nessie
                     finishedOp = true;
                     break;
             }
+        }
+
+        void Push()
+        {
+            // Always use a "put" cycle.
+            DelayedAddr = (ushort)(0x100 + SP);
+            SP--;
+        }
+
+        void Pull()
+        {
+            // A bit redundant, but I think the function should be called at reset IIRC
+            SP++;
+            DelayedAddr = (ushort)(0x100 + SP);
         }
         
         void Halt()
