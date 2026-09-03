@@ -543,9 +543,6 @@ namespace Anode.Cores.NES.Nessie
             finishedOp = false;
             op_t = 0;
             t = 0;
-            getAddrOnly = false;
-
-            
         }
     }
 }
