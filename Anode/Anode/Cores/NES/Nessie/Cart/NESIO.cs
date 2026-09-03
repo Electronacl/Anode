@@ -15,7 +15,7 @@ namespace Anode.Cores.NES.Nessie
     {
         byte[] InternalROM;
         byte[] ROM = new byte[0x8000];
-        byte[] RAM = new byte[0x800]; // Random Access Memory
+        public byte[] RAM = new byte[0x800]; // Random Access Memory
 
         byte[] HeaderedROM;
         byte cartSize;
@@ -176,7 +176,7 @@ namespace Anode.Cores.NES.Nessie
             if (AddressBus < 0x2000)
             {
                 // Returns mirrored RAM
-                return RAM[DataBus & 0x7FF];
+                return RAM[AddressBus & 0x7FF];
             }
             if (AddressBus >= 0x8000)
             {
@@ -190,7 +190,7 @@ namespace Anode.Cores.NES.Nessie
             if (AddressBus < 0x2000)
             {
                 // Write to RAM
-                RAM[DataBus & 0x7FF] = DataBus;
+                RAM[AddressBus & 0x7FF] = DataBus;
             }
         }
     }

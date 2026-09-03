@@ -18,6 +18,8 @@ namespace Anode.Cores.NES.Nessie
         byte SP; // Stack Pointer
         public ushort PC; // Program Counter
 
+        byte ADD;
+
         bool flag_Carry;
         bool flag_Zero;
         bool flag_InterruptDisable;
@@ -85,11 +87,10 @@ namespace Anode.Cores.NES.Nessie
 
         byte opcode_type; // Values above 127 don't use standard operands
         byte operand_type;
-        bool getAddrOnly;
 
         // Temp values for debug
-        bool logging = false;
-        StreamWriter tracelog;
+        public bool logging = false;
+        public StreamWriter tracelog;
         public string tracepath;
         void Tracelogger(byte opcode)
         {
@@ -122,10 +123,11 @@ namespace Anode.Cores.NES.Nessie
 
         public void RunCycle()
         {
+            DataLatch = DataBus;
             if (op_t == 0 && t == 0)
             {
                 // Read the opcode
-                opcode = DataBus;
+                opcode = DataLatch;
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
                 op_c = (byte)(opcode & 0x3);
@@ -305,10 +307,14 @@ namespace Anode.Cores.NES.Nessie
                     switch (operand_type)
                     {
                         case 0x10:
+                            Zero_Page();
+                            break;
                         case 0x11:
                         case 0x12:
                             break;
                         case 0x20:
+                            Absolute();
+                            break;
                         case 0x21:
                         case 0x22:
                             break;
@@ -324,6 +330,9 @@ namespace Anode.Cores.NES.Nessie
                             case 2:
                                 getRequired = true;
                                 break;
+                            case 1:
+                                getRequired = false;
+                                break;
                         }
                     }
                 }
@@ -334,7 +343,7 @@ namespace Anode.Cores.NES.Nessie
                         // Immediate and A
                         if (operand_type == 2)
                         {
-                            DataBus = A;
+                            DataLatch = A;
                         }
                         else
                         {
@@ -342,13 +351,13 @@ namespace Anode.Cores.NES.Nessie
                         }
                         quickOpComplete = false;
                     }
-                    DataLatch = DataBus;
 
                     switch (opcode_type)
                     {
                         case 0:
                             break;
                         case 1:
+                            Store();
                             break;
                         case 2:
                             Internal_Mem();
@@ -397,6 +406,8 @@ namespace Anode.Cores.NES.Nessie
 
                 DelayedAddr = PC;
             }
+
+            DataBus = DataLatch;
         }
 
         void Internal_Mem()
@@ -456,6 +467,66 @@ namespace Anode.Cores.NES.Nessie
                 tracelog.Close();
             }
         }
+
+        void Store()
+        {
+            switch (op_c)
+            {
+                case 0:
+                    // STY
+                    DataLatch = Y;
+                    break;
+                case 1:
+                    // STA
+                    DataLatch = A;
+                    break;
+                case 2:
+                    // STX
+                    DataLatch = X;
+                    break;
+                case 3:
+                    // SHA, SHS
+                    DataLatch = (byte)(A & X);
+                    break;
+            }
+            if ((op_c != 1) && (op_b == 4 || op_b == 7 || op_b == 6))
+            {
+                if (op_b == 6)
+                {
+                    // SHS (TAS)
+                    SP = DataLatch;
+                }
+
+                // SHX, SHA, SHY
+                //Unstable_Cross(DataBus);
+                //DataBus = (byte)(DataBus & (preIndex_Hi + 1));
+            }
+            resetInstr = true;
+        }
+
+        void Zero_Page()
+        {
+            DelayedAddr = DataLatch;
+            finishedOp = true;
+            PC++;
+        }
+
+        void Absolute()
+        {
+            switch (op_t)
+            {
+                case 1:
+                    ADD = DataLatch;
+                    PC++;
+                    DelayedAddr++;
+                    break;
+                case 2:
+                    DelayedAddr = (ushort)((DataLatch << 8) | ADD);
+                    PC++;
+                    finishedOp = true;
+                    break;
+            }
+        }
         
         void Halt()
         {
@@ -474,11 +545,7 @@ namespace Anode.Cores.NES.Nessie
             t = 0;
             getAddrOnly = false;
 
-            tracepath = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + "\\tracelog.txt";
-            if (logging)
-            {
-                tracelog = new StreamWriter(tracepath);
-            }
+            
         }
     }
 }

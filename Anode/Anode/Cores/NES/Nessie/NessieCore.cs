@@ -2,6 +2,7 @@
 using Anode.Common;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,9 @@ namespace Anode.Cores.NES.Nessie
         NESIO IO;
 
         Renderer renderer;
+
+        bool devmode = false;
+        Tester tester;
 
         void EmuCore.AdvanceFrame()
         {
@@ -61,6 +65,15 @@ namespace Anode.Cores.NES.Nessie
                     CPUClock = MaxCPU;
                 }
                 APUClock = CPUClock;
+            }
+
+            if (CPU.halt)
+            {
+                if (CPU.logging)
+                {
+                    tester.Test_Ram(IO.RAM);
+                    CPU.tracelog.Close();
+                }
             }
 
             PPU.FrameComplete = false;
@@ -122,6 +135,15 @@ namespace Anode.Cores.NES.Nessie
             CPU.DelayedAddr = CPU.PC;
 
             renderer = new Renderer(32 * 8, (30 * 8) - (IO.region ? 0 : 1));
+
+            tester = new Tester();
+            CPU.logging = devmode;
+
+            if (devmode)
+            {
+                CPU.tracepath = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath) + "\\tracelog.txt";
+                CPU.tracelog = new StreamWriter(CPU.tracepath);
+            }
         }
 
         void EmuCore.SoftReset()
