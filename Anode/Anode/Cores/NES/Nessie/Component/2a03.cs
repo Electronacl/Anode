@@ -129,6 +129,11 @@ namespace Anode.Cores.NES.Nessie
         public void RunCycle()
         {
             DataLatch = DataBus;
+            // Why set the data latch instead of using the data bus?
+            // Well, it hasn't been implemented yet, but there's a separate internal and
+            // external bus - some audio registers don't update the external one
+            // So, in this case, DL is the internal and DB is external
+
             if (op_t == 0 && t == 0)
             {
                 // Read the opcode
@@ -421,14 +426,76 @@ namespace Anode.Cores.NES.Nessie
             switch (op_a)
             {
                 case 0:
+                    // c=0 is NOP, N/A or NOP for c=2
+                    if (op_c == 1)
+                    {
+                        // ORA
+                        // Binary ORs accumulator with value
+                        A |= DataLatch;
+                        flag_Negative = A >= 0x80;
+                        flag_Zero = A == 0;
+                    }
                     break;
                 case 1:
+                    // N/A or NOP for c=2
+                    switch (op_c)
+                    {
+                        case 0:
+                            if (op_b < 4)
+                            {
+                                // BIT
+                                // This isn't commonly used, but still important to implement
+                                flag_Zero = (A & DataLatch) == 0;
+                                flag_Negative = (DataLatch & 0x80) != 0;
+                                flag_Overflow = (DataLatch & 0x40) != 0;
+                            }
+                            // In other cases, NOP
+                            break;
+                        case 1:
+                            // AND
+                            // Binary ANDs accumulator with value
+                            A &= DataLatch;
+                            flag_Negative = A >= 0x80;
+                            flag_Zero = A == 0;
+                            break;
+                    }
                     break;
                 case 2:
+                    // N/A or NOP for C=0 and C=2
+                    if (op_c == 1)
+                    {
+                        // EOR
+                        // Binary exclusive ORs with accumulator, aka XOR
+                        A ^= DataLatch;
+                        flag_Negative = A >= 0x80;
+                        flag_Zero = A == 0;
+                    }
                     break;
                 case 3:
+                    if (op_c == 1)
+                    {
+                        // ADC
+                        // Add with carry - this one is kinda complex...
+
+                        // Find the result of the calculation
+                        signedTemp = DataLatch + A + (flag_Carry ? 1 : 0);
+
+                        // Figure out whether it causes an overflow (2 positives
+                        // ends up being negative, or 2 negatives is positive)
+                        // This is used in signed calculations
+                        flag_Overflow = (~(A ^ DataLatch) & (A ^ signedTemp) & 0x80) != 0;
+
+                        // Find whether it carries over to the next bit
+                        flag_Carry = signedTemp > 0xFF;
+
+                        // Now store in A and set other flags as normal
+                        A = (byte)signedTemp;
+                        flag_Negative = A >= 0x80;
+                        flag_Zero = A == 0;
+                    }
                     break;
                 case 4:
+                    // Only NOP
                     break;
                 case 5:
                     // Load instruction
@@ -462,8 +529,60 @@ namespace Anode.Cores.NES.Nessie
                     flag_Negative = DataLatch >= 0x80;
                     break;
                 case 6:
+                    switch (op_c)
+                    {
+                        case 0:
+                            if (op_b < 4)
+                            {
+                                // CPY
+                                // Compares the Y register with the data bus to set flags
+                                flag_Carry = Y >= DataLatch;
+                                flag_Zero = DataLatch == Y;
+                                flag_Negative = (byte)(Y - DataLatch) >= 0x80;
+                            }
+                            // In other cases, NOP
+                            break;
+                        case 1:
+                            // CMP
+                            // Compares the accumulator with the data bus to set flags
+                            flag_Carry = A >= DataLatch;
+                            flag_Zero = DataLatch == A;
+                            flag_Negative = (byte)(A - DataLatch) >= 0x80;
+                            break;
+                        // Case 2 is NOP
+                    }
                     break;
                 case 7:
+                    switch (op_c)
+                    {
+                        case 0:
+                            // CPX
+                            // Compares the x register with the data bus to set flags
+                            if (op_b < 4)
+                            {
+                                flag_Carry = X >= DataLatch;
+                                flag_Zero = DataLatch == X;
+                                flag_Negative = (byte)(X - DataLatch) >= 0x80;
+                            }
+                            // In other cases, NOP
+                            break;
+                        case 1:
+                            // SBC
+                            // Ahh, another complex one
+
+                            // Get the result of the calculation
+                            signedTemp = A - DataLatch - (flag_Carry ? 0 : 1);
+                            // In case of the signed overflow
+                            flag_Overflow = ((A ^ DataLatch) & (A ^ signedTemp) & 0x80) != 0;
+                            // Unsigned overflow
+                            flag_Carry = signedTemp >= 0;
+                            // Transfer to A and set regular flags
+                            A = (byte)signedTemp;
+                            flag_Negative = A >= 0x80;
+                            flag_Zero = A == 0;
+                            break;
+                            // Case 2 is NOP
+                    }
                     break;
             }
             resetInstr = true;
