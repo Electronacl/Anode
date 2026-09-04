@@ -24,7 +24,7 @@ namespace Anode.Cores.NES.Nessie
 
         Renderer renderer;
 
-        bool devmode = true;
+        bool devmode = false;
         Tester tester;
 
         void EmuCore.AdvanceFrame()
