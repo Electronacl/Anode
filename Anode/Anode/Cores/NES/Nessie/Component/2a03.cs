@@ -49,6 +49,10 @@ namespace Anode.Cores.NES.Nessie
         byte op_b;
         byte op_c;
 
+        // On reading and writing - important!
+        // Set the read/write address *before* the cycle you want to access memory on.
+        // This means that for push/pull, use it before the frame to push/pull on.
+
         // Tracelogger code from 100th Coin's tutorial, I'll make my own one in the future. (it's been a while and I still haven't done this lol)
         static String[] OpCodeNames =
         {
@@ -575,7 +579,7 @@ namespace Anode.Cores.NES.Nessie
 
         void Stack()
         {
-            if (getRequired)
+            if ((op_a & 1) != 0)
             {
                 // Pull
                 switch (t)
@@ -616,6 +620,7 @@ namespace Anode.Cores.NES.Nessie
                 {
                     case 1:
                         getRequired = false;
+                        Push();
                         break;
                     case 2:
                         if ((op_a & 2) == 0)
@@ -636,7 +641,6 @@ namespace Anode.Cores.NES.Nessie
                             // PHA
                             DataLatch = A;
                         }
-                        Push();
                         resetInstr = true;
                         break;
                 }
@@ -645,7 +649,75 @@ namespace Anode.Cores.NES.Nessie
 
         void Move()
         {
-
+            if(op_b == 0)
+            {
+                switch (op_a)
+                {
+                    case 0:
+                        // BRK
+                        break;
+                    case 1:
+                        // JSR
+                        switch (t)
+                        {
+                            case 1:
+                                PC++;
+                                ADD = DataLatch;
+                                DelayedAddr = (ushort)(0x100 + SP);
+                                break;
+                            case 2:
+                                getRequired = false;
+                                Push();
+                                break;
+                            case 3:
+                                DataLatch = (byte)(PC >> 8);
+                                Push();
+                                break;
+                            case 4:
+                                DataLatch = (byte)PC;
+                                getRequired = true;
+                                DelayedAddr = PC;
+                                break;
+                            case 5:
+                                PC = (ushort)((DataLatch << 8) | ADD);
+                                resetInstr = true;
+                                break;
+                        }
+                        break;
+                    case 2:
+                        // RTI
+                        break;
+                    case 3:
+                        // RTS
+                        switch (t)
+                        {
+                            case 1:
+                                // rd
+                                DelayedAddr = (ushort)(0x100 + SP);
+                                break;
+                            case 2:
+                                // rd
+                                Pull();
+                                break;
+                            case 3:
+                                // rd
+                                ADD = DataLatch;
+                                Pull();
+                                break;
+                            case 4:
+                                // rd
+                                PC = (ushort)((DataLatch << 8) | ADD);
+                                PC++;
+                                DelayedAddr = PC;
+                                break;
+                            case 5:
+                                // rd
+                                resetInstr = true;
+                                break;
+                        }
+                        break;
+                }
+            }
         }
 
         void Zero_Page()
