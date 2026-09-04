@@ -1,16 +1,14 @@
 ﻿using Anode.Common;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Anode.Cores.NES.Nessie
 {
     [Serializable]
     internal class _2a03
     {
+        readonly byte unstable_magic = 0xEC;
+
         byte A; // Accumulator
         byte X;
         byte Y;
@@ -28,6 +26,8 @@ namespace Anode.Cores.NES.Nessie
         bool flag_Overflow;
         bool flag_Negative;
 
+        bool FutureFlag_Carry;
+
         byte op_t;
         byte t;
         bool resetInstr;
@@ -37,6 +37,9 @@ namespace Anode.Cores.NES.Nessie
         public ushort AddressBus;
         public byte DataLatch; // Internal bus
         public byte DataBus;
+
+        byte preIndex_hi;
+        bool changedBoundary;
 
         public ushort DelayedAddr;
 
@@ -152,6 +155,11 @@ namespace Anode.Cores.NES.Nessie
                 PC++;
                 DelayedAddr++;
 
+                if (opcode == 0xCa)
+                {
+
+                }
+
                 
                 // Opcode types
                 // 0x0x:
@@ -170,7 +178,7 @@ namespace Anode.Cores.NES.Nessie
                     // Movement or push/pull
                     opcode_type = op_b == 0 ? (byte)0x80 : (byte)0x81;
                 }
-                else if (op_c == 2 && (op_a & 0b110) != 0b100)
+                else if (op_c == 2 && ((op_a & 0b100) == 0 || ((op_a & 0b110) != 0b100 && (op_b & 0b11) != 0b10)))
                 {
                     // RMW
                     opcode_type = 0;
@@ -194,8 +202,16 @@ namespace Anode.Cores.NES.Nessie
                 {
                     if (!(op_c == 3 && op_b == 2))
                     {
-                        // Internal memory execution
-                        opcode_type = 2;
+                        if (op_c == 0 && (op_a & 0b110) == 0b010)
+                        {
+                            // JMP is weird
+                            opcode_type = 0x80;
+                        }
+                        else
+                        {
+                            // Internal memory execution
+                            opcode_type = 2;
+                        }
                     }
                     else
                     {
@@ -322,16 +338,20 @@ namespace Anode.Cores.NES.Nessie
                             break;
                         case 0x11:
                         case 0x12:
+                            Zero_Page_Indexed();
                             break;
                         case 0x20:
                             Absolute();
                             break;
                         case 0x21:
                         case 0x22:
+                            Absolute_Indexed();
                             break;
                         case 0x31:
+                            X_Indirect();
                             break;
                         case 0x32:
+                            Y_Indirect();
                             break;
                     }
                     if (finishedOp)
@@ -352,6 +372,8 @@ namespace Anode.Cores.NES.Nessie
                         if (operand_type == 2)
                         {
                             DataLatch = A;
+                            t = 3;
+                            // A instructions take 2 cycles and only do the first dummy read
                         }
                         else
                         {
@@ -363,6 +385,7 @@ namespace Anode.Cores.NES.Nessie
                     switch (opcode_type)
                     {
                         case 0:
+                            RMW();
                             break;
                         case 1:
                             Store();
@@ -377,11 +400,13 @@ namespace Anode.Cores.NES.Nessie
                             Stack();
                             break;
                         case 0x82:
+                            Single_Byte();
                             break;
                         case 0x83:
                             Branch();
                             break;
                         case 0x84:
+                            Unofficial_Immediate();
                             break;
                     }
                 }
@@ -412,6 +437,8 @@ namespace Anode.Cores.NES.Nessie
                 resetInstr = false;
                 finishedOp = false;
                 quickOpComplete = false;
+                changedBoundary = false;
+
                 op_t = 0;
                 t = 0;
 
@@ -623,8 +650,8 @@ namespace Anode.Cores.NES.Nessie
                 }
 
                 // SHX, SHA, SHY
-                //Unstable_Cross(DataBus);
-                //DataBus = (byte)(DataBus & (preIndex_Hi + 1));
+                Unstable_Cross(DataLatch);
+                DataLatch = (byte)(DataLatch & (preIndex_hi + 1));
             }
             resetInstr = true;
         }
@@ -774,6 +801,53 @@ namespace Anode.Cores.NES.Nessie
                 {
                     case 0:
                         // BRK
+                        switch (t)
+                        {
+                            case 1:
+                                PC++;
+                                getRequired = false;
+                                break;
+                            case 2:
+                                DataLatch = (byte)(PC >> 8);
+
+                                // Potentially update the push method to use this, as it's more accurate
+                                AddressBus = (ushort)(0x100 + SP);
+                                SP--;
+                                break;
+                            case 3:
+                                DataLatch = (byte)PC;
+                                AddressBus = (ushort)(0x100 + SP);
+                                SP--;
+                                break;
+                            case 4:
+                                DataLatch =  (byte)(flag_Carry ? 1 : 0);
+                                DataLatch |= (byte)(flag_Zero ? 2 : 0);
+                                DataLatch |= (byte)(flag_InterruptDisable ? 4 : 0);
+                                DataLatch |= (byte)(flag_Decimal ? 8 : 0);
+                                //DataLatch |= (byte)((inNMI || inIRQ) ? 0 : 0x10); // NMI has no B flag
+                                DataLatch |= 0x10;
+                                DataLatch |= 0x20; // Always set
+                                DataLatch |= (byte)(flag_Overflow ? 0x40 : 0);
+                                DataLatch |= (byte)(flag_Negative ? 0x80 : 0);
+
+                                AddressBus = (ushort)(0x100 + SP);
+                                SP--;
+
+                                getRequired = true;
+                                //DelayedAddr = (ushort)(inNMI ? 0xFFFA : 0xFFFE);
+                                DelayedAddr = 0xFFFE;
+                                break;
+                            case 5:
+                                ADD = DataLatch;
+                                DelayedAddr++;
+                                break;
+                            case 6:
+                                DelayedAddr = (ushort)((DataLatch << 8) | ADD);
+                                PC = DelayedAddr;
+
+                                resetInstr = true;
+                                break;
+                        }
                         break;
                     case 1:
                         // JSR
@@ -805,6 +879,33 @@ namespace Anode.Cores.NES.Nessie
                         break;
                     case 2:
                         // RTI
+                        switch (t)
+                        {
+                            case 1:
+                                DelayedAddr = (ushort)(SP + 0x100);
+                                break;
+                            case 2:
+                                Pull();
+                                break;
+                            case 3:
+                                flag_Carry = (DataLatch & 1) != 0;
+                                flag_Zero = (DataLatch & 2) != 0;
+                                flag_InterruptDisable = (DataLatch & 4) != 0;
+                                flag_Decimal = (DataLatch & 8) != 0;
+                                flag_Overflow = (DataLatch & 0x40) != 0;
+                                flag_Negative = (DataLatch & 0x80) != 0;
+
+                                Pull();
+                                break;
+                            case 4:
+                                ADD = DataLatch;
+                                Pull();
+                                break;
+                            case 5:
+                                PC = (ushort)((DataLatch << 8) | ADD);
+                                resetInstr = true;
+                                break;
+                        }
                         break;
                     case 3:
                         // RTS
@@ -837,6 +938,441 @@ namespace Anode.Cores.NES.Nessie
                         break;
                 }
             }
+            else
+            {
+                if (op_a != 3 && t == 1)
+                {
+                    // For absolute instead of indirect, skip
+                    t = 3;
+                }
+                switch (t)
+                {
+                    case 1:
+                        ADD = DataLatch;
+                        DelayedAddr++;
+                        break;
+                    case 2:
+                        DelayedAddr = (ushort)((DataLatch << 8) | ADD);
+                        break;
+                    case 3:
+                        ADD = DataLatch;
+                        if (op_a == 3)
+                        {
+                            DelayedAddr = (ushort)((AddressBus & 0xFF00) | ((AddressBus + 1) & 0xFF));
+                        }
+                        else
+                        {
+                            DelayedAddr++;
+                        }
+                        break;
+                    case 4:
+                        PC = (ushort)((DataLatch << 8) | ADD);
+
+                        resetInstr = true;
+                        break;
+                }
+            }
+        }
+
+        void RMW()
+        {
+            switch (t)
+            {
+                case 1:
+                    // Read
+                    getRequired = false;
+                    break;
+                case 2:
+                    // Dummy write
+                    break;
+                case 3:
+                    // Do stuff
+                    if (op_c != 3)
+                    {
+                        switch (op_a)
+                        {
+                            case 0:
+                                // ASL - Arithmetic Shift Left
+                                flag_Carry = DataLatch >= 0x80;
+                                DataLatch <<= 1;
+                                flag_Zero = DataLatch == 0;
+                                flag_Negative = DataLatch >= 0x80;
+                                break;
+                            case 1:
+                                // ROL - Rotate Left
+                                bool Futureflag_Carry = DataLatch >= 0x80;
+                                DataLatch <<= 1;
+                                if (flag_Carry)
+                                {
+                                    DataLatch |= 1;
+                                }
+                                flag_Carry = Futureflag_Carry;
+                                flag_Negative = DataLatch >= 0x80;
+                                flag_Zero = DataLatch == 0;
+                                break;
+                            case 2:
+                                // LSR - Logical Shift Right
+                                flag_Carry = (DataLatch & 1) != 0;
+                                DataLatch >>= 1;
+                                flag_Negative = DataLatch >= 0x80;
+                                flag_Zero = DataLatch == 0;
+                                break;
+                            case 3:
+                                // ROR - Rotate Right
+                                bool FutureFlag_Carry = (DataLatch & 1) != 0;
+                                DataLatch >>= 1;
+                                if (flag_Carry)
+                                {
+                                    DataLatch |= 0x80;
+                                }
+                                flag_Carry = FutureFlag_Carry;
+                                flag_Negative = DataLatch >= 0x80;
+                                flag_Zero = DataLatch == 0;
+                                break;
+                            case 6:
+                                // DEC - Decrement
+                                DataLatch--;
+                                flag_Negative = DataLatch >= 0x80;
+                                flag_Zero = DataLatch == 0;
+                                break;
+                            case 7:
+                                // INC - Increment
+                                DataLatch++;
+                                flag_Negative = DataLatch >= 0x80;
+                                flag_Zero = DataLatch == 0;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (op_a)
+                        {
+                            case 0:
+                                // SLO (Unofficial)
+                                flag_Carry = DataLatch >= 0x80;
+                                DataLatch <<= 1;
+                                A |= DataLatch;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 1:
+                                // RLA (Unofficial)
+                                FutureFlag_Carry = DataLatch >= 0x80;
+                                DataLatch <<= 1;
+                                if (flag_Carry)
+                                {
+                                    DataLatch |= 1;
+                                }
+                                flag_Carry = FutureFlag_Carry;
+                                A &= DataLatch;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 2:
+                                // SRE (Unofficial)
+                                flag_Carry = (DataLatch & 1) != 0;
+                                DataLatch >>= 1;
+
+                                A ^= DataLatch;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 3:
+                                // RRA
+                                FutureFlag_Carry = (DataLatch & 1) != 0;
+                                DataLatch >>= 1;
+                                if (flag_Carry)
+                                {
+                                    DataLatch |= 0x80;
+                                }
+                                flag_Carry = FutureFlag_Carry;
+
+                                signedTemp = DataLatch + A + (flag_Carry ? 1 : 0);
+                                flag_Overflow = (~(A ^ DataLatch) & (A ^ signedTemp) & 0x80) != 0; // Signed overflow
+                                flag_Carry = signedTemp > 0xFF; // Unsigned overflow
+                                A = (byte)signedTemp;
+
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                            case 6:
+                                // DCP (Unofficial)
+                                DataLatch--;
+                                flag_Carry = A >= DataLatch;
+                                flag_Zero = DataLatch == A;
+                                flag_Negative = (byte)(A - DataLatch) >= 0x80;
+                                break;
+                            case 7:
+                                // ISC (Unofficial)
+                                DataLatch++;
+                                // Get the result of the calculation
+                                signedTemp = A - DataLatch - (flag_Carry ? 0 : 1);
+                                // In case of the signed overflow
+                                flag_Overflow = ((A ^ DataLatch) & (A ^ signedTemp) & 0x80) != 0;
+                                // Unsigned overflow
+                                flag_Carry = signedTemp >= 0;
+                                // Transfer to A and set regular flags
+                                A = (byte)signedTemp;
+                                flag_Negative = A >= 0x80;
+                                flag_Zero = A == 0;
+                                break;
+                        }
+                    }
+                    if (operand_type == 2)
+                    {
+                        A = DataLatch;
+                    }
+                    resetInstr = true;
+                    break;
+            }
+        }
+
+        void Unofficial_Immediate()
+        {
+            PC++;
+            switch (op_a)
+            {
+                case 0:
+                case 1:
+                    // ANC
+                    // First AND
+                    A &= DataLatch;
+                    flag_Negative = A >= 0x80;
+                    flag_Zero = A == 0;
+
+                    // Then carry flag is set
+                    flag_Carry = A >= 0x80;
+                    break;
+                case 2:
+                    // ALR / ASR
+                    // First AND
+                    A &= DataLatch;
+
+                    DataLatch = A;
+
+                    // Then LSR
+                    flag_Carry = (DataLatch & 1) != 0;
+                    DataLatch >>= 1;
+                    flag_Negative = DataLatch >= 0x80;
+                    flag_Zero = DataLatch == 0;
+
+                    // Affects A
+                    A = DataLatch;
+                    break;
+                case 3:
+                    // ARR
+                    // Shiver me timbers!
+                    // First AND
+                    A &= DataLatch;
+                    flag_Negative = A >= 0x80;
+                    flag_Zero = A == 0;
+
+                    DataLatch = A;
+
+                    // Then ROR
+                    bool FutureFlag_Carry = (DataLatch & 1) != 0;
+                    DataLatch >>= 1;
+                    if (flag_Carry)
+                    {
+                        DataLatch |= 0x80;
+                    }
+                    flag_Carry = FutureFlag_Carry;
+                    flag_Negative = DataLatch >= 0x80;
+                    flag_Zero = DataLatch == 0;
+
+                    // Affects A
+                    A = DataLatch;
+
+                    // Sets flags based on certain conditions
+                    flag_Carry = (A & 0b01000000) != 0; // Flag is set if bit 6 is set
+                    flag_Overflow = flag_Carry != ((A & 0b00100000) != 0); // Flag is set if either bit 6 OR 5 is set but NOT both
+                    break;
+                case 4:
+                    // ANE (XXA)
+                    // Unstable opcode using a magic value. The magic value fluctuates on real
+                    // hardware based on temperature and other factors, but this isn't done in emulation,
+                    // as it prevents repeatability. The constant is currently chosen based on a realistic
+                    // value, albeit I don't have a flash cart to check real hardware.
+                    A = (byte)((unstable_magic | A) & X & DataLatch);
+                    flag_Zero = A == 0;
+                    flag_Negative = A >= 0x80;
+                    break;
+                case 5:
+                    // LXA
+                    // immediate version of LAX, but it's unstable
+                    DataLatch = (byte)((A | unstable_magic) & DataLatch);
+                    A = DataLatch;
+                    X = DataLatch;
+                    flag_Negative = DataLatch >= 0x80;
+                    flag_Zero = DataLatch == 0;
+                    break;
+                case 6:
+                    // SBX (AXS, SAX)
+                    DataLatch = (byte)((A & X) - DataLatch);
+                    flag_Zero = DataLatch == 0;
+                    flag_Negative = DataLatch >= 0x80;
+                    flag_Carry = DataLatch <= (A & X);
+                    X = DataLatch;
+                    break;
+                case 7:
+                    // USBC (Wow, USB-C! The NES was really ahead of it's time /j)
+                    // Literally just SBC #
+
+                    // Get the result of the calculation
+                    signedTemp = A - DataLatch - (flag_Carry ? 0 : 1);
+                    // In case of the signed overflow
+                    flag_Overflow = ((A ^ DataLatch) & (A ^ signedTemp) & 0x80) != 0;
+                    // Unsigned overflow
+                    flag_Carry = signedTemp >= 0;
+                    // Transfer to A and set regular flags
+                    A = (byte)signedTemp;
+                    flag_Negative = A >= 0x80;
+                    flag_Zero = A == 0;
+                    break;
+            }
+            resetInstr = true;
+        }
+
+        void Single_Byte()
+        {
+            if (op_c == 0)
+            {
+                if (op_b == 2)
+                {
+                    switch (op_a)
+                    {
+                        case 4:
+                            // DEY
+                            // Subtract 1 from Y and update flags
+                            Y--;
+                            flag_Zero = Y == 0;
+                            flag_Negative = Y >= 0x80;
+                            break;
+                        case 5:
+                            // TAY
+                            // Sets Y to A and then updates flags
+                            Y = A;
+                            flag_Zero = Y == 0;
+                            flag_Negative = Y >= 0x80;
+                            break;
+                        case 6:
+                            // INY
+                            // Increments 1 on Y and update flags
+                            Y++;
+                            flag_Zero = Y == 0;
+                            flag_Negative = Y >= 0x80;
+                            break;
+                        case 7:
+                            // INX
+                            // Increments 1 on X and updates flags
+                            X++;
+                            flag_Zero = X == 0;
+                            flag_Negative = X >= 0x80;
+                            break;
+                    }
+
+                }
+                else
+                {
+                    switch (op_a)
+                    {
+                        case 0:
+                            // CLC
+                            // Clears the carry flag
+                            flag_Carry = false;
+                            break;
+                        case 1:
+                            // SEC
+                            // Sets the carry flag
+                            flag_Carry = true;
+                            break;
+                        case 2:
+                            // CLI
+                            // Clears the interrupt disable flag
+                            flag_InterruptDisable = false;
+                            break;
+                        case 3:
+                            // SEI
+                            // Sets the interrupt disable flag
+                            flag_InterruptDisable = true;
+                            break;
+                        case 4:
+                            // TYA
+                            // Copies Y over to the A register and sets flags
+                            A = Y;
+                            flag_Zero = A == 0;
+                            flag_Negative = A >= 0x80;
+                            break;
+                        case 5:
+                            // CLV
+                            // Clears the overflow register
+                            flag_Overflow = false;
+                            break;
+                        case 6:
+                            // CLD
+                            // Clears the decimal register
+                            flag_Decimal = false;
+                            break;
+                        case 7:
+                            // SED
+                            // Sets the decimal register
+                            flag_Decimal = true;
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                if (op_b == 2)
+                {
+                    switch (op_a)
+                    {
+                        case 4:
+                            // TXA
+                            // Copies the X register to the A register and sets flags
+                            A = X;
+                            flag_Zero = A == 0;
+                            flag_Negative = A >= 0x80;
+                            break;
+                        case 5:
+                            // TAX
+                            // Copies the A register to the X register and sets flags
+                            X = A;
+                            flag_Zero = X == 0;
+                            flag_Negative = X >= 0x80;
+                            break;
+                        case 6:
+                            // DEX
+                            // Subtracts 1 from the X register and sets flags
+                            X--;
+                            flag_Zero = X == 0;
+                            flag_Negative = X >= 0x80;
+                            break;
+                            // 7 is NOP
+                    }
+                }
+                else
+                {
+                    switch (op_a)
+                    {
+                        case 4:
+                            // TXS
+                            // Transfers the X to the SP
+                            // Doesn't set flags
+                            SP = X;
+                            break;
+                        case 5:
+                            // TSX
+                            // Transfers the SP to X and sets flags
+                            X = SP;
+                            flag_Zero = X == 0;
+                            flag_Negative = X >= 0x80;
+                            break;
+                        // Others are unofficial NOPs
+                    }
+                }
+            }
+            resetInstr = true;
         }
 
         void Zero_Page()
@@ -844,6 +1380,30 @@ namespace Anode.Cores.NES.Nessie
             DelayedAddr = DataLatch;
             finishedOp = true;
             PC++;
+        }
+
+        void Zero_Page_Indexed()
+        {
+            switch (op_t)
+            {
+                case 1:
+                    DelayedAddr = DataLatch;
+                    PC++;
+                    break;
+                case 2:
+                    if (operand_type == 0x11)
+                    {
+                        // Zero Page, X
+                        DelayedAddr = (byte)(DelayedAddr + X);
+                    }
+                    else
+                    {
+                        // Zero Page, Y
+                        DelayedAddr = (byte)(DelayedAddr + Y);
+                    }
+                    finishedOp = true;
+                    break;
+            }
         }
 
         void Absolute()
@@ -860,6 +1420,124 @@ namespace Anode.Cores.NES.Nessie
                     PC++;
                     finishedOp = true;
                     break;
+            }
+        }
+
+        void Absolute_Indexed()
+        {
+            switch (op_t)
+            {
+                case 1:
+                    ADD = DataLatch;
+                    PC++;
+                    DelayedAddr++;
+                    break;
+                case 2:
+                    DelayedAddr = (ushort)((DataLatch << 8) | ADD);
+                    PC++;
+                    preIndex_hi = DataLatch;
+
+                    ushort AddressTemp;
+                    if (operand_type == 0x21)
+                    {
+                        // Absolute, X
+                        AddressTemp = (ushort)(DelayedAddr + X);
+                    }
+                    else
+                    {
+                        // Absolute, Y
+                        AddressTemp = (ushort)(DelayedAddr + Y);
+                    }
+
+                    DelayedAddr = (ushort)((DelayedAddr & 0xFF00) | (byte)AddressTemp);
+                    if (AddressTemp != DelayedAddr)
+                    {
+                        // Page boundary crossed, wait
+                        signedTemp = (AddressTemp - DelayedAddr);
+                        changedBoundary = true;
+                    }
+                    else
+                    {
+                        // No boundary crossed
+                        if (opcode_type != 1)
+                        {
+                            finishedOp = true;
+                        }
+                        else
+                        {
+                            // Store instructions don't skip the next step if not rquired
+                            signedTemp = 0;
+                        }
+                    }
+                    break;
+                case 3:
+                    DelayedAddr = (ushort)(AddressBus + signedTemp);
+                    break;
+            }
+        }
+
+        void X_Indirect()
+        {
+            switch (op_t)
+            {
+                case 1:
+                    PC++;
+                    DelayedAddr = DataLatch;
+                    break;
+                case 2:
+                    DelayedAddr = (byte)(AddressBus + X);
+                    break;
+                case 3:
+                    ADD = DataLatch;
+                    DelayedAddr = (byte)(AddressBus + 1);
+                    break;
+                case 4:
+                    DelayedAddr = (ushort)((DataLatch << 8) | ADD);
+                    finishedOp = true;
+                    break;
+            }
+        }
+
+        void Y_Indirect()
+        {
+            switch (op_t)
+            {
+                case 1:
+                    PC++;
+                    DelayedAddr = DataLatch;
+                    break;
+                case 2:
+                    DelayedAddr = (byte)(AddressBus + 1);
+                    ADD = DataLatch;
+                    break;
+                case 3:
+                    preIndex_hi = DataLatch;
+                    DelayedAddr = (ushort)((DataLatch << 8) | ADD);
+
+                    ushort AddrTemp = (ushort)(((DelayedAddr + Y) & 0xFF) | (DelayedAddr & 0xFF00));
+                    signedTemp = DelayedAddr + Y - AddrTemp;
+                    DelayedAddr = AddrTemp;
+
+                    if (signedTemp == 0 && opcode_type != 1)
+                    {
+                        finishedOp = true;
+                    }
+                    break;
+                case 4:
+                    changedBoundary = signedTemp != 0;
+                    DelayedAddr = (ushort)(DelayedAddr + signedTemp);
+                    finishedOp = true;
+                    break;
+            }
+        }
+
+        void Unstable_Cross(byte CrossVal)
+        {
+            // The edge case might not be applicable at the moment as DMA is not working correctly.
+            // DON'T change the address bus like this, but ig it works for this case as the use of it occurs after the cycle
+            if (changedBoundary)
+            {
+                AddressBus = (ushort)((AddressBus & 0xFF00 & (CrossVal << 8)) | (AddressBus & 0xFF));
             }
         }
 
