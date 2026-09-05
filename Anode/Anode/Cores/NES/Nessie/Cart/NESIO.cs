@@ -180,7 +180,10 @@ namespace Anode.Cores.NES.Nessie
             }
             if (AddressBus >= 0x8000)
             {
-                return ROM[AddressBus & 0x7FFF];
+                if (cartSize <= 2)
+                {
+                    return ROM[(AddressBus & 0x7FFF) & ((Header[4] * 0x4000) - 1)];
+                }
             }
             return DataBus;
         }

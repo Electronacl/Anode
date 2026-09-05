@@ -131,6 +131,13 @@ namespace Anode.Cores.NES.Nessie
             CPUClock = MaxCPU;
 
             CPU.PC = (ushort)((IO.ReadCPU(0xFFFD, 0) << 8) | IO.ReadCPU(0xFFFC, 0));
+
+            // For running nestest headless
+            if (devmode)
+            {
+                CPU.PC = 0xC000;
+            }
+
             CPU.getRequired = true;
             CPU.DelayedAddr = CPU.PC;
 

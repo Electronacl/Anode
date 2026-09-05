@@ -137,6 +137,11 @@ namespace Anode.Cores.NES.Nessie
             // external bus - some audio registers don't update the external one
             // So, in this case, DL is the internal and DB is external
 
+            if (opcode == 0x70)
+            {
+
+            }
+
             if (op_t == 0 && t == 0)
             {
                 // Read the opcode
@@ -155,7 +160,7 @@ namespace Anode.Cores.NES.Nessie
                 PC++;
                 DelayedAddr++;
 
-                if (opcode == 0xCa)
+                if (opcode == 0x70)
                 {
 
                 }
@@ -202,7 +207,7 @@ namespace Anode.Cores.NES.Nessie
                 {
                     if (!(op_c == 3 && op_b == 2))
                     {
-                        if (op_c == 0 && (op_a & 0b110) == 0b010)
+                        if (op_c == 0 && (op_a & 0b110) == 0b010 && op_b == 3)
                         {
                             // JMP is weird
                             opcode_type = 0x80;
@@ -719,6 +724,7 @@ namespace Anode.Cores.NES.Nessie
                 case 3:
                     DelayedAddr = (ushort)(AddressBus + signedTemp);
                     PC = DelayedAddr;
+                    resetInstr = true;
                     break;
             }
         }
@@ -1472,6 +1478,7 @@ namespace Anode.Cores.NES.Nessie
                     break;
                 case 3:
                     DelayedAddr = (ushort)(AddressBus + signedTemp);
+                    finishedOp = true;
                     break;
             }
         }
