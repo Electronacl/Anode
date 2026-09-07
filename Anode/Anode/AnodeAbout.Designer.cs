@@ -29,82 +29,82 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AnodeAbout));
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
-            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
+            this.AnodeTitleText = new System.Windows.Forms.Label();
+            this.AnodeSummaryText = new System.Windows.Forms.Label();
+            this.CopyrightText = new System.Windows.Forms.Label();
+            this.LinkGroup = new System.Windows.Forms.Panel();
+            this.LicenseLink = new System.Windows.Forms.LinkLabel();
+            this.BugLink = new System.Windows.Forms.LinkLabel();
+            this.GHLink = new System.Windows.Forms.LinkLabel();
+            this.LegalInfoText = new System.Windows.Forms.Label();
+            this.HDiv1 = new System.Windows.Forms.Label();
+            this.HDiv2 = new System.Windows.Forms.Label();
             this.versionText = new System.Windows.Forms.Label();
-            this.label8 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
-            this.panel1.SuspendLayout();
+            this.HDiv3 = new System.Windows.Forms.Label();
+            this.HDiv4 = new System.Windows.Forms.Label();
+            this.LinkGroup.SuspendLayout();
             this.SuspendLayout();
             // 
-            // label1
+            // AnodeTitleText
             // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
+            resources.ApplyResources(this.AnodeTitleText, "AnodeTitleText");
+            this.AnodeTitleText.Name = "AnodeTitleText";
             // 
-            // label2
+            // AnodeSummaryText
             // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
+            resources.ApplyResources(this.AnodeSummaryText, "AnodeSummaryText");
+            this.AnodeSummaryText.Name = "AnodeSummaryText";
             // 
-            // label3
+            // CopyrightText
             // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
+            resources.ApplyResources(this.CopyrightText, "CopyrightText");
+            this.CopyrightText.Name = "CopyrightText";
             // 
-            // panel1
+            // LinkGroup
             // 
-            this.panel1.Controls.Add(this.linkLabel3);
-            this.panel1.Controls.Add(this.linkLabel2);
-            this.panel1.Controls.Add(this.linkLabel1);
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.Name = "panel1";
+            this.LinkGroup.Controls.Add(this.LicenseLink);
+            this.LinkGroup.Controls.Add(this.BugLink);
+            this.LinkGroup.Controls.Add(this.GHLink);
+            resources.ApplyResources(this.LinkGroup, "LinkGroup");
+            this.LinkGroup.Name = "LinkGroup";
             // 
-            // linkLabel3
+            // LicenseLink
             // 
-            resources.ApplyResources(this.linkLabel3, "linkLabel3");
-            this.linkLabel3.Name = "linkLabel3";
-            this.linkLabel3.TabStop = true;
-            this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel3_LinkClicked);
+            resources.ApplyResources(this.LicenseLink, "LicenseLink");
+            this.LicenseLink.Name = "LicenseLink";
+            this.LicenseLink.TabStop = true;
+            this.LicenseLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel3_LinkClicked);
             // 
-            // linkLabel2
+            // BugLink
             // 
-            resources.ApplyResources(this.linkLabel2, "linkLabel2");
-            this.linkLabel2.Name = "linkLabel2";
-            this.linkLabel2.TabStop = true;
-            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
+            resources.ApplyResources(this.BugLink, "BugLink");
+            this.BugLink.Name = "BugLink";
+            this.BugLink.TabStop = true;
+            this.BugLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
-            // linkLabel1
+            // GHLink
             // 
-            resources.ApplyResources(this.linkLabel1, "linkLabel1");
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            resources.ApplyResources(this.GHLink, "GHLink");
+            this.GHLink.Name = "GHLink";
+            this.GHLink.TabStop = true;
+            this.GHLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
-            // label4
+            // LegalInfoText
             // 
-            resources.ApplyResources(this.label4, "label4");
-            this.label4.Name = "label4";
+            resources.ApplyResources(this.LegalInfoText, "LegalInfoText");
+            this.LegalInfoText.Name = "LegalInfoText";
             // 
-            // label5
+            // HDiv1
             // 
-            this.label5.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            resources.ApplyResources(this.label5, "label5");
-            this.label5.Name = "label5";
+            this.HDiv1.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            resources.ApplyResources(this.HDiv1, "HDiv1");
+            this.HDiv1.Name = "HDiv1";
             // 
-            // label6
+            // HDiv2
             // 
-            this.label6.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
+            this.HDiv2.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            resources.ApplyResources(this.HDiv2, "HDiv2");
+            this.HDiv2.Name = "HDiv2";
             // 
             // versionText
             // 
@@ -112,38 +112,38 @@
             this.versionText.Name = "versionText";
             this.versionText.Click += new System.EventHandler(this.versionText_Click);
             // 
-            // label8
+            // HDiv3
             // 
-            this.label8.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            resources.ApplyResources(this.label8, "label8");
-            this.label8.Name = "label8";
+            this.HDiv3.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            resources.ApplyResources(this.HDiv3, "HDiv3");
+            this.HDiv3.Name = "HDiv3";
             // 
-            // label7
+            // HDiv4
             // 
-            this.label7.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
-            resources.ApplyResources(this.label7, "label7");
-            this.label7.Name = "label7";
+            this.HDiv4.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            resources.ApplyResources(this.HDiv4, "HDiv4");
+            this.HDiv4.Name = "HDiv4";
             // 
             // AnodeAbout
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.label7);
-            this.Controls.Add(this.label8);
+            this.Controls.Add(this.HDiv4);
+            this.Controls.Add(this.HDiv3);
             this.Controls.Add(this.versionText);
-            this.Controls.Add(this.label6);
-            this.Controls.Add(this.label5);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.panel1);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.HDiv2);
+            this.Controls.Add(this.HDiv1);
+            this.Controls.Add(this.LegalInfoText);
+            this.Controls.Add(this.LinkGroup);
+            this.Controls.Add(this.CopyrightText);
+            this.Controls.Add(this.AnodeSummaryText);
+            this.Controls.Add(this.AnodeTitleText);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AnodeAbout";
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.LinkGroup.ResumeLayout(false);
+            this.LinkGroup.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -151,18 +151,18 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.LinkLabel linkLabel1;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.LinkLabel linkLabel2;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label AnodeTitleText;
+        private System.Windows.Forms.Label AnodeSummaryText;
+        private System.Windows.Forms.Label CopyrightText;
+        private System.Windows.Forms.Panel LinkGroup;
+        private System.Windows.Forms.LinkLabel GHLink;
+        private System.Windows.Forms.Label LegalInfoText;
+        private System.Windows.Forms.LinkLabel BugLink;
+        private System.Windows.Forms.Label HDiv1;
+        private System.Windows.Forms.Label HDiv2;
         private System.Windows.Forms.Label versionText;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.LinkLabel linkLabel3;
+        private System.Windows.Forms.Label HDiv3;
+        private System.Windows.Forms.Label HDiv4;
+        private System.Windows.Forms.LinkLabel LicenseLink;
     }
 }

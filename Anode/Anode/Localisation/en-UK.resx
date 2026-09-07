@@ -1,0 +1,280 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AboutWin" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AdvFrameTool" xml:space="preserve">
+    <value>Advance frame</value>
+  </data>
+  <data name="AnodeName" xml:space="preserve">
+    <value>Anode</value>
+    <comment>constant</comment>
+  </data>
+  <data name="AnodeSummary" xml:space="preserve">
+    <value>An open source NES emulator built in winforms, with the intent on focusing on improving
+accuracy</value>
+  </data>
+  <data name="BugLink" xml:space="preserve">
+    <value>Bug tracker</value>
+  </data>
+  <data name="Copyright" xml:space="preserve">
+    <value>© Electronacl 2026. Licensed under the MIT licence.
+"NES" and "Nintendo" are registered trademarks of Nintendo Co. LTD. 
+This program is not endorsed by, nor affiliated with, Nintendo.</value>
+  </data>
+  <data name="CoreConfigIncompatInfo" xml:space="preserve">
+    <value>Controls marked with [X] are features which do not currently exist, but are planned for the future.</value>
+  </data>
+  <data name="CoreConfigPartialCompatInfo" xml:space="preserve">
+    <value>Controls marked with [/] are only compatible with specific cores.</value>
+  </data>
+  <data name="CoresTab" xml:space="preserve">
+    <value>Emulator Cores</value>
+  </data>
+  <data name="NESCPUYear" xml:space="preserve">
+    <value>CPU Era:</value>
+  </data>
+  <data name="DisabledCommonTool" xml:space="preserve">
+    <value>disabled</value>
+  </data>
+  <data name="EmulationMenu" xml:space="preserve">
+    <value>Emulation</value>
+  </data>
+  <data name="EnabledCommonTool" xml:space="preserve">
+    <value>enabled</value>
+  </data>
+  <data name="FileMenu" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="GeneralTab" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="GitHubLink" xml:space="preserve">
+    <value>GitHub</value>
+    <comment>constant</comment>
+  </data>
+  <data name="HardResetTool" xml:space="preserve">
+    <value>Hard reset</value>
+  </data>
+  <data name="LanguageControl" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LegalInfo" xml:space="preserve">
+    <value>Legal info: Whilst making, using, and running an emulator is legal, this only applies if the ROMs
+used are legally obtained. This emulator is only intended to run legally obtained ROMs, and the
+developer assumes no responsibility for any ROMs loaded onto this emulator.</value>
+  </data>
+  <data name="LicenseLink" xml:space="preserve">
+    <value>License</value>
+  </data>
+  <data name="LocalisationGroup" xml:space="preserve">
+    <value>Localisation</value>
+  </data>
+  <data name="LocalisationGroupDesc" xml:space="preserve">
+    <value>Here, you can change the app's language. Currently, localisation is extremely limited, so do not expect many strings to be translated.</value>
+  </data>
+  <data name="NESConfigGroupDesc" xml:space="preserve">
+    <value>Not all NESes are identical. For that reason, you might want to emulate a specific console variant if you want to run certain games.</value>
+  </data>
+  <data name="NESConfigWarn" xml:space="preserve">
+    <value>[!] Some specific hardware combinations may not exist for actual hardware, or may not be intended for standard NESes</value>
+  </data>
+  <data name="NESCoreGroupDesc" xml:space="preserve">
+    <value>Choose "Nessie" if you prefer performance, or "PartialNES" if you prefer accuracy.</value>
+  </data>
+  <data name="NESName" xml:space="preserve">
+    <value>NES</value>
+    <comment>constant</comment>
+  </data>
+  <data name="NESNTSCPPURev" xml:space="preserve">
+    <value>NTSC PPU Revision:</value>
+  </data>
+  <data name="NESNTSCType" xml:space="preserve">
+    <value>NTSC Console:</value>
+  </data>
+  <data name="NESPALPPURev" xml:space="preserve">
+    <value>PAL PPU Revision:</value>
+  </data>
+  <data name="NessieExperimentalWarn" xml:space="preserve">
+    <value>[!] Nessie is currently "experimental", and can often crash or fail to run</value>
+  </data>
+  <data name="NessieName" xml:space="preserve">
+    <value>Nessie</value>
+    <comment>Constant</comment>
+  </data>
+  <data name="OpenTool" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="OptionsWin" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="PartialNESDeprWarn" xml:space="preserve">
+    <value>[!] PartialNES is marked for deprecation in 2.0.0, and will no longer be available after.</value>
+  </data>
+  <data name="PartialNESName" xml:space="preserve">
+    <value>PartialNES</value>
+    <comment>constant</comment>
+  </data>
+  <data name="PauseTool1" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="PauseTool2" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="ThrottlerTool" xml:space="preserve">
+    <value>Throttler</value>
+  </data>
+  <data name="VersionText" xml:space="preserve">
+    <value>Version: </value>
+  </data>
+  <data name="NESOLDCPU" xml:space="preserve">
+    <value>Pre-mid-1990s</value>
+  </data>
+  <data name="NESNEWCPU" xml:space="preserve">
+    <value>Mid-1990s</value>
+  </data>
+  <data name="NESANEMagic" xml:space="preserve">
+    <value>ANE Magic:</value>
+  </data>
+  <data name="NESLXAMagic" xml:space="preserve">
+    <value>LXA Magic:</value>
+  </data>
+  <data name="ThisTranslationPercentage" xml:space="preserve">
+    <value>100</value>
+  </data>
+  <data name="NESRAMMode" xml:space="preserve">
+    <value>Power-on RAM</value>
+  </data>
+  <data name="NESRAMFF" xml:space="preserve">
+    <value>All FF</value>
+  </data>
+  <data name="NESRAMZero" xml:space="preserve">
+    <value>All 00</value>
+  </data>
+  <data name="NESRRAMAlternate" xml:space="preserve">
+    <value>4x 00, 4x FF</value>
+  </data>
+  <data name="NESRAMNybbleAlternate" xml:space="preserve">
+    <value>8x F0-F0-0F-0F, 8x inverse</value>
+  </data>
+  <data name="ResetConfig" xml:space="preserve">
+    <value>Use defaults</value>
+  </data>
+</root>

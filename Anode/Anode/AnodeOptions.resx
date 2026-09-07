@@ -323,33 +323,6 @@
   <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>210, 42</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>30, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>(...%)</value>
-  </data>
-  <data name="&gt;&gt;label2.Name" xml:space="preserve">
-    <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
-    <value>groupBox2</value>
-  </data>
-  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="comboBox1.Items" xml:space="preserve">
     <value>Deutsch</value>
   </data>
@@ -402,7 +375,7 @@
     <value>groupBox2</value>
   </data>
   <data name="&gt;&gt;comboBox1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -429,7 +402,7 @@
     <value>groupBox2</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 7</value>
@@ -517,7 +490,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>NoControl</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 229</value>
+    <value>246, 217</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -547,7 +520,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>NoControl</value>
   </data>
   <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 202</value>
+    <value>246, 190</value>
   </data>
   <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -577,7 +550,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>NoControl</value>
   </data>
   <data name="label18.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 176</value>
+    <value>246, 164</value>
   </data>
   <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -607,7 +580,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>NoControl</value>
   </data>
   <data name="label17.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 150</value>
+    <value>246, 138</value>
   </data>
   <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -637,7 +610,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>NoControl</value>
   </data>
   <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 123</value>
+    <value>246, 111</value>
   </data>
   <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -667,7 +640,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>NoControl</value>
   </data>
   <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 95</value>
+    <value>246, 83</value>
   </data>
   <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -694,7 +667,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
-    <value>246, 68</value>
+    <value>246, 56</value>
   </data>
   <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
     <value>20, 13</value>
@@ -718,7 +691,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>6</value>
   </data>
   <data name="button1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 253</value>
+    <value>9, 241</value>
   </data>
   <data name="button1.Size" type="System.Drawing.Size, System.Drawing">
     <value>96, 23</value>
@@ -754,7 +727,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>8x F0-F0-0F-0F, 8x inverse</value>
   </data>
   <data name="comboBox6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 226</value>
+    <value>120, 214</value>
   </data>
   <data name="comboBox6.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 21</value>
@@ -781,7 +754,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label11.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 229</value>
+    <value>6, 217</value>
   </data>
   <data name="label11.Size" type="System.Drawing.Size, System.Drawing">
     <value>82, 13</value>
@@ -805,7 +778,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>9</value>
   </data>
   <data name="numericUpDown2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 200</value>
+    <value>120, 188</value>
   </data>
   <data name="numericUpDown2.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 20</value>
@@ -829,7 +802,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 202</value>
+    <value>6, 190</value>
   </data>
   <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
     <value>62, 13</value>
@@ -853,7 +826,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>11</value>
   </data>
   <data name="numericUpDown1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 174</value>
+    <value>120, 162</value>
   </data>
   <data name="numericUpDown1.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 20</value>
@@ -877,7 +850,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 176</value>
+    <value>6, 164</value>
   </data>
   <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
     <value>64, 13</value>
@@ -907,7 +880,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>Mid-1990</value>
   </data>
   <data name="comboBox5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 147</value>
+    <value>120, 135</value>
   </data>
   <data name="comboBox5.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 21</value>
@@ -934,7 +907,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 150</value>
+    <value>6, 138</value>
   </data>
   <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
     <value>51, 13</value>
@@ -964,14 +937,13 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>6, 16</value>
   </data>
   <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>618, 39</value>
+    <value>618, 26</value>
   </data>
   <data name="label7.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
     <value>Not all NESes are identical. For that reason, you might want to emulate a specific console variant if you want to run certain games.
-[i] These features are neither supported by PartialNES or Nessie in their current implementation.
 [i] Some specific hardware combinations may not exist for actual hardware, or may not be intended for standard NESes</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
@@ -993,7 +965,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>Famicom</value>
   </data>
   <data name="comboBox4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 120</value>
+    <value>120, 108</value>
   </data>
   <data name="comboBox4.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 21</value>
@@ -1020,7 +992,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 123</value>
+    <value>6, 111</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
     <value>80, 13</value>
@@ -1050,7 +1022,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>7-0</value>
   </data>
   <data name="comboBox3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 92</value>
+    <value>120, 80</value>
   </data>
   <data name="comboBox3.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 21</value>
@@ -1077,7 +1049,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 95</value>
+    <value>6, 83</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
     <value>99, 13</value>
@@ -1149,7 +1121,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>RC2C05-99</value>
   </data>
   <data name="comboBox2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>120, 65</value>
+    <value>120, 53</value>
   </data>
   <data name="comboBox2.Size" type="System.Drawing.Size, System.Drawing">
     <value>120, 21</value>
@@ -1176,7 +1148,7 @@ Controls marked with [/] are only compatible with specific cores.</value>
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 68</value>
+    <value>6, 56</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>108, 13</value>

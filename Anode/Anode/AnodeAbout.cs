@@ -34,7 +34,7 @@ namespace Anode
         {
             try
             {
-                linkLabel1.LinkVisited = true;
+                GHLink.LinkVisited = true;
                 OpenLink("https://github.com/Electronacl/Anode");
             }
             catch
@@ -52,7 +52,7 @@ namespace Anode
         {
             try
             {
-                linkLabel2.LinkVisited = true;
+                BugLink.LinkVisited = true;
                 OpenLink("https://github.com/Electronacl/Anode/issues");
             }
             catch
@@ -78,7 +78,7 @@ namespace Anode
         {
             try
             {
-                linkLabel3.LinkVisited = true;
+                LicenseLink.LinkVisited = true;
                 OpenLink("https://github.com/Electronacl/Anode/blob/main/LICENSE");
             }
             catch

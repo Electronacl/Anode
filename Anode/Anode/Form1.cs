@@ -31,7 +31,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace Anode
 {
-    public partial class Form1 : Form
+    public partial class AnodeMainUI : Form
     {
         // Anode windows
         Form aboutForm;
@@ -58,7 +58,7 @@ namespace Anode
         Stopwatch throttler = new Stopwatch();
 
         // Winforms stuff
-        public Form1()
+        public AnodeMainUI()
         {
             InitializeComponent();
             this.AllowDrop = true;
@@ -141,7 +141,7 @@ namespace Anode
 
             this.ChangeTitle($"{romname} - Anode {Constants.version_name}");
             // For locking
-            ScreenObject = pictureBox1;
+            ScreenObject = graphicsDisplayArea;
             // Start the throttler
             throttler.Start();
 
@@ -155,21 +155,21 @@ namespace Anode
                     lock (ScreenObject)
                     {
                         // Update the frame
-                        if (pictureBox1.InvokeRequired)
+                        if (graphicsDisplayArea.InvokeRequired)
                         {
-                            pictureBox1.Invoke(new MethodInvoker(
+                            graphicsDisplayArea.Invoke(new MethodInvoker(
                                 delegate ()
                                 {
                                     // This method runs if something is using the object
-                                    pictureBox1.Image = emuRenderer.outputBitmap;
-                                    pictureBox1.Update();
+                                    graphicsDisplayArea.Image = emuRenderer.outputBitmap;
+                                    graphicsDisplayArea.Update();
                                 }));
                         }
                         else
                         {
                             // Otherwise, just update
-                            pictureBox1.Image = emuRenderer.outputBitmap;
-                            pictureBox1.Update();
+                            graphicsDisplayArea.Image = emuRenderer.outputBitmap;
+                            graphicsDisplayArea.Update();
                         }
                     }
 
@@ -304,8 +304,8 @@ namespace Anode
         private void disableThrottlerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             throttled = !throttled;
-            disableThrottlerToolStripMenuItem.Text = "Throttler " + (throttled ? "enabled" : "disabled");
-            disableThrottlerToolStripMenuItem.Checked = throttled;
+            throttlerToolStripMenuItem.Text = "Throttler " + (throttled ? "enabled" : "disabled");
+            throttlerToolStripMenuItem.Checked = throttled;
         }
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)

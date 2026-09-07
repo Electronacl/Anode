@@ -39,11 +39,19 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.vScrollBar2 = new System.Windows.Forms.VScrollBar();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.label13 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.comboBox6 = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
@@ -61,15 +69,6 @@
             this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.vScrollBar3 = new System.Windows.Forms.VScrollBar();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label13 = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
-            this.label20 = new System.Windows.Forms.Label();
             this.tabPage2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
@@ -149,17 +148,16 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.label12);
-            this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.comboBox1);
             this.groupBox2.Controls.Add(this.label1);
             resources.ApplyResources(this.groupBox2, "groupBox2");
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.TabStop = false;
             // 
-            // label2
+            // label12
             // 
-            resources.ApplyResources(this.label2, "label2");
-            this.label2.Name = "label2";
+            resources.ApplyResources(this.label12, "label12");
+            this.label12.Name = "label12";
             // 
             // comboBox1
             // 
@@ -192,6 +190,11 @@
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // label13
+            // 
+            resources.ApplyResources(this.label13, "label13");
+            this.label13.Name = "label13";
+            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.label20);
@@ -220,6 +223,41 @@
             resources.ApplyResources(this.groupBox3, "groupBox3");
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.TabStop = false;
+            // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
+            // 
+            // label19
+            // 
+            resources.ApplyResources(this.label19, "label19");
+            this.label19.Name = "label19";
+            // 
+            // label18
+            // 
+            resources.ApplyResources(this.label18, "label18");
+            this.label18.Name = "label18";
+            // 
+            // label17
+            // 
+            resources.ApplyResources(this.label17, "label17");
+            this.label17.Name = "label17";
+            // 
+            // label16
+            // 
+            resources.ApplyResources(this.label16, "label16");
+            this.label16.Name = "label16";
+            // 
+            // label15
+            // 
+            resources.ApplyResources(this.label15, "label15");
+            this.label15.Name = "label15";
+            // 
+            // label14
+            // 
+            resources.ApplyResources(this.label14, "label14");
+            this.label14.Name = "label14";
             // 
             // button1
             // 
@@ -343,51 +381,6 @@
             resources.ApplyResources(this.vScrollBar3, "vScrollBar3");
             this.vScrollBar3.Name = "vScrollBar3";
             // 
-            // label12
-            // 
-            resources.ApplyResources(this.label12, "label12");
-            this.label12.Name = "label12";
-            // 
-            // label13
-            // 
-            resources.ApplyResources(this.label13, "label13");
-            this.label13.Name = "label13";
-            // 
-            // label14
-            // 
-            resources.ApplyResources(this.label14, "label14");
-            this.label14.Name = "label14";
-            // 
-            // label15
-            // 
-            resources.ApplyResources(this.label15, "label15");
-            this.label15.Name = "label15";
-            // 
-            // label16
-            // 
-            resources.ApplyResources(this.label16, "label16");
-            this.label16.Name = "label16";
-            // 
-            // label17
-            // 
-            resources.ApplyResources(this.label17, "label17");
-            this.label17.Name = "label17";
-            // 
-            // label18
-            // 
-            resources.ApplyResources(this.label18, "label18");
-            this.label18.Name = "label18";
-            // 
-            // label19
-            // 
-            resources.ApplyResources(this.label19, "label19");
-            this.label19.Name = "label19";
-            // 
-            // label20
-            // 
-            resources.ApplyResources(this.label20, "label20");
-            this.label20.Name = "label20";
-            // 
             // AnodeOptions
             // 
             resources.ApplyResources(this, "$this");
@@ -424,7 +417,6 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.VScrollBar vScrollBar2;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.GroupBox groupBox3;
