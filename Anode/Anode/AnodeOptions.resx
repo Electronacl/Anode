@@ -323,58 +323,58 @@
   <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="comboBox1.Items" xml:space="preserve">
+  <data name="LanguageBox.Items" xml:space="preserve">
     <value>Deutsch</value>
   </data>
-  <data name="comboBox1.Items1" xml:space="preserve">
+  <data name="LanguageBox.Items1" xml:space="preserve">
     <value>English (UK)</value>
   </data>
-  <data name="comboBox1.Items2" xml:space="preserve">
+  <data name="LanguageBox.Items2" xml:space="preserve">
     <value>English (US)</value>
   </data>
-  <data name="comboBox1.Items3" xml:space="preserve">
+  <data name="LanguageBox.Items3" xml:space="preserve">
     <value>English (Shakespearian)</value>
   </data>
-  <data name="comboBox1.Items4" xml:space="preserve">
+  <data name="LanguageBox.Items4" xml:space="preserve">
     <value>Español</value>
   </data>
-  <data name="comboBox1.Items5" xml:space="preserve">
+  <data name="LanguageBox.Items5" xml:space="preserve">
     <value>Français</value>
   </data>
-  <data name="comboBox1.Items6" xml:space="preserve">
+  <data name="LanguageBox.Items6" xml:space="preserve">
     <value>Nederlands</value>
   </data>
-  <data name="comboBox1.Items7" xml:space="preserve">
+  <data name="LanguageBox.Items7" xml:space="preserve">
     <value>LOLCAT</value>
   </data>
-  <data name="comboBox1.Items8" xml:space="preserve">
+  <data name="LanguageBox.Items8" xml:space="preserve">
     <value>Pirate Speak</value>
   </data>
-  <data name="comboBox1.Items9" xml:space="preserve">
+  <data name="LanguageBox.Items9" xml:space="preserve">
     <value>中文</value>
   </data>
-  <data name="comboBox1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="LanguageBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>70, 39</value>
   </data>
-  <data name="comboBox1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="LanguageBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>134, 21</value>
   </data>
-  <data name="comboBox1.TabIndex" type="System.Int32, mscorlib">
+  <data name="LanguageBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="comboBox1.Text" xml:space="preserve">
+  <data name="LanguageBox.Text" xml:space="preserve">
     <value>...</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
-    <value>comboBox1</value>
+  <data name="&gt;&gt;LanguageBox.Name" xml:space="preserve">
+    <value>LanguageBox</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
+  <data name="&gt;&gt;LanguageBox.Type" xml:space="preserve">
     <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;comboBox1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;LanguageBox.Parent" xml:space="preserve">
     <value>groupBox2</value>
   </data>
-  <data name="&gt;&gt;comboBox1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;LanguageBox.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">

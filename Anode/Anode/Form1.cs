@@ -5,6 +5,7 @@ using Anode.Cores.NES;
 using Anode.Cores.NES.Nessie;
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -65,6 +66,8 @@ namespace Anode
             this.DragEnter += new DragEventHandler(dragDropEnter);
             this.DragDrop += new DragEventHandler(dragDropFile);
             this.Text = $"Anode {Constants.version_name}";
+
+            // CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(Properties.Settings.Default.Locale);
         }
 
         private void dragDropEnter(object sender, DragEventArgs e)

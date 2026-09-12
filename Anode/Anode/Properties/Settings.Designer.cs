@@ -34,5 +34,17 @@ namespace Anode.Properties {
                 this["NESCore"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2057")]
+        public int Locale {
+            get {
+                return ((int)(this["Locale"]));
+            }
+            set {
+                this["Locale"] = value;
+            }
+        }
     }
 }

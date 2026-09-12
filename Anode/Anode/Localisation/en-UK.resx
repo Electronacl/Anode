@@ -217,7 +217,7 @@ developer assumes no responsibility for any ROMs loaded onto this emulator.</val
   </data>
   <data name="NessieName" xml:space="preserve">
     <value>Nessie</value>
-    <comment>Constant</comment>
+    <comment>constant</comment>
   </data>
   <data name="OpenTool" xml:space="preserve">
     <value>Open</value>

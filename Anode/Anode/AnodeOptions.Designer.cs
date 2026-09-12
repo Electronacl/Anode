@@ -40,7 +40,7 @@
             this.vScrollBar2 = new System.Windows.Forms.VScrollBar();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label12 = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.LanguageBox = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.label13 = new System.Windows.Forms.Label();
@@ -148,7 +148,7 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.label12);
-            this.groupBox2.Controls.Add(this.comboBox1);
+            this.groupBox2.Controls.Add(this.LanguageBox);
             this.groupBox2.Controls.Add(this.label1);
             resources.ApplyResources(this.groupBox2, "groupBox2");
             this.groupBox2.Name = "groupBox2";
@@ -159,22 +159,23 @@
             resources.ApplyResources(this.label12, "label12");
             this.label12.Name = "label12";
             // 
-            // comboBox1
+            // LanguageBox
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            resources.GetString("comboBox1.Items"),
-            resources.GetString("comboBox1.Items1"),
-            resources.GetString("comboBox1.Items2"),
-            resources.GetString("comboBox1.Items3"),
-            resources.GetString("comboBox1.Items4"),
-            resources.GetString("comboBox1.Items5"),
-            resources.GetString("comboBox1.Items6"),
-            resources.GetString("comboBox1.Items7"),
-            resources.GetString("comboBox1.Items8"),
-            resources.GetString("comboBox1.Items9")});
-            resources.ApplyResources(this.comboBox1, "comboBox1");
-            this.comboBox1.Name = "comboBox1";
+            this.LanguageBox.FormattingEnabled = true;
+            this.LanguageBox.Items.AddRange(new object[] {
+            resources.GetString("LanguageBox.Items"),
+            resources.GetString("LanguageBox.Items1"),
+            resources.GetString("LanguageBox.Items2"),
+            resources.GetString("LanguageBox.Items3"),
+            resources.GetString("LanguageBox.Items4"),
+            resources.GetString("LanguageBox.Items5"),
+            resources.GetString("LanguageBox.Items6"),
+            resources.GetString("LanguageBox.Items7"),
+            resources.GetString("LanguageBox.Items8"),
+            resources.GetString("LanguageBox.Items9")});
+            resources.ApplyResources(this.LanguageBox, "LanguageBox");
+            this.LanguageBox.Name = "LanguageBox";
+            this.LanguageBox.SelectedIndexChanged += new System.EventHandler(this.LanguageBox_SelectedIndexChanged);
             // 
             // label1
             // 
@@ -415,7 +416,7 @@
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox LanguageBox;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.VScrollBar vScrollBar2;
         private System.Windows.Forms.Label label4;

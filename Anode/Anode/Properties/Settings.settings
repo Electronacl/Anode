@@ -5,5 +5,8 @@
     <Setting Name="NESCore" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
+    <Setting Name="Locale" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2057</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
