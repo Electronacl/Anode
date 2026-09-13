@@ -159,7 +159,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void InitBanks()
+        private void InitBanks()
         {
             if (cartSize <= 2)
             {

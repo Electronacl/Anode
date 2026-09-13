@@ -126,7 +126,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Sprite_Eval()
+        private void Sprite_Eval()
         {
             if (xRender == 0)
             {

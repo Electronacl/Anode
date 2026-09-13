@@ -100,7 +100,7 @@ namespace Anode.Cores.NES.Nessie
         public bool logging = false;
         public StreamWriter tracelog;
         public string tracepath;
-        void Tracelogger(byte opcode)
+        private void Tracelogger(byte opcode)
         {
             if (logging)
             {
@@ -124,11 +124,6 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        public void Initialise()
-        {
-            getRequired = true;
-        }
-
         public void RunCycle()
         {
             DataLatch = DataBus;
@@ -136,11 +131,6 @@ namespace Anode.Cores.NES.Nessie
             // Well, it hasn't been implemented yet, but there's a separate internal and
             // external bus - some audio registers don't update the external one
             // So, in this case, DL is the internal and DB is external
-
-            if (opcode == 0x70)
-            {
-
-            }
 
             if (op_t == 0 && t == 0)
             {
@@ -453,7 +443,7 @@ namespace Anode.Cores.NES.Nessie
             DataBus = DataLatch;
         }
 
-        void Internal_Mem()
+        private void Internal_Mem()
         {
             switch (op_a)
             {
@@ -625,7 +615,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Store()
+        private void Store()
         {
             switch (op_c)
             {
@@ -661,7 +651,7 @@ namespace Anode.Cores.NES.Nessie
             resetInstr = true;
         }
 
-        void Branch()
+        private void Branch()
         {
             switch(t)
             {
@@ -729,7 +719,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Stack()
+        private void Stack()
         {
             if ((op_a & 1) != 0)
             {
@@ -772,7 +762,6 @@ namespace Anode.Cores.NES.Nessie
                 {
                     case 1:
                         getRequired = false;
-                        Push();
                         break;
                     case 2:
                         if ((op_a & 2) == 0)
@@ -787,6 +776,7 @@ namespace Anode.Cores.NES.Nessie
                             DataLatch |= 0x20; // Always set
                             DataLatch |= (byte)(flag_Overflow ? 0x40 : 0);
                             DataLatch |= (byte)(flag_Negative ? 0x80 : 0);
+                            Push();
                         }
                         else
                         {
@@ -799,7 +789,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Move()
+        private void Move()
         {
             if(op_b == 0)
             {
@@ -815,15 +805,11 @@ namespace Anode.Cores.NES.Nessie
                                 break;
                             case 2:
                                 DataLatch = (byte)(PC >> 8);
-
-                                // Potentially update the push method to use this, as it's more accurate
-                                AddressBus = (ushort)(0x100 + SP);
-                                SP--;
+                                Push();
                                 break;
                             case 3:
                                 DataLatch = (byte)PC;
-                                AddressBus = (ushort)(0x100 + SP);
-                                SP--;
+                                Push();
                                 break;
                             case 4:
                                 DataLatch =  (byte)(flag_Carry ? 1 : 0);
@@ -836,8 +822,7 @@ namespace Anode.Cores.NES.Nessie
                                 DataLatch |= (byte)(flag_Overflow ? 0x40 : 0);
                                 DataLatch |= (byte)(flag_Negative ? 0x80 : 0);
 
-                                AddressBus = (ushort)(0x100 + SP);
-                                SP--;
+                                Push();
 
                                 getRequired = true;
                                 //DelayedAddr = (ushort)(inNMI ? 0xFFFA : 0xFFFE);
@@ -866,7 +851,6 @@ namespace Anode.Cores.NES.Nessie
                                 break;
                             case 2:
                                 getRequired = false;
-                                Push();
                                 break;
                             case 3:
                                 DataLatch = (byte)(PC >> 8);
@@ -875,6 +859,7 @@ namespace Anode.Cores.NES.Nessie
                             case 4:
                                 DataLatch = (byte)PC;
                                 getRequired = true;
+                                Push();
                                 DelayedAddr = PC;
                                 break;
                             case 5:
@@ -980,7 +965,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void RMW()
+        private void RMW()
         {
             switch (t)
             {
@@ -1133,7 +1118,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Unofficial_Immediate()
+        private void Unofficial_Immediate()
         {
             PC++;
             switch (op_a)
@@ -1239,7 +1224,7 @@ namespace Anode.Cores.NES.Nessie
             resetInstr = true;
         }
 
-        void Single_Byte()
+        private void Single_Byte()
         {
             if (op_c == 0)
             {
@@ -1381,14 +1366,14 @@ namespace Anode.Cores.NES.Nessie
             resetInstr = true;
         }
 
-        void Zero_Page()
+        private void Zero_Page()
         {
             DelayedAddr = DataLatch;
             finishedOp = true;
             PC++;
         }
 
-        void Zero_Page_Indexed()
+        private void Zero_Page_Indexed()
         {
             switch (op_t)
             {
@@ -1412,7 +1397,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Absolute()
+        private void Absolute()
         {
             switch (op_t)
             {
@@ -1429,7 +1414,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Absolute_Indexed()
+        private void Absolute_Indexed()
         {
             switch (op_t)
             {
@@ -1483,7 +1468,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void X_Indirect()
+        private void X_Indirect()
         {
             switch (op_t)
             {
@@ -1505,7 +1490,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Y_Indirect()
+        private void Y_Indirect()
         {
             switch (op_t)
             {
@@ -1538,7 +1523,7 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Unstable_Cross(byte CrossVal)
+        private void Unstable_Cross(byte CrossVal)
         {
             // The edge case might not be applicable at the moment as DMA is not working correctly.
             // DON'T change the address bus like this, but ig it works for this case as the use of it occurs after the cycle
@@ -1548,21 +1533,21 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
-        void Push()
+        private void Push()
         {
             // Always use a "put" cycle.
-            DelayedAddr = (ushort)(0x100 + SP);
+            AddressBus = (ushort)(0x100 + SP);
             SP--;
         }
 
-        void Pull()
+        private void Pull()
         {
             // A bit redundant, but I think the function should be called at reset IIRC
             SP++;
             DelayedAddr = (ushort)(0x100 + SP);
         }
         
-        void Halt()
+        private void Halt()
         {
             halt = true;
             Util.ThrowError("CPU Halted", $"Encountered a halt instruction: {opcode:X}");
