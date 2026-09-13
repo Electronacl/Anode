@@ -52,6 +52,15 @@ namespace Anode.Cores.NES.Nessie
                     }
                 }
 
+                if (PPUClock == MaxPPU)
+                {
+                    PPU.Run_PPU();
+                    if (PPU.RenderPixel)
+                    {
+                        renderer.SetPixel(PPU.xRender - 1, PPU.yRender, PPU.r, PPU.g, PPU.b);
+                    }
+                }
+
                 PPUClock--;
                 CPUClock--;
                 //APUClock--;

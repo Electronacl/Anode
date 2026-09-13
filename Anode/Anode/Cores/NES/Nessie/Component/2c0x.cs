@@ -16,7 +16,71 @@ namespace Anode.Cores.NES.Nessie
         public byte b;
         public bool FrameComplete;
 
-        public byte[] CHRData = new byte[0x2000]; // Character data
+        // OAM registers
+        byte ppuSpriteEvalTemp;
+        byte ppuOAMAddress;
+        byte ppuSecondaryOAMAddress;
+        byte ppuSecondaryOAMSize;
+        byte ppuSpriteEvalTick;
+        bool lastScanLineContainsSpriteZero;
+        bool ppuScanLineContainsSpriteZero;
+        bool ppuSpriteEvaluationOAMOverflowed;
+        bool ppuSecondaryOAMFull;
+
+        // Sprite shift registers
+        byte[] ppu_SpriteShiftRegisterL = new byte[8];
+        byte[] ppu_SpriteShiftRegisterH = new byte[8];
+
+        byte[] ppu_SpriteAttribute = new byte[8];
+        byte[] ppu_SpritePattern = new byte[8];
+        byte[] ppu_SpriteXposition = new byte[8];
+        byte[] ppu_SpriteYposition = new byte[8];
+
+        // ----- PPU Flags
+        bool ppuVRAMInc32Mode;
+        bool ppuSpritePatternTable;
+        bool ppuBGPatternTable;
+        bool ppuUse8x16Sprites;
+        bool ppuEnableNMI;
+
+        bool ppuMask_GreyscaleMode;
+        bool ppuMask_8pxMaskBG;
+        bool ppuMask_8pxMaskSprites;
+        bool ppuMask_RenderBG;
+        bool ppuMask_RenderSprites;
+
+        bool ppuStatusOverflow;
+        bool ppuStatusSprZeroHit;
+
+        // ----- PPU Registers and render info
+        bool ppu_w; // Write Latch
+        ushort ppu_t; // Transfer Address
+        ushort ppu_v; // VRAM Address
+        byte ppu_x; // PPU X scroll
+
+        // BG Shift registers
+        ushort ppuShiftRegister_patternL;
+        ushort ppuShiftRegister_patternH;
+        ushort ppuShiftRegister_attributeL;
+        ushort ppuShiftRegister_attributeH;
+
+        // Registers used in the 8-step BG render sequence
+        byte ppu8Step_patternLowBitPlane;
+        byte ppu8Step_patternHighBitPlane;
+        byte ppu8Step_attribute;
+        byte ppu8Step_NextCharacter;
+
+        // Screen position and info
+        int ppuDot;
+        int ppuScanLine;
+        bool ppuVBlank;
+        bool ppuInVBlank;
+
+        // PPU registers
+        ushort TempVRAMAddress;
+        byte PPUReadBuffer; // Used in reads from $2007
+
+        // public byte[] CHRData = new byte[0x2000]; // Character data
         byte[] VRAM = new byte[0x800]; // Video Random Access Memory
         byte[] PaletteRAM = new byte[32]; // Palette Random Access Memory
         byte[] OAM = new byte[0x100]; // Object Attribute Memory
@@ -37,11 +101,7 @@ namespace Anode.Cores.NES.Nessie
 
         public void Run_PPU()
         {
-            if (xRender == 1 && yRender == 241)
-            {
-                FrameComplete = true;
-            }
-
+            // Rendering and position config
             xRender++;
             if (xRender > 341)
             {
@@ -51,6 +111,37 @@ namespace Anode.Cores.NES.Nessie
                 {
                     yRender = 0;
                 }
+            }
+            if (xRender == 1 && yRender == 241)
+            {
+                FrameComplete = true;
+            }
+            if (yRender < 240 && xRender > 0 && xRender <= 256)
+            {
+                RenderPixel = true;
+            }
+            else
+            {
+                RenderPixel = false;
+            }
+        }
+
+        void Sprite_Eval()
+        {
+            if (xRender == 0)
+            {
+                // Init sprite evaluation
+                ppuSecondaryOAMAddress = 0;
+                ppuOAMAddress = 0; // assumed
+                ppuSecondaryOAMFull = false;
+                ppuSpriteEvalTick = 0;
+
+                // As sprite eval handles the *next* scanline
+                lastScanLineContainsSpriteZero = ppuScanLineContainsSpriteZero;
+
+                ppuScanLineContainsSpriteZero = false;
+                ppuSpriteEvaluationOAMOverflowed = false;
+                ppuStatusOverflow = false;
             }
         }
 
@@ -63,6 +154,9 @@ namespace Anode.Cores.NES.Nessie
                 Pal_G[j] = Pal[pal_i++];
                 Pal_B[j] = Pal[pal_i++];
             }
+
+            xRender = 341;
+            yRender = 261;
         }
     }
 }

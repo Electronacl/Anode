@@ -201,7 +201,6 @@ namespace Anode
         byte sq2_timer_lo;
         byte sq2_timer_hi;
         byte sq2_lengthCounter;
-        bool sq2_playing;
 
         // tri registers
         bool tri_count;
@@ -209,7 +208,6 @@ namespace Anode
         byte tri_timer_lo;
         byte tri_timer_hi;
         byte tri_lengthCounter;
-        bool tri_playing;
 
         // noise registers
         bool noise_loop;
@@ -218,7 +216,6 @@ namespace Anode
         bool noise_mode;
         byte noise_period;
         byte noise_lengthCounter;
-        bool noise_playing;
 
         // DMC registers
         byte apuDMCFrequency;
