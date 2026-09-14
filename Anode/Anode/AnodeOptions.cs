@@ -25,7 +25,13 @@ namespace Anode
         {
             InitializeComponent();
 
-            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(Properties.Settings.Default.Locale);
+            CoreConfigPage.AutoScroll = false;
+            CoreConfigPage.HorizontalScroll.Enabled = false;
+            CoreConfigPage.HorizontalScroll.Visible = false;
+            CoreConfigPage.HorizontalScroll.Maximum = 0;
+            CoreConfigPage.AutoScroll = true;
+
+            //CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(Properties.Settings.Default.Locale);
 
             switch (Properties.Settings.Default.NESCore)
             {
@@ -37,9 +43,12 @@ namespace Anode
                     break;
             }
 
+            NESANEMagic.Value = Properties.Settings.Default.NESMAGICANE;
+            NESLXAMagic.Value = Properties.Settings.Default.NESMAGICLXA;
+            NESPPUDecay.Value = Properties.Settings.Default.NESPPUDECAY;
 
             // Stupidly long thing for a simple thing
-            LanguageBox.Text = CultureInfo.CurrentCulture.DisplayName;
+            /*LanguageBox.Text = CultureInfo.CurrentCulture.DisplayName;
             LanguageBox.Items.Clear();
             LangOrder = new int[languagesUsed.Length];
             int LangIndex = 0;
@@ -74,7 +83,7 @@ namespace Anode
                 {
                     LanguageBox.Items.Add(altLanguages[-(i + 1)]);
                 }
-            }
+            }*/
         }
 
         private void UpdateNESCore()
@@ -87,7 +96,6 @@ namespace Anode
             {
                 Properties.Settings.Default.NESCore = 1;
             }
-            Properties.Settings.Default.Save();
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
@@ -100,10 +108,50 @@ namespace Anode
             UpdateNESCore();
         }
 
-        private void LanguageBox_SelectedIndexChanged(object sender, EventArgs e)
+        /*private void LanguageBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.Locale = LanguageBox.SelectedIndex;
             Properties.Settings.Default.Save();
+        }*/
+
+        private void NESANEMagic_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.NESMAGICANE = (byte)NESANEMagic.Value;
+        }
+
+        private void NESLXAMagic_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.NESMAGICLXA = (byte)NESLXAMagic.Value;
+        }
+
+        private void NESPPUDecay_ValueChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.NESPPUDECAY = (ushort)NESPPUDecay.Value;
+        }
+
+        private void OKButton_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.Save();
+            this.Close();
+        }
+
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.Reload();
+            this.Close();
+        }
+
+        private void ApplyButton_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.Save();
+        }
+
+        private void NESConfigDefault_Click(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.Reset();
+            NESPPUDecay.Value = Properties.Settings.Default.NESPPUDECAY;
+            NESLXAMagic.Value = Properties.Settings.Default.NESMAGICLXA;
+            NESANEMagic.Value = Properties.Settings.Default.NESMAGICANE;
         }
     }
 }

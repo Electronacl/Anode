@@ -7,7 +7,8 @@ namespace Anode.Cores.NES.Nessie
     [Serializable]
     internal class _2a03
     {
-        readonly byte unstable_magic = 0xEC;
+        byte ANE_Magic;
+        byte LXA_Magic;
 
         byte A; // Accumulator
         byte X;
@@ -1184,14 +1185,14 @@ namespace Anode.Cores.NES.Nessie
                     // hardware based on temperature and other factors, but this isn't done in emulation,
                     // as it prevents repeatability. The constant is currently chosen based on a realistic
                     // value, albeit I don't have a flash cart to check real hardware.
-                    A = (byte)((unstable_magic | A) & X & DataLatch);
+                    A = (byte)((ANE_Magic | A) & X & DataLatch);
                     flag_Zero = A == 0;
                     flag_Negative = A >= 0x80;
                     break;
                 case 5:
                     // LXA
                     // immediate version of LAX, but it's unstable
-                    DataLatch = (byte)((A | unstable_magic) & DataLatch);
+                    DataLatch = (byte)((A | LXA_Magic) & DataLatch);
                     A = DataLatch;
                     X = DataLatch;
                     flag_Negative = DataLatch >= 0x80;
@@ -1562,6 +1563,9 @@ namespace Anode.Cores.NES.Nessie
             finishedOp = false;
             op_t = 0;
             t = 0;
+
+            ANE_Magic = Properties.Settings.Default.NESMAGICANE;
+            LXA_Magic = Properties.Settings.Default.NESMAGICLXA;
         }
     }
 }

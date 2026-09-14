@@ -46,5 +46,41 @@ namespace Anode.Properties {
                 this["Locale"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("12288")]
+        public ushort NESPPUDECAY {
+            get {
+                return ((ushort)(this["NESPPUDECAY"]));
+            }
+            set {
+                this["NESPPUDECAY"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("128")]
+        public byte NESMAGICLXA {
+            get {
+                return ((byte)(this["NESMAGICLXA"]));
+            }
+            set {
+                this["NESMAGICLXA"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("128")]
+        public byte NESMAGICANE {
+            get {
+                return ((byte)(this["NESMAGICANE"]));
+            }
+            set {
+                this["NESMAGICANE"] = value;
+            }
+        }
     }
 }

@@ -29,22 +29,20 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AnodeOptions));
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.CorePage = new System.Windows.Forms.TabPage();
             this.vScrollBar1 = new System.Windows.Forms.VScrollBar();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.vScrollBar2 = new System.Windows.Forms.VScrollBar();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.label12 = new System.Windows.Forms.Label();
-            this.LanguageBox = new System.Windows.Forms.ComboBox();
+            this.CoreConfigPage = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
             this.label13 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.NESPPUDecay = new System.Windows.Forms.NumericUpDown();
+            this.label21 = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
@@ -52,12 +50,12 @@
             this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
+            this.NESConfigDefault = new System.Windows.Forms.Button();
             this.comboBox6 = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
-            this.numericUpDown2 = new System.Windows.Forms.NumericUpDown();
+            this.NESLXAMagic = new System.Windows.Forms.NumericUpDown();
             this.label10 = new System.Windows.Forms.Label();
-            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.NESANEMagic = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             this.comboBox5 = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -68,25 +66,26 @@
             this.label5 = new System.Windows.Forms.Label();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.vScrollBar3 = new System.Windows.Forms.VScrollBar();
-            this.tabPage2.SuspendLayout();
+            this.ApplyButton = new System.Windows.Forms.Button();
+            this.CancelButton = new System.Windows.Forms.Button();
+            this.OKButton = new System.Windows.Forms.Button();
+            this.CorePage.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabControl1.SuspendLayout();
-            this.tabPage1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.tabPage3.SuspendLayout();
+            this.CoreConfigPage.SuspendLayout();
             this.groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NESPPUDecay)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NESLXAMagic)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NESANEMagic)).BeginInit();
             this.SuspendLayout();
             // 
-            // tabPage2
+            // CorePage
             // 
-            this.tabPage2.Controls.Add(this.vScrollBar1);
-            this.tabPage2.Controls.Add(this.groupBox1);
-            resources.ApplyResources(this.tabPage2, "tabPage2");
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.UseVisualStyleBackColor = true;
+            this.CorePage.Controls.Add(this.vScrollBar1);
+            this.CorePage.Controls.Add(this.groupBox1);
+            resources.ApplyResources(this.CorePage, "CorePage");
+            this.CorePage.Name = "CorePage";
+            this.CorePage.UseVisualStyleBackColor = true;
             // 
             // vScrollBar1
             // 
@@ -125,71 +124,25 @@
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabPage1);
-            this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.CorePage);
+            this.tabControl1.Controls.Add(this.CoreConfigPage);
             resources.ApplyResources(this.tabControl1, "tabControl1");
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             // 
-            // tabPage1
+            // CoreConfigPage
             // 
-            this.tabPage1.Controls.Add(this.vScrollBar2);
-            this.tabPage1.Controls.Add(this.groupBox2);
-            resources.ApplyResources(this.tabPage1, "tabPage1");
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // vScrollBar2
-            // 
-            resources.ApplyResources(this.vScrollBar2, "vScrollBar2");
-            this.vScrollBar2.Name = "vScrollBar2";
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.label12);
-            this.groupBox2.Controls.Add(this.LanguageBox);
-            this.groupBox2.Controls.Add(this.label1);
-            resources.ApplyResources(this.groupBox2, "groupBox2");
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.TabStop = false;
-            // 
-            // label12
-            // 
-            resources.ApplyResources(this.label12, "label12");
-            this.label12.Name = "label12";
-            // 
-            // LanguageBox
-            // 
-            this.LanguageBox.FormattingEnabled = true;
-            this.LanguageBox.Items.AddRange(new object[] {
-            resources.GetString("LanguageBox.Items"),
-            resources.GetString("LanguageBox.Items1"),
-            resources.GetString("LanguageBox.Items2"),
-            resources.GetString("LanguageBox.Items3"),
-            resources.GetString("LanguageBox.Items4"),
-            resources.GetString("LanguageBox.Items5"),
-            resources.GetString("LanguageBox.Items6"),
-            resources.GetString("LanguageBox.Items7"),
-            resources.GetString("LanguageBox.Items8"),
-            resources.GetString("LanguageBox.Items9")});
-            resources.ApplyResources(this.LanguageBox, "LanguageBox");
-            this.LanguageBox.Name = "LanguageBox";
-            this.LanguageBox.SelectedIndexChanged += new System.EventHandler(this.LanguageBox_SelectedIndexChanged);
+            this.CoreConfigPage.Controls.Add(this.label1);
+            this.CoreConfigPage.Controls.Add(this.label13);
+            this.CoreConfigPage.Controls.Add(this.groupBox3);
+            resources.ApplyResources(this.CoreConfigPage, "CoreConfigPage");
+            this.CoreConfigPage.Name = "CoreConfigPage";
+            this.CoreConfigPage.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            // 
-            // tabPage3
-            // 
-            this.tabPage3.Controls.Add(this.label13);
-            this.tabPage3.Controls.Add(this.groupBox3);
-            this.tabPage3.Controls.Add(this.vScrollBar3);
-            resources.ApplyResources(this.tabPage3, "tabPage3");
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.UseVisualStyleBackColor = true;
             // 
             // label13
             // 
@@ -198,6 +151,9 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.label2);
+            this.groupBox3.Controls.Add(this.NESPPUDecay);
+            this.groupBox3.Controls.Add(this.label21);
             this.groupBox3.Controls.Add(this.label20);
             this.groupBox3.Controls.Add(this.label19);
             this.groupBox3.Controls.Add(this.label18);
@@ -205,12 +161,12 @@
             this.groupBox3.Controls.Add(this.label16);
             this.groupBox3.Controls.Add(this.label15);
             this.groupBox3.Controls.Add(this.label14);
-            this.groupBox3.Controls.Add(this.button1);
+            this.groupBox3.Controls.Add(this.NESConfigDefault);
             this.groupBox3.Controls.Add(this.comboBox6);
             this.groupBox3.Controls.Add(this.label11);
-            this.groupBox3.Controls.Add(this.numericUpDown2);
+            this.groupBox3.Controls.Add(this.NESLXAMagic);
             this.groupBox3.Controls.Add(this.label10);
-            this.groupBox3.Controls.Add(this.numericUpDown1);
+            this.groupBox3.Controls.Add(this.NESANEMagic);
             this.groupBox3.Controls.Add(this.label9);
             this.groupBox3.Controls.Add(this.comboBox5);
             this.groupBox3.Controls.Add(this.label8);
@@ -224,6 +180,27 @@
             resources.ApplyResources(this.groupBox3, "groupBox3");
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.TabStop = false;
+            // 
+            // label2
+            // 
+            resources.ApplyResources(this.label2, "label2");
+            this.label2.Name = "label2";
+            // 
+            // NESPPUDecay
+            // 
+            resources.ApplyResources(this.NESPPUDecay, "NESPPUDecay");
+            this.NESPPUDecay.Maximum = new decimal(new int[] {
+            65535,
+            0,
+            0,
+            0});
+            this.NESPPUDecay.Name = "NESPPUDecay";
+            this.NESPPUDecay.ValueChanged += new System.EventHandler(this.NESPPUDecay_ValueChanged);
+            // 
+            // label21
+            // 
+            resources.ApplyResources(this.label21, "label21");
+            this.label21.Name = "label21";
             // 
             // label20
             // 
@@ -260,11 +237,12 @@
             resources.ApplyResources(this.label14, "label14");
             this.label14.Name = "label14";
             // 
-            // button1
+            // NESConfigDefault
             // 
-            resources.ApplyResources(this.button1, "button1");
-            this.button1.Name = "button1";
-            this.button1.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.NESConfigDefault, "NESConfigDefault");
+            this.NESConfigDefault.Name = "NESConfigDefault";
+            this.NESConfigDefault.UseVisualStyleBackColor = true;
+            this.NESConfigDefault.Click += new System.EventHandler(this.NESConfigDefault_Click);
             // 
             // comboBox6
             // 
@@ -282,20 +260,32 @@
             resources.ApplyResources(this.label11, "label11");
             this.label11.Name = "label11";
             // 
-            // numericUpDown2
+            // NESLXAMagic
             // 
-            resources.ApplyResources(this.numericUpDown2, "numericUpDown2");
-            this.numericUpDown2.Name = "numericUpDown2";
+            resources.ApplyResources(this.NESLXAMagic, "NESLXAMagic");
+            this.NESLXAMagic.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.NESLXAMagic.Name = "NESLXAMagic";
+            this.NESLXAMagic.ValueChanged += new System.EventHandler(this.NESLXAMagic_ValueChanged);
             // 
             // label10
             // 
             resources.ApplyResources(this.label10, "label10");
             this.label10.Name = "label10";
             // 
-            // numericUpDown1
+            // NESANEMagic
             // 
-            resources.ApplyResources(this.numericUpDown1, "numericUpDown1");
-            this.numericUpDown1.Name = "numericUpDown1";
+            resources.ApplyResources(this.NESANEMagic, "NESANEMagic");
+            this.NESANEMagic.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.NESANEMagic.Name = "NESANEMagic";
+            this.NESANEMagic.ValueChanged += new System.EventHandler(this.NESANEMagic_ValueChanged);
             // 
             // label9
             // 
@@ -377,52 +367,62 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
-            // vScrollBar3
+            // ApplyButton
             // 
-            resources.ApplyResources(this.vScrollBar3, "vScrollBar3");
-            this.vScrollBar3.Name = "vScrollBar3";
+            resources.ApplyResources(this.ApplyButton, "ApplyButton");
+            this.ApplyButton.Name = "ApplyButton";
+            this.ApplyButton.UseVisualStyleBackColor = true;
+            this.ApplyButton.Click += new System.EventHandler(this.ApplyButton_Click);
+            // 
+            // CancelButton
+            // 
+            resources.ApplyResources(this.CancelButton, "CancelButton");
+            this.CancelButton.Name = "CancelButton";
+            this.CancelButton.UseVisualStyleBackColor = true;
+            this.CancelButton.Click += new System.EventHandler(this.CancelButton_Click);
+            // 
+            // OKButton
+            // 
+            resources.ApplyResources(this.OKButton, "OKButton");
+            this.OKButton.Name = "OKButton";
+            this.OKButton.UseVisualStyleBackColor = true;
+            this.OKButton.Click += new System.EventHandler(this.OKButton_Click);
             // 
             // AnodeOptions
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.OKButton);
+            this.Controls.Add(this.CancelButton);
+            this.Controls.Add(this.ApplyButton);
             this.Controls.Add(this.tabControl1);
             this.Name = "AnodeOptions";
-            this.tabPage2.ResumeLayout(false);
+            this.CorePage.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabControl1.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.tabPage3.ResumeLayout(false);
-            this.tabPage3.PerformLayout();
+            this.CoreConfigPage.ResumeLayout(false);
+            this.CoreConfigPage.PerformLayout();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NESPPUDecay)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NESLXAMagic)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NESANEMagic)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.TabPage tabPage2;
-        private System.Windows.Forms.VScrollBar vScrollBar1;
+        private System.Windows.Forms.TabPage CorePage;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.TabControl tabControl1;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.ComboBox LanguageBox;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.VScrollBar vScrollBar2;
+        private System.Windows.Forms.TabPage CoreConfigPage;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.VScrollBar vScrollBar3;
         private System.Windows.Forms.ComboBox comboBox2;
         private System.Windows.Forms.ComboBox comboBox4;
         private System.Windows.Forms.Label label6;
@@ -432,13 +432,12 @@
         private System.Windows.Forms.ComboBox comboBox5;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.NumericUpDown numericUpDown2;
+        private System.Windows.Forms.NumericUpDown NESLXAMagic;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.NumericUpDown NESANEMagic;
         private System.Windows.Forms.ComboBox comboBox6;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Button NESConfigDefault;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Label label19;
@@ -447,5 +446,13 @@
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.NumericUpDown NESPPUDecay;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Button ApplyButton;
+        private System.Windows.Forms.Button CancelButton;
+        private System.Windows.Forms.Button OKButton;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.VScrollBar vScrollBar1;
     }
 }

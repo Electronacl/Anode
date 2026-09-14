@@ -8,5 +8,14 @@
     <Setting Name="Locale" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2057</Value>
     </Setting>
+    <Setting Name="NESPPUDECAY" Type="System.UInt16" Scope="User">
+      <Value Profile="(Default)">12288</Value>
+    </Setting>
+    <Setting Name="NESMAGICLXA" Type="System.Byte" Scope="User">
+      <Value Profile="(Default)">128</Value>
+    </Setting>
+    <Setting Name="NESMAGICANE" Type="System.Byte" Scope="User">
+      <Value Profile="(Default)">128</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

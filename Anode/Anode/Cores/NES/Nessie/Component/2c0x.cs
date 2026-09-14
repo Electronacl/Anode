@@ -70,12 +70,6 @@ namespace Anode.Cores.NES.Nessie
         byte ppu8Step_attribute;
         byte ppu8Step_NextCharacter;
 
-        // Screen position and info
-        int ppuDot;
-        int ppuScanLine;
-        bool ppuVBlank;
-        bool ppuInVBlank;
-
         // PPU registers
         ushort TempVRAMAddress;
         byte PPUReadBuffer; // Used in reads from $2007
@@ -87,6 +81,9 @@ namespace Anode.Cores.NES.Nessie
         byte[] SecondaryOAM = new byte[0x20]; // Secondary Object Attribute Memory
 
         byte lastPPUIOUpdate = 0;
+        byte PPUIOBus;
+
+        ushort ppuDecayTime;
 
         byte[] Pal = {
             0x65, 0x65, 0x65, 0x00, 0x2A, 0x84, 0x15, 0x13, 0xA2, 0x3A, 0x01, 0x9E, 0x59, 0x00, 0x7A, 0x6A, 0x00, 0x3E, 0x68, 0x08, 0x00, 0x53, 0x1D, 0x00, 0x32, 0x34, 0x00, 0x0D, 0x46, 0x00, 0x00, 0x4F, 0x00, 0x00, 0x4C, 0x09, 0x00, 0x3F, 0x4B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -101,6 +98,16 @@ namespace Anode.Cores.NES.Nessie
 
         public void Run_PPU()
         {
+            // Decay the PPU IO Bus
+            if (lastPPUIOUpdate > ppuDecayTime)
+            {
+                PPUIOBus = 0;
+            }
+            else
+            {
+                lastPPUIOUpdate++;
+            }
+
             // Rendering and position config
             xRender++;
             if (xRender > 341)
@@ -145,6 +152,51 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
+        // I haven't changed this code in ages, but that's because it works
+        ushort FindSpritePatternAddress(byte SecondaryOAMSlot)
+        {
+            if (!ppuUse8x16Sprites) // 8x8
+            {
+                // Address is $0000 or $1000, depends on pattern table
+                // Then, add pattern value from OAM, shifted by 4 bits (x16)
+                // Then, add scanlines from top of object
+                if (((ppu_SpriteAttribute[SecondaryOAMSlot] >> 7) & 1) == 0) // Don't flip Y
+                {
+                    return (ushort)((ppuSpritePatternTable ? 0x1000 : 0) + (ppu_SpritePattern[SecondaryOAMSlot] << 4) + (yRender - ppu_SpriteYposition[SecondaryOAMSlot]));
+                }
+                else // Flip Y
+                {
+                    return (ushort)((ppuSpritePatternTable ? 0x1000 : 0) + (ppu_SpritePattern[SecondaryOAMSlot] << 4) + ((7 - (yRender - ppu_SpriteYposition[SecondaryOAMSlot])) & 7));
+                }
+            }
+            else // 8x16
+            {
+                // If bottom half is being drawn, add 16
+                if (((ppu_SpriteAttribute[SecondaryOAMSlot] >> 7) & 1) == 0) // Don't flip Y
+                {
+                    if (yRender - ppu_SpriteYposition[SecondaryOAMSlot] < 8)
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | ((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + (yRender - ppu_SpriteYposition[SecondaryOAMSlot]));
+                    }
+                    else
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | (((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + 16) + ((yRender - ppu_SpriteYposition[SecondaryOAMSlot]) & 7));
+                    }
+                }
+                else // Flip Y
+                {
+                    if (yRender - ppu_SpriteYposition[SecondaryOAMSlot] < 8)
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | (((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + 16) + ((yRender - ppu_SpriteYposition[SecondaryOAMSlot]) & 7) + 7);
+                    }
+                    else
+                    {
+                        return (ushort)((((ppu_SpritePattern[SecondaryOAMSlot] & 1) == 1) ? 0x1000 : 0) | (((ppu_SpritePattern[SecondaryOAMSlot] & 0xFE) << 4) + 7) + ((yRender - ppu_SpriteYposition[SecondaryOAMSlot]) & 7));
+                    }
+                }
+            }
+        }
+
         public _2c0x()
         {
             int pal_i = 0;
@@ -157,6 +209,20 @@ namespace Anode.Cores.NES.Nessie
 
             xRender = 341;
             yRender = 261;
+
+            ppuDecayTime = Properties.Settings.Default.NESPPUDECAY;
+        }
+
+        public byte CPU_Read_PPU(ushort Address)
+        {
+            lastPPUIOUpdate = 0;
+            return PPUIOBus;
+        }
+
+        public void CPU_Write_PPU(byte Value)
+        {
+            PPUIOBus = Value;
+            lastPPUIOUpdate = 0;
         }
     }
 }
