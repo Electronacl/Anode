@@ -49,7 +49,7 @@ namespace Anode.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("12288")]
+        [global::System.Configuration.DefaultSettingValueAttribute("12287")]
         public ushort NESPPUDECAY {
             get {
                 return ((ushort)(this["NESPPUDECAY"]));

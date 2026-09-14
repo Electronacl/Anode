@@ -39,6 +39,8 @@ namespace Anode.Cores.NES.Nessie
         public byte DataLatch; // Internal bus
         public byte DataBus;
 
+        public bool CPU_Cycle = false;
+
         byte preIndex_hi;
         bool changedBoundary;
 
@@ -127,6 +129,7 @@ namespace Anode.Cores.NES.Nessie
 
         public void RunCycle()
         {
+            CPU_Cycle = !CPU_Cycle;
             DataLatch = DataBus;
             // Why set the data latch instead of using the data bus?
             // Well, it hasn't been implemented yet, but there's a separate internal and

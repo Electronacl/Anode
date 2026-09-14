@@ -1,13 +1,7 @@
 ﻿using Anode.Common;
 using Anode.Cores.NES.Nessie.Cart;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Anode.Cores.NES.Nessie
 {
@@ -24,7 +18,7 @@ namespace Anode.Cores.NES.Nessie
         public byte[] CHRData = new byte[0x2000];
         public bool CHRDataUpdate;
 
-        byte[] Header = new byte[0x10]; // iNES header
+        public byte[] Header = new byte[0x10]; // iNES header
 
         public bool compatible;
 
@@ -36,6 +30,11 @@ namespace Anode.Cores.NES.Nessie
         byte nesversion;
         byte expansion;
         byte ext_nesversion;
+
+        public bool OAMDMA;
+        public byte OAMDMAInit;
+        public ushort OAMDMAAddr;
+        public byte OAM_POS;
 
         public void LoadCart(string path)
         {
@@ -169,6 +168,12 @@ namespace Anode.Cores.NES.Nessie
             {
                 Array.Copy(HeaderedROM, 0x10, ROM, 0, 0x8000);
             }
+
+            // Does the ROM support graphics?
+            if (Header[5] != 0)
+            {
+                Array.Copy(HeaderedROM, 0x4000 * cartSize + 0x10, CHRData, 0, 0x2000); // Load graphics pattern data
+            }
         }
 
         public byte ReadCPU(ushort AddressBus, byte DataBus)
@@ -194,6 +199,13 @@ namespace Anode.Cores.NES.Nessie
             {
                 // Write to RAM
                 RAM[AddressBus & 0x7FF] = DataBus;
+            }
+            if (AddressBus == 0x4014)
+            {
+                OAM_POS = DataBus;
+                OAMDMAAddr = 0;
+                OAMDMAInit = 0;
+                OAMDMA = true;
             }
         }
     }
