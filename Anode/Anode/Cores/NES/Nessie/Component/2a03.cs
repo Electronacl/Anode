@@ -206,7 +206,7 @@ namespace Anode.Cores.NES.Nessie
                     // Movement or push/pull
                     opcode_type = op_b == 0 ? (byte)0x80 : (byte)0x81;
                 }
-                else if (op_c == 2 && ((op_a & 0b100) == 0 || ((op_a & 0b110) != 0b100 && (op_b & 0b11) != 0b10)))
+                else if (op_c == 2 && (((op_a & 0b100) == 0 && op_b != 6) || ((op_a & 0b110) != 0b100 && (op_b & 0b11) != 0b10)))
                 {
                     // RMW
                     opcode_type = 0;
