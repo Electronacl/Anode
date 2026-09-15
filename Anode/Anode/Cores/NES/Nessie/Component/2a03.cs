@@ -103,6 +103,15 @@ namespace Anode.Cores.NES.Nessie
         public bool logging = false;
         public StreamWriter tracelog;
         public string tracepath;
+
+        bool DoNMI;
+        bool inIRQ;
+        bool inNMI;
+        bool doIRQ;
+        bool soonIRQ;
+        bool NMILevelDetector;
+
+        public bool NMIConditionsMet;
         private void Tracelogger(byte opcode)
         {
             if (logging)
@@ -138,8 +147,27 @@ namespace Anode.Cores.NES.Nessie
 
             if (op_t == 0 && t == 0)
             {
+                // IRQ is disabled if the flag is enabled
+                inIRQ = doIRQ && !flag_InterruptDisable;
+                inNMI = DoNMI;
+
                 // Read the opcode
-                opcode = DataLatch;
+                if (!(inNMI || inIRQ))
+                {
+                    opcode = DataLatch;
+                    PC++;
+                    DelayedAddr++;
+                }
+                else
+                {
+                    opcode = 0x00;
+                    if (!inNMI)
+                    {
+                        flag_InterruptDisable = true;
+                    }
+                }
+
+                
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
                 op_c = (byte)(opcode & 0x3);
@@ -151,13 +179,7 @@ namespace Anode.Cores.NES.Nessie
                     Tracelogger(opcode);
                 }
 
-                PC++;
-                DelayedAddr++;
-
-                if (opcode == 0x70)
-                {
-
-                }
+                
 
                 
                 // Opcode types
@@ -611,12 +633,8 @@ namespace Anode.Cores.NES.Nessie
                     }
                     break;
             }
+            Poll_Interrupts();
             resetInstr = true;
-
-            if (halt && logging)
-            {
-                tracelog.Close();
-            }
         }
 
         private void Store()
@@ -652,6 +670,7 @@ namespace Anode.Cores.NES.Nessie
                 Unstable_Cross(DataLatch);
                 DataLatch = (byte)(DataLatch & (preIndex_hi + 1));
             }
+            Poll_Interrupts();
             resetInstr = true;
         }
 
@@ -660,6 +679,7 @@ namespace Anode.Cores.NES.Nessie
             switch(t)
             {
                 case 1:
+                    Poll_Interrupts();
                     PC++;
                     DelayedAddr++;
                     bool branch_condition = false;
@@ -716,6 +736,7 @@ namespace Anode.Cores.NES.Nessie
                     }
                     break;
                 case 3:
+                    Poll_Interrupts();
                     DelayedAddr = (ushort)(AddressBus + signedTemp);
                     PC = DelayedAddr;
                     resetInstr = true;
@@ -755,6 +776,7 @@ namespace Anode.Cores.NES.Nessie
                             flag_Zero = A == 0;
                             flag_Negative = A >= 0x80;
                         }
+                        Poll_Interrupts();
                         resetInstr = true;
                         break;
                 }
@@ -787,6 +809,7 @@ namespace Anode.Cores.NES.Nessie
                             // PHA
                             DataLatch = A;
                         }
+                        Poll_Interrupts();
                         resetInstr = true;
                         break;
                 }
@@ -804,24 +827,30 @@ namespace Anode.Cores.NES.Nessie
                         switch (t)
                         {
                             case 1:
-                                PC++;
+                                Poll_Interrupts();
+                                if (!(inNMI || inIRQ))
+                                {
+                                    PC++;
+                                }
                                 getRequired = false;
                                 break;
                             case 2:
+                                Poll_Interrupts();
                                 DataLatch = (byte)(PC >> 8);
                                 Push();
                                 break;
                             case 3:
+                                Poll_Interrupts();
                                 DataLatch = (byte)PC;
                                 Push();
                                 break;
                             case 4:
+                                Poll_Interrupts();
                                 DataLatch =  (byte)(flag_Carry ? 1 : 0);
                                 DataLatch |= (byte)(flag_Zero ? 2 : 0);
                                 DataLatch |= (byte)(flag_InterruptDisable ? 4 : 0);
                                 DataLatch |= (byte)(flag_Decimal ? 8 : 0);
-                                //DataLatch |= (byte)((inNMI || inIRQ) ? 0 : 0x10); // NMI has no B flag
-                                DataLatch |= 0x10;
+                                DataLatch |= (byte)((inNMI || inIRQ) ? 0 : 0x10); // NMI has no B flag
                                 DataLatch |= 0x20; // Always set
                                 DataLatch |= (byte)(flag_Overflow ? 0x40 : 0);
                                 DataLatch |= (byte)(flag_Negative ? 0x80 : 0);
@@ -829,8 +858,8 @@ namespace Anode.Cores.NES.Nessie
                                 Push();
 
                                 getRequired = true;
-                                //DelayedAddr = (ushort)(inNMI ? 0xFFFA : 0xFFFE);
-                                DelayedAddr = 0xFFFE;
+                                DelayedAddr = (ushort)(inNMI ? 0xFFFA : 0xFFFE);
+                                //DelayedAddr = 0xFFFE;
                                 break;
                             case 5:
                                 ADD = DataLatch;
@@ -839,6 +868,10 @@ namespace Anode.Cores.NES.Nessie
                             case 6:
                                 DelayedAddr = (ushort)((DataLatch << 8) | ADD);
                                 PC = DelayedAddr;
+
+                                DoNMI = false;
+                                doIRQ = false;
+                                soonIRQ = false;
 
                                 resetInstr = true;
                                 break;
@@ -1117,6 +1150,7 @@ namespace Anode.Cores.NES.Nessie
                     {
                         A = DataLatch;
                     }
+                    Poll_Interrupts();
                     resetInstr = true;
                     break;
             }
@@ -1225,6 +1259,7 @@ namespace Anode.Cores.NES.Nessie
                     flag_Zero = A == 0;
                     break;
             }
+            Poll_Interrupts();
             resetInstr = true;
         }
 
@@ -1367,6 +1402,7 @@ namespace Anode.Cores.NES.Nessie
                     }
                 }
             }
+            Poll_Interrupts();
             resetInstr = true;
         }
 
@@ -1555,6 +1591,20 @@ namespace Anode.Cores.NES.Nessie
         {
             halt = true;
             Util.ThrowError("CPU Halted", $"Encountered a halt instruction: {opcode:X}");
+        }
+
+        void Poll_Interrupts()
+        {
+            // Check whether NMI should occur
+            bool PreviousNMILevelDetector = NMILevelDetector;
+            NMILevelDetector = NMIConditionsMet;
+            if (!PreviousNMILevelDetector && NMILevelDetector)
+            {
+                // Yep, do it!
+                DoNMI = true;
+            }
+
+            doIRQ = soonIRQ;
         }
 
         public _2a03()

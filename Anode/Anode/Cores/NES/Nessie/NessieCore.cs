@@ -40,6 +40,7 @@ namespace Anode.Cores.NES.Nessie
                     if (!IO.OAMDMA)
                     {
                         CPU.AddressBus = CPU.DelayedAddr;
+                        CPU.NMIConditionsMet = PPU.CheckNMIConditions();
 
                         if (CPU.getRequired)
                         {

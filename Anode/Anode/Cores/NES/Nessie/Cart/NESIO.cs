@@ -2,6 +2,8 @@
 using Anode.Cores.NES.Nessie.Cart;
 using System;
 using System.IO;
+using System.Net;
+using System.Windows.Input;
 
 namespace Anode.Cores.NES.Nessie
 {
@@ -35,6 +37,29 @@ namespace Anode.Cores.NES.Nessie
         public byte OAMDMAInit;
         public ushort OAMDMAAddr;
         public byte OAM_POS;
+
+        // ----- Controller
+        byte controller1;
+        byte Controller1ShiftRegister;
+
+        void Update_Controller()
+        {
+            // This function can still get input, even if the application is minimised.
+            // Therefore, I need to check focus
+            if (Util.ApplicationIsActivated())
+            {
+                // Hopefully I can make custom control schemes somewhen
+                controller1 = 0;
+                if (Keyboard.IsKeyDown(Key.X)) { controller1 |= 0x80; }
+                if (Keyboard.IsKeyDown(Key.Z)) { controller1 |= 0x40; }
+                if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) { controller1 |= 0x20; }
+                if (Keyboard.IsKeyDown(Key.Enter)) { controller1 |= 0x10; }
+                if (Keyboard.IsKeyDown(Key.Up)) { controller1 |= 0x08; }
+                if (Keyboard.IsKeyDown(Key.Down)) { controller1 |= 0x04; }
+                if (Keyboard.IsKeyDown(Key.Left)) { controller1 |= 0x02; }
+                if (Keyboard.IsKeyDown(Key.Right)) { controller1 |= 0x01; }
+            }
+        }
 
         public void LoadCart(string path)
         {
@@ -183,7 +208,20 @@ namespace Anode.Cores.NES.Nessie
                 // Returns mirrored RAM
                 return RAM[AddressBus & 0x7FF];
             }
-            if (AddressBus >= 0x8000)
+            else if (AddressBus == 0x4016)
+            {
+                // Read from the controller
+                byte controllerBit = (byte)((Controller1ShiftRegister & 0x80) >> 7);
+                Controller1ShiftRegister <<= 1;
+                controllerBit |= (byte)(DataBus & 0b11100000);
+                return controllerBit;
+            }
+            else if (AddressBus == 0x4017)
+            {
+                // P2 controller isn't implemented, so it's just open bus in the upper bits and 0 in lower
+                return (byte)(DataBus & 0b11100000);
+            }
+            else if (AddressBus >= 0x8000)
             {
                 if (cartSize <= 2)
                 {
@@ -200,12 +238,21 @@ namespace Anode.Cores.NES.Nessie
                 // Write to RAM
                 RAM[AddressBus & 0x7FF] = DataBus;
             }
-            if (AddressBus == 0x4014)
+            else if (AddressBus == 0x4014)
             {
                 OAM_POS = DataBus;
                 OAMDMAAddr = 0;
                 OAMDMAInit = 0;
                 OAMDMA = true;
+            }
+            else if (AddressBus == 0x4016)
+            {
+                // Controller write ("Joystick strobe")
+                if ((DataBus & 1) != 0)
+                {
+                    Update_Controller();
+                    Controller1ShiftRegister = controller1;
+                }
             }
         }
     }

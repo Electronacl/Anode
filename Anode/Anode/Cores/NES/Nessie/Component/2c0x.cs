@@ -897,5 +897,9 @@ namespace Anode.Cores.NES.Nessie
                     break;
             }
         }
+        public bool CheckNMIConditions()
+        {
+            return ppuEnableNMI && VBlank;
+        }
     }
 }
