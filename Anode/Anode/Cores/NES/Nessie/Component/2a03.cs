@@ -167,7 +167,6 @@ namespace Anode.Cores.NES.Nessie
                     }
                 }
 
-                
                 op_a = (byte)(opcode >> 5);
                 op_b = (byte)((opcode & 0x1C) >> 2);
                 op_c = (byte)(opcode & 0x3);
@@ -178,10 +177,8 @@ namespace Anode.Cores.NES.Nessie
                 {
                     Tracelogger(opcode);
                 }
-
                 
 
-                
                 // Opcode types
                 // 0x0x:
                 // 0 - RMW
