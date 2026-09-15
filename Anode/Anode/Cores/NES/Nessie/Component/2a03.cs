@@ -155,6 +155,10 @@ namespace Anode.Cores.NES.Nessie
                 if (!(inNMI || inIRQ))
                 {
                     opcode = DataLatch;
+                    if (logging)
+                    {
+                        Tracelogger(opcode);
+                    }
                     PC++;
                     DelayedAddr++;
                 }
@@ -165,6 +169,17 @@ namespace Anode.Cores.NES.Nessie
                     {
                         flag_InterruptDisable = true;
                     }
+                    else
+                    {
+                        if (logging)
+                        {
+                            tracelog.WriteLine("-- NMI");
+                        }
+                    }
+                    if (logging)
+                    {
+                        Tracelogger(opcode);
+                    }
                 }
 
                 op_a = (byte)(opcode >> 5);
@@ -173,10 +188,7 @@ namespace Anode.Cores.NES.Nessie
 
                 getRequired = true;
 
-                if (logging)
-                {
-                    Tracelogger(opcode);
-                }
+                
                 
 
                 // Opcode types
@@ -752,8 +764,7 @@ namespace Anode.Cores.NES.Nessie
                         DelayedAddr = (ushort)(0x100 + SP);
                         break;
                     case 2:
-                        SP++;
-                        DelayedAddr = (ushort)(0x100 + SP);
+                        Pull();
                         break;
                     case 3:
                         if ((op_a & 2) == 0)
@@ -799,13 +810,13 @@ namespace Anode.Cores.NES.Nessie
                             DataLatch |= 0x20; // Always set
                             DataLatch |= (byte)(flag_Overflow ? 0x40 : 0);
                             DataLatch |= (byte)(flag_Negative ? 0x80 : 0);
-                            Push();
                         }
                         else
                         {
                             // PHA
                             DataLatch = A;
                         }
+                        Push();
                         Poll_Interrupts();
                         resetInstr = true;
                         break;
