@@ -135,33 +135,28 @@ namespace Anode.Cores.NES.Nessie
                     yRender = 0;
                 }
             }
+
             if (xRender == 1 && yRender == 241)
             {
                 FrameComplete = true;
                 VBlank = true;
                 inVBlank = true;
             }
-            if (xRender == 1 && yRender == 241)
+            if (xRender == 1 && yRender == 261)
             {
                 VBlank = false;
                 inVBlank = false;
-            }
-            if (yRender < 240 && xRender > 0 && xRender <= 256)
-            {
-                RenderPixel = true;
-            }
-            else
-            {
-                RenderPixel = false;
+                ppuStatusOverflow = false;
+                ppuStatusSprZeroHit = false;
             }
 
-            if ((xRender & 1) != 0)
+            if ((xRender & 1) == 0)
             {
                 // Read!
                 DataBus = Read((ushort)((AddressBus << 8) | DataBus));
             }
 
-            if (yRender < 240 || xRender == 261)
+            if (yRender < 240 || yRender == 261)
             {
                 if (ppuMask_RenderBG || ppuMask_RenderSprites)
                 {
@@ -284,6 +279,7 @@ namespace Anode.Cores.NES.Nessie
             if (yRender < 240 && xRender > 0 && xRender <= 256)
             {
                 // Rendering!
+                RenderPixel = true;
 
                 // BG Rendering
                 byte PalHi = 0; // Colour palette
@@ -358,8 +354,12 @@ namespace Anode.Cores.NES.Nessie
                 g = Pal_G[colourIndex];
                 b = Pal_B[colourIndex];
             }
+            else
+            {
+                RenderPixel = false;
+            }
 
-            if ((xRender & 1) == 0)
+            if ((xRender & 1) != 0)
             {
                 // Set address
                 DataBus = (byte)PPUTargetAddress;
