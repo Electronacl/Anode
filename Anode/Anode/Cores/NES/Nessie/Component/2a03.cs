@@ -187,8 +187,6 @@ namespace Anode.Cores.NES.Nessie
                 op_c = (byte)(opcode & 0x3);
 
                 getRequired = true;
-
-                
                 
 
                 // Opcode types
@@ -345,8 +343,16 @@ namespace Anode.Cores.NES.Nessie
                             operand_type = 0x22;
                             break;
                         case 7:
-                            // Absolute, X
-                            operand_type = 0x21;
+                            if ((op_c & 2) == 2 && (op_a & 0b110) == 0b100)
+                            {
+                                // Absolute, Y
+                                operand_type = 0x22;
+                            }
+                            else
+                            {
+                                // Absolute, X
+                                operand_type = 0x21;
+                            }
                             break;
                     }
 
@@ -1492,7 +1498,7 @@ namespace Anode.Cores.NES.Nessie
                     if (AddressTemp != DelayedAddr)
                     {
                         // Page boundary crossed, wait
-                        signedTemp = (AddressTemp - DelayedAddr);
+                        signedTemp = AddressTemp - DelayedAddr;
                         changedBoundary = true;
                     }
                     else
