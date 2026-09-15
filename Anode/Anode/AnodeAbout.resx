@@ -214,63 +214,6 @@ This program is not endorsed by, nor affiliated with, Nintendo</value>
   <data name="&gt;&gt;CopyrightText.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="&gt;&gt;LicenseLink.Name" xml:space="preserve">
-    <value>LicenseLink</value>
-  </data>
-  <data name="&gt;&gt;LicenseLink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;LicenseLink.Parent" xml:space="preserve">
-    <value>LinkGroup</value>
-  </data>
-  <data name="&gt;&gt;LicenseLink.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;BugLink.Name" xml:space="preserve">
-    <value>BugLink</value>
-  </data>
-  <data name="&gt;&gt;BugLink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;BugLink.Parent" xml:space="preserve">
-    <value>LinkGroup</value>
-  </data>
-  <data name="&gt;&gt;BugLink.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;GHLink.Name" xml:space="preserve">
-    <value>GHLink</value>
-  </data>
-  <data name="&gt;&gt;GHLink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;GHLink.Parent" xml:space="preserve">
-    <value>LinkGroup</value>
-  </data>
-  <data name="&gt;&gt;GHLink.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="LinkGroup.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 165</value>
-  </data>
-  <data name="LinkGroup.Size" type="System.Drawing.Size, System.Drawing">
-    <value>440, 23</value>
-  </data>
-  <data name="LinkGroup.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="&gt;&gt;LinkGroup.Name" xml:space="preserve">
-    <value>LinkGroup</value>
-  </data>
-  <data name="&gt;&gt;LinkGroup.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;LinkGroup.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;LinkGroup.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
   <data name="LicenseLink.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -351,6 +294,27 @@ This program is not endorsed by, nor affiliated with, Nintendo</value>
   </data>
   <data name="&gt;&gt;GHLink.ZOrder" xml:space="preserve">
     <value>2</value>
+  </data>
+  <data name="LinkGroup.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 165</value>
+  </data>
+  <data name="LinkGroup.Size" type="System.Drawing.Size, System.Drawing">
+    <value>440, 23</value>
+  </data>
+  <data name="LinkGroup.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;LinkGroup.Name" xml:space="preserve">
+    <value>LinkGroup</value>
+  </data>
+  <data name="&gt;&gt;LinkGroup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;LinkGroup.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;LinkGroup.ZOrder" xml:space="preserve">
+    <value>6</value>
   </data>
   <data name="LegalInfoText.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
