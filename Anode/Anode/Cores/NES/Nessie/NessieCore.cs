@@ -11,7 +11,7 @@ namespace Anode.Cores.NES.Nessie
 {
     internal class NessieCore : EmuCore
     {
-        static readonly ulong NessieVersion = 2;
+        static readonly ulong NessieVersion = 3;
 
         byte PPUClock;
         byte CPUClock;
