@@ -187,7 +187,12 @@ namespace Anode.Cores.NES.Nessie
                 op_c = (byte)(opcode & 0x3);
 
                 getRequired = true;
-                
+
+                if (opcode == 0x1A)
+                {
+
+                }
+
 
                 // Opcode types
                 // 0x0x:
@@ -206,8 +211,11 @@ namespace Anode.Cores.NES.Nessie
                     // Movement or push/pull
                     opcode_type = op_b == 0 ? (byte)0x80 : (byte)0x81;
                 }
-                else if (op_c == 2 && (((op_a & 0b100) == 0 && op_b != 6) || ((op_a & 0b110) != 0b100 && (op_b & 0b11) != 0b10)))
+                else if ((op_c == 2 && ((op_a < 4 && op_b != 6) || (op_a > 5 && (op_b & 1) != 0))) || (op_c == 3 && !((op_a & 0b110) == 0b100) && !(op_b == 2)))
                 {
+                    // Old statement: op_c == 2 && (((op_a & 0b100) == 0 && op_b != 6) || ((op_a & 0b110) != 0b100 && (op_b & 0b11) != 0b10))
+                    // Alt statement: 
+                    // Updated statement: (op_c & 0b10) != 0 && (op_a & 0b110) != 0b100 && !(op_c == 2 && op_b == 6 && !(op_b == 2 && (op_a & 0b110) == 0b110)) && !(op_c == 3 && op_b == 3)
                     // RMW
                     opcode_type = 0;
                 }

@@ -35,7 +35,7 @@ namespace Anode.Cores.NES.Nessie
 
         public bool OAMDMA;
         public byte OAMDMAInit;
-        public ushort OAMDMAAddr;
+        public byte OAMDMAAddr;
         public byte OAM_POS;
 
         // ----- Controller
