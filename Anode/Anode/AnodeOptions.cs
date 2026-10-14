@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace Anode
@@ -153,5 +151,7 @@ namespace Anode
             NESLXAMagic.Value = Properties.Settings.Default.NESMAGICLXA;
             NESANEMagic.Value = Properties.Settings.Default.NESMAGICANE;
         }
+
+        
     }
 }

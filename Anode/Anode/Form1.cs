@@ -5,6 +5,9 @@ using Anode.Cores.NES;
 using Anode.Cores.NES.Nessie;
 using System;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -38,6 +41,8 @@ namespace Anode
         Form aboutForm;
         Form optionForm;
 
+        Bitmap resized;
+
         // Initialise variables which are used later
         EmuCore emulator;
         string rompath;
@@ -67,7 +72,13 @@ namespace Anode
             this.DragDrop += new DragEventHandler(dragDropFile);
             this.Text = $"Anode {Constants.version_name}";
 
+            this.SizeChanged += ResizeComponents;
+
+            // For locking
+            ScreenObject = graphicsDisplayArea;
+
             // CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(Properties.Settings.Default.Locale);
+            JustResize();
         }
 
         private void dragDropEnter(object sender, DragEventArgs e)
@@ -143,8 +154,7 @@ namespace Anode
             if (romHeader == "") { romHeader = romname; }
 
             this.ChangeTitle($"{romname} - Anode {Constants.version_name}");
-            // For locking
-            ScreenObject = graphicsDisplayArea;
+            
             // Start the throttler
             throttler.Start();
 
@@ -155,26 +165,7 @@ namespace Anode
                     emulator.AdvanceFrame();
                     Renderer emuRenderer = emulator.GetRenderer();
 
-                    lock (ScreenObject)
-                    {
-                        // Update the frame
-                        if (graphicsDisplayArea.InvokeRequired)
-                        {
-                            graphicsDisplayArea.Invoke(new MethodInvoker(
-                                delegate ()
-                                {
-                                    // This method runs if something is using the object
-                                    graphicsDisplayArea.Image = emuRenderer.outputBitmap;
-                                    graphicsDisplayArea.Update();
-                                }));
-                        }
-                        else
-                        {
-                            // Otherwise, just update
-                            graphicsDisplayArea.Image = emuRenderer.outputBitmap;
-                            graphicsDisplayArea.Update();
-                        }
-                    }
+                    RenderSizedBitmap(emuRenderer.outputBitmap);
 
                     if (throttled && !waitingForFrame)
                     {
@@ -203,6 +194,7 @@ namespace Anode
                         //wo.Init(rs);
                         //wo.Play();
                     }
+
                     // Setup the next frame
                     waitingForFrame = false;
                 }
@@ -315,6 +307,99 @@ namespace Anode
         {
             optionForm = new AnodeOptions();
             optionForm.Show();
+        }
+
+        private void RenderSizedBitmap(Bitmap originMap)
+        {
+            double scaleModifier;
+            int usedHeight = this.Height - 62;
+            if ((double)this.Width / (double)originMap.Width  > (double)usedHeight / (double)originMap.Height)
+            {
+                scaleModifier = (double)usedHeight / (double)originMap.Height;
+            }
+            else
+            {
+                scaleModifier = (double)this.Width / (double)originMap.Width;
+            }
+            resized = ResizeImage(originMap, (int)(originMap.Width * scaleModifier), (int)(originMap.Height * scaleModifier));
+            lock (ScreenObject)
+            {
+                // Update the frame
+                if (graphicsDisplayArea.InvokeRequired)
+                {
+                    graphicsDisplayArea.Invoke(new MethodInvoker(
+                        delegate ()
+                        {
+                            // This method runs if something is using the object
+                            graphicsDisplayArea.Image = resized;
+                            graphicsDisplayArea.Update();
+                        }));
+                }
+                else
+                {
+                    // Otherwise, just update
+                    graphicsDisplayArea.Image = resized;
+                    graphicsDisplayArea.Update();
+                }
+            }
+        }
+        private void ResizeComponents(object sender, EventArgs e)
+        {
+            // This is stupid
+            JustResize();
+        }
+        private void JustResize()
+        {
+            // Because no
+            if (graphicsDisplayArea.InvokeRequired)
+            {
+                graphicsDisplayArea.Invoke(new MethodInvoker(
+                    delegate ()
+                    {
+                        // This method runs if something is using the object
+                        graphicsDisplayArea.Width = this.Width;
+                        graphicsDisplayArea.Height = this.Height - 62;
+                        graphicsDisplayArea.Update();
+                    }));
+            }
+            else
+            {
+                // Otherwise, just update
+                graphicsDisplayArea.Width = this.Width;
+                graphicsDisplayArea.Height = this.Height - 62;
+                graphicsDisplayArea.Update();
+            }
+        }
+        /// <summary>
+        /// Resize the image to the specified width and height.
+        /// </summary>
+        /// <param name="image">The image to resize.</param>
+        /// <param name="width">The width to resize to.</param>
+        /// <param name="height">The height to resize to.</param>
+        /// <returns>The resized image.</returns>
+        public static Bitmap ResizeImage(Image image, int width, int height)
+        {
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
         }
     }
 }
