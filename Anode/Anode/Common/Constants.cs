@@ -21,10 +21,10 @@ namespace Anode
 {
     internal static class Constants
     {
-        // Major.Minor.Patch Channel (prerelease branch build)
+        // Major.Minor.Patch Channel (release branch build)
         // Branches:
         // a - main
         // b - split
-        public static string version_name = "2.0.0 Alpha (1b2)";
+        public static string version_name = "2.0.0 Alpha (0b2)";
     }
 }
