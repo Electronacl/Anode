@@ -203,7 +203,7 @@ namespace Anode.Cores.NES.Nessie
             // For running nestest headless
             if (devmode)
             {
-                CPU.PC = 0xC000;
+                // CPU.PC = 0xC000;
             }
 
             CPU.getRequired = true;

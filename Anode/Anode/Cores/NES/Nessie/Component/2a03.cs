@@ -922,6 +922,7 @@ namespace Anode.Cores.NES.Nessie
                                 DelayedAddr = PC;
                                 break;
                             case 5:
+                                Poll_Interrupts();
                                 PC = (ushort)((DataLatch << 8) | ADD);
                                 resetInstr = true;
                                 break;
@@ -952,6 +953,7 @@ namespace Anode.Cores.NES.Nessie
                                 Pull();
                                 break;
                             case 5:
+                                Poll_Interrupts();
                                 PC = (ushort)((DataLatch << 8) | ADD);
                                 resetInstr = true;
                                 break;
@@ -959,6 +961,7 @@ namespace Anode.Cores.NES.Nessie
                         break;
                     case 3:
                         // RTS
+                        // Why are these comments like that, I can't remember what I did lol
                         switch (t)
                         {
                             case 1:
@@ -982,6 +985,7 @@ namespace Anode.Cores.NES.Nessie
                                 break;
                             case 5:
                                 // rd
+                                Poll_Interrupts();
                                 resetInstr = true;
                                 break;
                         }
@@ -1016,6 +1020,7 @@ namespace Anode.Cores.NES.Nessie
                         }
                         break;
                     case 4:
+                        Poll_Interrupts();
                         PC = (ushort)((DataLatch << 8) | ADD);
 
                         resetInstr = true;
