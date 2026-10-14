@@ -197,6 +197,8 @@ namespace Anode
 
                     // Setup the next frame
                     waitingForFrame = false;
+
+                    System.GC.Collect();
                 }
             }
 

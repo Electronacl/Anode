@@ -18,6 +18,7 @@ namespace Anode.Common
         /// <summary>
         /// Creates a deep copy of a value provided
         /// </summary>
+        // Uhh this uses a concerningly high amount of memory
         public static T Clone<T>(T source)
         {
             if (!typeof(T).IsSerializable)
@@ -37,7 +38,9 @@ namespace Anode.Common
             {
                 formatter.Serialize(stream, source);
                 stream.Seek(0, SeekOrigin.Begin);
-                return (T)formatter.Deserialize(stream);
+                T output = (T)formatter.Deserialize(stream);
+                stream.Dispose();
+                return output;
             }
         }
 
