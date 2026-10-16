@@ -25,7 +25,7 @@ namespace Anode.Common
     internal class Renderer
     {
         public Bitmap outputBitmap;
-        Bitmap internalBitmap;
+        public Bitmap internalBitmap;
         BitmapData outputData;
         int stride;
         bool finishedFrame = true; // Juuust in case
@@ -39,6 +39,10 @@ namespace Anode.Common
 
         public void InitFrame()
         {
+            if (outputBitmap != null)
+            {
+                outputBitmap.Dispose();
+            }
             if (!finishedFrame)
             {
                 FinishFrame();
@@ -51,6 +55,7 @@ namespace Anode.Common
         public void FinishFrame()
         {
             internalBitmap.UnlockBits(outputData);
+            //outputBitmap = (Bitmap)internalBitmap.Clone();
             outputBitmap = Util.Clone(internalBitmap);
             finishedFrame = true;
         }

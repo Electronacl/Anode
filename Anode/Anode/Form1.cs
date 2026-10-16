@@ -72,13 +72,13 @@ namespace Anode
             this.DragDrop += new DragEventHandler(dragDropFile);
             this.Text = $"Anode {Constants.version_name}";
 
-            this.SizeChanged += ResizeComponents;
+            //this.SizeChanged += ResizeComponents;
 
             // For locking
             ScreenObject = graphicsDisplayArea;
 
             // CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(Properties.Settings.Default.Locale);
-            JustResize();
+            // JustResize();
         }
 
         private void dragDropEnter(object sender, DragEventArgs e)
@@ -165,21 +165,30 @@ namespace Anode
                     emulator.AdvanceFrame();
                     Renderer emuRenderer = emulator.GetRenderer();
 
-                    RenderSizedBitmap(emuRenderer.outputBitmap);
+                    //RenderSizedBitmap(emuRenderer.outputBitmap);
 
                     if (throttled && !waitingForFrame)
                     {
-                        /*if (wo != null)
+                        lock (ScreenObject)
                         {
-                            while (wo.PlaybackState == PlaybackState.Playing)
+                            // Update the frame
+                            if (graphicsDisplayArea.InvokeRequired)
                             {
-
+                                graphicsDisplayArea.Invoke(new MethodInvoker(
+                                    delegate ()
+                                    {
+                                        // This method runs if something is using the object
+                                        graphicsDisplayArea.Image = emulator.GetRenderer().internalBitmap;
+                                        graphicsDisplayArea.Update();
+                                    }));
                             }
-                            wo.Dispose();
+                            else
+                            {
+                                // Otherwise, just update
+                                graphicsDisplayArea.Image = emulator.GetRenderer().internalBitmap;
+                                graphicsDisplayArea.Update();
+                            }
                         }
-                        ms.Write(emulator.processedAPUBuffer, 0, emulator.processedAPUBuffer.Length);
-                        wo = new WaveOutEvent();*/
-                        //throttler.Stop();
                         float timerequired = emulator.GetSpeed();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
                         while (timetaken < timerequired)
@@ -191,14 +200,10 @@ namespace Anode
                         throttler.Stop();
                         throttler.Reset();
                         throttler.Start();
-                        //wo.Init(rs);
-                        //wo.Play();
                     }
 
                     // Setup the next frame
                     waitingForFrame = false;
-
-                    System.GC.Collect();
                 }
             }
 
@@ -313,7 +318,7 @@ namespace Anode
 
         private void RenderSizedBitmap(Bitmap originMap)
         {
-            double scaleModifier;
+            /*double scaleModifier;
             int usedHeight = this.Height - 62;
             if ((double)this.Width / (double)originMap.Width  > (double)usedHeight / (double)originMap.Height)
             {
@@ -323,7 +328,7 @@ namespace Anode
             {
                 scaleModifier = (double)this.Width / (double)originMap.Width;
             }
-            resized = ResizeImage(originMap, (int)(originMap.Width * scaleModifier), (int)(originMap.Height * scaleModifier));
+            resized = ResizeImage(originMap, (int)(originMap.Width * scaleModifier), (int)(originMap.Height * scaleModifier));*/
             lock (ScreenObject)
             {
                 // Update the frame
@@ -333,19 +338,19 @@ namespace Anode
                         delegate ()
                         {
                             // This method runs if something is using the object
-                            graphicsDisplayArea.Image = resized;
+                            graphicsDisplayArea.Image = originMap;
                             graphicsDisplayArea.Update();
                         }));
                 }
                 else
                 {
                     // Otherwise, just update
-                    graphicsDisplayArea.Image = resized;
+                    graphicsDisplayArea.Image = originMap;
                     graphicsDisplayArea.Update();
                 }
             }
         }
-        private void ResizeComponents(object sender, EventArgs e)
+        /*private void ResizeComponents(object sender, EventArgs e)
         {
             // This is stupid
             JustResize();
@@ -402,6 +407,6 @@ namespace Anode
             }
 
             return destImage;
-        }
+        }*/
     }
 }

@@ -1,17 +1,13 @@
 ﻿using Anode.Base;
 using Anode.Common;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Anode.Cores.NES.Nessie
 {
     internal class NessieCore : EmuCore
     {
-        static readonly ulong NessieVersion = 3;
+        static readonly ulong NessieVersion = 4;
 
         byte PPUClock;
         byte CPUClock;
