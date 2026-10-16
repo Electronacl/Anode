@@ -5,7 +5,7 @@ namespace Anode
 {
     public partial class AnodeOptions : Form
     {
-        int[] languagesUsed =
+        /*int[] languagesUsed =
         {
             1031, 1033, 1034, 1035, 1040, 1041, 1042, 1043, 2052, 2057, -1, -2, -3
         };
@@ -17,7 +17,7 @@ namespace Anode
             "Pirate Speak",
             "English (Shakespearian)",
             "LOLCAT"
-        };
+        };*/
 
         public AnodeOptions()
         {

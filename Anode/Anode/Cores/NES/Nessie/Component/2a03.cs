@@ -1,6 +1,8 @@
 ﻿using Anode.Common;
+using Anode.Cores.NES.Nessie.Component;
 using System;
 using System.IO;
+using System.Net;
 
 namespace Anode.Cores.NES.Nessie
 {
@@ -136,10 +138,23 @@ namespace Anode.Cores.NES.Nessie
             }
         }
 
+        public _2a03_APU APU = new _2a03_APU();
+
         public void RunCycle()
         {
             CPU_Cycle = !CPU_Cycle;
+
             DataLatch = DataBus;
+
+            bool dontUpdateLatch = false;
+
+            if (getRequired && AddressBus == 0x4015)
+            {
+                // Internal read!
+                DataLatch = APU.Read(DataLatch);
+                dontUpdateLatch = true;
+            }
+
             // Why set the data latch instead of using the data bus?
             // Well, it hasn't been implemented yet, but there's a separate internal and
             // external bus - some audio registers don't update the external one
@@ -489,7 +504,17 @@ namespace Anode.Cores.NES.Nessie
                 DelayedAddr = PC;
             }
 
-            DataBus = DataLatch;
+            if (!dontUpdateLatch)
+            {
+                DataBus = DataLatch;
+            }
+
+            soonIRQ = APU.IRQLevelDetector;
+
+            if (((AddressBus & 0xFFF0) == 0x4000) && !getRequired)
+            {
+                APU.Write(AddressBus, DataLatch);
+            }
         }
 
         private void Internal_Mem()

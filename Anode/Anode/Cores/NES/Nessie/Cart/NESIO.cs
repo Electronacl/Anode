@@ -9,16 +9,16 @@ namespace Anode.Cores.NES.Nessie
 {
     internal class NESIO
     {
-        byte[] InternalROM;
+        //byte[] InternalROM;
         byte[] ROM = new byte[0x8000];
         public byte[] RAM = new byte[0x800]; // Random Access Memory
 
         byte[] HeaderedROM;
         byte cartSize;
 
-        byte[] InternalCHRData;
+        //byte[] InternalCHRData;
         public byte[] CHRData = new byte[0x2000];
-        public bool CHRDataUpdate;
+        //public bool CHRDataUpdate;
 
         public byte[] Header = new byte[0x10]; // iNES header
 

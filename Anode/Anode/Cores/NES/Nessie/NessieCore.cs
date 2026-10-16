@@ -35,6 +35,8 @@ namespace Anode.Cores.NES.Nessie
             {
                 if (CPUClock == MaxCPU)
                 {
+                    CPU.APU.RunAPUFrame();
+
                     if (!IO.OAMDMA)
                     {
                         CPU.AddressBus = CPU.DelayedAddr;
@@ -47,6 +49,11 @@ namespace Anode.Cores.NES.Nessie
                             if (CPU.AddressBus >= 0x2000 && CPU.AddressBus < 0x4000)
                             {
                                 CPU.DataBus = PPU.CPU_Read_PPU(CPU.AddressBus);
+                            }
+                            else if (CPU.AddressBus == 0x4015)
+                            {
+                                // CPU internal read
+                                // Do absolutely nothing!
                             }
                             else
                             {
@@ -141,6 +148,7 @@ namespace Anode.Cores.NES.Nessie
             }
 
             PPU.FrameComplete = false;
+            CPU.APU.apuFrameIndex = 0;
 
             renderer.FinishFrame();
         }

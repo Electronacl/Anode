@@ -25,6 +25,6 @@ namespace Anode
         // Branches:
         // a - main
         // b - split
-        public static string version_name = "2.0.0 Alpha (0b3)";
+        public static string version_name = "2.0.0 Alpha (0b5)";
     }
 }
