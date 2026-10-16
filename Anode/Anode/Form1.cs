@@ -72,13 +72,13 @@ namespace Anode
             this.DragDrop += new DragEventHandler(dragDropFile);
             this.Text = $"Anode {Constants.version_name}";
 
-            //this.SizeChanged += ResizeComponents;
+            this.SizeChanged += ResizeComponents;
 
             // For locking
             ScreenObject = graphicsDisplayArea;
 
             // CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(Properties.Settings.Default.Locale);
-            // JustResize();
+            JustResize();
         }
 
         private void dragDropEnter(object sender, DragEventArgs e)
@@ -169,26 +169,7 @@ namespace Anode
 
                     if (throttled && !waitingForFrame)
                     {
-                        lock (ScreenObject)
-                        {
-                            // Update the frame
-                            if (graphicsDisplayArea.InvokeRequired)
-                            {
-                                graphicsDisplayArea.Invoke(new MethodInvoker(
-                                    delegate ()
-                                    {
-                                        // This method runs if something is using the object
-                                        graphicsDisplayArea.Image = emulator.GetRenderer().internalBitmap;
-                                        graphicsDisplayArea.Update();
-                                    }));
-                            }
-                            else
-                            {
-                                // Otherwise, just update
-                                graphicsDisplayArea.Image = emulator.GetRenderer().internalBitmap;
-                                graphicsDisplayArea.Update();
-                            }
-                        }
+                        RenderSizedBitmap(emulator.GetRenderer().outputBitmap);
                         float timerequired = emulator.GetSpeed();
                         timetaken = ((double)throttler.ElapsedTicks + 5d) / (double)Stopwatch.Frequency;
                         while (timetaken < timerequired)
@@ -318,7 +299,12 @@ namespace Anode
 
         private void RenderSizedBitmap(Bitmap originMap)
         {
-            /*double scaleModifier;
+            if (resized != null)
+            {
+                resized.Dispose();
+            }
+
+            double scaleModifier;
             int usedHeight = this.Height - 62;
             if ((double)this.Width / (double)originMap.Width  > (double)usedHeight / (double)originMap.Height)
             {
@@ -328,7 +314,7 @@ namespace Anode
             {
                 scaleModifier = (double)this.Width / (double)originMap.Width;
             }
-            resized = ResizeImage(originMap, (int)(originMap.Width * scaleModifier), (int)(originMap.Height * scaleModifier));*/
+            resized = ResizeImage(originMap, (int)(originMap.Width * scaleModifier), (int)(originMap.Height * scaleModifier));
             lock (ScreenObject)
             {
                 // Update the frame
@@ -338,19 +324,19 @@ namespace Anode
                         delegate ()
                         {
                             // This method runs if something is using the object
-                            graphicsDisplayArea.Image = originMap;
+                            graphicsDisplayArea.Image = resized;
                             graphicsDisplayArea.Update();
                         }));
                 }
                 else
                 {
                     // Otherwise, just update
-                    graphicsDisplayArea.Image = originMap;
+                    graphicsDisplayArea.Image = resized;
                     graphicsDisplayArea.Update();
                 }
             }
         }
-        /*private void ResizeComponents(object sender, EventArgs e)
+        private void ResizeComponents(object sender, EventArgs e)
         {
             // This is stupid
             JustResize();
@@ -407,6 +393,6 @@ namespace Anode
             }
 
             return destImage;
-        }*/
+        }
     }
 }
